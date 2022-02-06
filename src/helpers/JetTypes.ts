@@ -11,14 +11,14 @@ export interface ToBytes {
   toBytes(): Uint8Array;
 };
 
-//Idl Metadata
+// Idl Metadata
 export interface IdlMetadata {
   address: PublicKey;
   cluster: string;
   market: MarketMetadata;
   reserves: ReserveMetadata[]
 };
-//Idl errors
+// Idl errors
 export interface CustomProgramError {
   code: number;
   name: string;
@@ -75,7 +75,8 @@ export interface JetMarketReserveInfo {
 };
 export type CacheReserveInfoStruct = CacheStruct & {
   /** The price of the asset being stored in the reserve account.
-  USD per smallest unit (1u64) of a token */
+  USD per smallest unit (1u64) of a token 
+  */
   price: BN,
   /** The value of the deposit note (unit: reserve tokens per note token) */
   depositNoteExchangeRate: BN,
@@ -84,7 +85,8 @@ export type CacheReserveInfoStruct = CacheStruct & {
   /** The minimum allowable collateralization ratio for a loan on this reserve */
   minCollateralRatio: number,
   /** The bonus awarded to liquidators when repaying a loan in exchange for a
-  collateral asset. */
+  collateral asset. 
+  */
   liquidationBonus: number,
   /** Unused space */
   _reserved: number[],
@@ -218,12 +220,12 @@ export interface ReserveMetadata {
     faucet?: PublicKey,
     depositNoteMint: PublicKey,
     loanNoteMint: PublicKey,
-    
+
     pythPrice: PublicKey,
     pythProduct: PublicKey,
 
     pythOraclePrice: PublicKey;
-    pythOracleProduct: PublicKey;  
+    pythOracleProduct: PublicKey;
 
     dexMarket: PublicKey,
     dexSwapTokens: PublicKey,
@@ -266,7 +268,7 @@ export interface User {
   // Transaction logs
   transactionLogs: TransactionLog[],
   transactionLogsInit: boolean,
-  
+
   // Notifications
   notifications: Notification[],
   addNotification: (n: Notification) => void,
@@ -298,7 +300,7 @@ export interface SolWindow extends Window {
     isSolflare?: boolean
   },
   Slope: {
-    new (): SlopeWallet;
+    new: () => SlopeWallet;
   }
 };
 
@@ -337,25 +339,25 @@ export interface SlopeWallet {
   on: Function,
   forgetAccounts: Function,
   connect(): Promise<{
-      msg: string;
-      data: {
-          publicKey?: string;
-      };
+    msg: string;
+    data: {
+      publicKey?: string;
+    };
   }>;
   disconnect(): Promise<{ msg: string }>;
   signTransaction(message: string): Promise<{
-      msg: string;
-      data: {
-          publicKey?: string;
-          signature?: string;
-      };
+    msg: string;
+    data: {
+      publicKey?: string;
+      signature?: string;
+    };
   }>;
   signAllTransactions(messages: string[]): Promise<{
-      msg: string;
-      data: {
-          publicKey?: string;
-          signatures?: string[];
-      };
+    msg: string;
+    data: {
+      publicKey?: string;
+      signatures?: string[];
+    };
   }>;
   signMessage(message: Uint8Array): Promise<{ data: { signature: string } }>;
 }
@@ -369,7 +371,8 @@ export interface WalletProvider {
 // Account
 export interface AssetStore {
   /** The users unwrapped sol balance found in their wallet. If we want to track more data than this, 
-   * this field could be expanded into a whole object instead of a BN. */
+   * this field could be expanded into a whole object instead of a BN. 
+   * */
   sol: TokenAmount,
   obligationPubkey: PublicKey,
   obligationBump: number,
@@ -479,7 +482,7 @@ export interface TransactionLog {
   signature: string,
   tradeAction: string,
   tradeAmount: TokenAmount,
-  transaction: { 
+  transaction: {
     message: {
       /** The message header, identifying signed and read-only `accountKeys` */
       header: {
@@ -555,8 +558,8 @@ export enum TxnResponse {
 export interface SlopeTxn {
   msg: string;
   data: {
-      publicKey?: string;
-      signature?: string;
-      signatures?: string[];
+    publicKey?: string;
+    signature?: string;
+    signatures?: string[];
   };
 };

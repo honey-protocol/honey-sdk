@@ -18,7 +18,8 @@ export const getReserveStructures = async (idlMetadata: IdlMetadata): Promise<Re
     // Setup reserve structures
     const reserves: Record<string, Reserve> = {};
     for (const reserveMeta of idlMetadata.reserves) {
-        let reserve: Reserve = {
+        if (!reserveMeta) continue;
+        const reserve: Reserve = {
             name: reserveMeta.name,
             abbrev: reserveMeta.abbrev,
             marketSize: TokenAmount.zero(reserveMeta.decimals),
@@ -76,24 +77,25 @@ export const getAssetPubkeys = async (market: Market, user: User, program: Progr
         return null;
     }
 
-    let [obligationPubkey, obligationBump] = await findObligationAddress(program, market.accountPubkey, user.wallet.publicKey);
+    const [obligationPubkey, obligationBump] = await findObligationAddress(program, market.accountPubkey, user.wallet.publicKey);
 
-    let assetStore: AssetStore = {
+    const assetStore: AssetStore = {
         sol: new TokenAmount(new BN(0), SOL_DECIMALS),
         obligationPubkey,
         obligationBump,
         tokens: {}
     } as AssetStore;
     for (const assetAbbrev in market.reserves) {
-        let reserve = market.reserves[assetAbbrev];
-        let tokenMintPubkey = reserve.tokenMintPubkey;
+        if (!assetAbbrev) continue;
+        const reserve = market.reserves[assetAbbrev];
+        const tokenMintPubkey = reserve.tokenMintPubkey;
 
-        let [depositNoteDestPubkey, depositNoteDestBump] = await findDepositNoteDestAddress(program, reserve.accountPubkey, user.wallet.publicKey);
-        let [depositNotePubkey, depositNoteBump] = await findDepositNoteAddress(program, reserve.accountPubkey, user.wallet.publicKey);
-        let [loanNotePubkey, loanNoteBump] = await findLoanNoteAddress(program, reserve.accountPubkey, obligationPubkey, user.wallet.publicKey);
-        let [collateralPubkey, collateralBump] = await findCollateralAddress(program, reserve.accountPubkey, obligationPubkey, user.wallet.publicKey);
+        const [depositNoteDestPubkey, depositNoteDestBump] = await findDepositNoteDestAddress(program, reserve.accountPubkey, user.wallet.publicKey);
+        const [depositNotePubkey, depositNoteBump] = await findDepositNoteAddress(program, reserve.accountPubkey, user.wallet.publicKey);
+        const [loanNotePubkey, loanNoteBump] = await findLoanNoteAddress(program, reserve.accountPubkey, obligationPubkey, user.wallet.publicKey);
+        const [collateralPubkey, collateralBump] = await findCollateralAddress(program, reserve.accountPubkey, obligationPubkey, user.wallet.publicKey);
 
-        let asset: Asset = {
+        const asset: Asset = {
             tokenMintPubkey,
             walletTokenPubkey: await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, tokenMintPubkey, user.wallet.publicKey),
             walletTokenExists: false,

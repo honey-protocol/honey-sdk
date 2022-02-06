@@ -9,8 +9,6 @@ import { MarketReserveInfoList, PositionInfoList, ReserveStateLayout } from "./l
 import { TokenAmount } from "./util";
 import bs58 from 'bs58';
 
-let user: User;
-
 // Find PDA functions and jet algorithms that are reimplemented here
 
 export const SOL_DECIMALS = 9;
@@ -118,8 +116,8 @@ export const findProgramAddress = async (
   programId: PublicKey,
   seeds: (HasPublicKey | ToBytes | Uint8Array | string)[]
 ): Promise<[PublicKey, number]> => {
-  const seed_bytes = seeds.map((s) => {
-    if (typeof s == "string") {
+  const SEEDBYTES = seeds.map((s) => {
+    if (typeof s === "string") {
       return new TextEncoder().encode(s);
     } else if ("publicKey" in s) {
       return s.publicKey.toBytes();
@@ -130,7 +128,7 @@ export const findProgramAddress = async (
     }
   });
 
-  return await anchor.web3.PublicKey.findProgramAddress(seed_bytes, programId);
+  return await anchor.web3.PublicKey.findProgramAddress(SEEDBYTES, programId);
 };
 
 /**
@@ -151,8 +149,8 @@ export const getTokenAccountAndSubscribe = async function (
   commitment?: Commitment
 ): Promise<number> {
   return await getAccountInfoAndSubscribe(connection, publicKey, (account, context) => {
-    if (account != null) {
-      if (account.data.length != 165) {
+    if (account !== null) {
+      if (account.data.length !== 165) {
         console.log('account data length', account.data.length);
       }
       const decoded = parseTokenAccount(account, publicKey);
@@ -271,7 +269,7 @@ export const sendTransaction = async (
 ): Promise<[res: TxnResponse, txid: string[]]> => {
   if (!provider.wallet?.publicKey) {
     throw new Error("Wallet is not connected");
-    
+
   }
   // Building phase
   let transaction = new Transaction();
@@ -285,27 +283,27 @@ export const sendTransaction = async (
   if (signers && signers.length > 0) {
     transaction.partialSign(...signers)
   }
-   //Slope wallet funcs only take bs58 strings
-  if (user.wallet?.name === 'Slope') {
-    try {
-      const { msg, data } = await provider.wallet.signTransaction(bs58.encode(transaction.serializeMessage()) as any) as unknown as SlopeTxn;
-      if (!data.publicKey || !data.signature) {
-        throw new Error("Transaction Signing Failed");
-      }
-      transaction.addSignature(new PublicKey(data.publicKey), bs58.decode(data.signature));
-    } catch (err) {
-      console.log('Signing Transactions Failed', err);
-      return [TxnResponse.Cancelled, []];
-    }
-  } else {
-    try {
-      transaction = await provider.wallet.signTransaction(transaction);
-    } catch (err) {
-      console.log('Signing Transactions Failed', err, [TxnResponse.Failed, null]);
-      // wallet refused to sign
-      return [TxnResponse.Cancelled, []];
-    }
+  //Slope wallet funcs only take bs58 strings
+  // if (user.wallet?.name === 'Slope') {
+  //   try {
+  //     const { msg, data } = await provider.wallet.signTransaction(bs58.encode(transaction.serializeMessage()) as any) as unknown as SlopeTxn;
+  //     if (!data.publicKey || !data.signature) {
+  //       throw new Error("Transaction Signing Failed");
+  //     }
+  //     transaction.addSignature(new PublicKey(data.publicKey), bs58.decode(data.signature));
+  //   } catch (err) {
+  //     console.log('Signing Transactions Failed', err);
+  //     return [TxnResponse.Cancelled, []];
+  //   }
+  // } else {
+  try {
+    transaction = await provider.wallet.signTransaction(transaction);
+  } catch (err) {
+    console.log('Signing Transactions Failed', err, [TxnResponse.Failed, null]);
+    // wallet refused to sign
+    return [TxnResponse.Cancelled, []];
   }
+  // }
 
   // Sending phase
   const rawTransaction = transaction.serialize();
@@ -343,7 +341,7 @@ let customProgramErrors: CustomProgramError[];
 export const getErrNameAndMsg = (errCode: number): string => {
   const code = Number(errCode);
 
-  if (code >=100 && code < 300) {
+  if (code >= 100 && code < 300) {
     return `This is an Anchor program error code ${code}. Please check here: https://github.com/project-serum/anchor/blob/master/lang/src/error.rs`;
   }
 
@@ -352,23 +350,23 @@ export const getErrNameAndMsg = (errCode: number): string => {
     if (err.code === code) {
       return `\n\nCustom Program Error Code: ${errCode} \n- ${err.name} \n- ${err.msg}`;
     }
-  } 
+  }
   return `No matching error code description or translation for ${errCode}`;
 };
 
 //get the custom program error code if there's any in the error message and return parsed error code hex to number string
 
-  /**
-   * Get the custom program error code if there's any in the error message and return parsed error code hex to number string
-   * @param errMessage string - error message that would contain the word "custom program error:" if it's a customer program error
-   * @returns [boolean, string] - probably not a custom program error if false otherwise the second element will be the code number in string
-   */
+/**
+ * Get the custom program error code if there's any in the error message and return parsed error code hex to number string
+ * @param errMessage string - error message that would contain the word "custom program error:" if it's a customer program error
+ * @returns [boolean, string] - probably not a custom program error if false otherwise the second element will be the code number in string
+ */
 export const getCustomProgramErrorCode = (errMessage: string): [boolean, string] => {
   const index = errMessage.indexOf('custom program error:');
-  if(index == -1) {
+  if (index == -1) {
     return [false, 'May not be a custom program error']
   } else {
-    return [true, `${parseInt(errMessage.substring(index + 22,  index + 28).replace(' ', ''), 16)}`];
+    return [true, `${parseInt(errMessage.substring(index + 22, index + 28).replace(' ', ''), 16)}`];
   }
 };
 
@@ -433,22 +431,22 @@ export const sendAllTransactions = async (
   //     return [TxnResponse.Cancelled, []];
   //   }
   // } else {
-    try {
-      //solong does not have a signAllTransactions Func so we sign one by one
-      if (!provider.wallet.signAllTransactions) {
-        for (let i = 0; i < txs.length; i++) {
-          const signedTxn = await provider.wallet.signTransaction(txs[i]);
-          signedTransactions.push(signedTxn);
-        }
-      } else {
-        signedTransactions = await provider.wallet.signAllTransactions(txs);
+  try {
+    //solong does not have a signAllTransactions Func so we sign one by one
+    if (!provider.wallet.signAllTransactions) {
+      for (let i = 0; i < txs.length; i++) {
+        const signedTxn = await provider.wallet.signTransaction(txs[i]);
+        signedTransactions.push(signedTxn);
       }
+    } else {
+      signedTransactions = await provider.wallet.signAllTransactions(txs);
     }
-    catch (err) {
-      console.log('Signing All Transactions Failed', err);
-      // wallet refused to sign
-      return [TxnResponse.Cancelled, []];
-    }
+  }
+  catch (err) {
+    console.log('Signing All Transactions Failed', err);
+    // wallet refused to sign
+    return [TxnResponse.Cancelled, []];
+  }
   // }
 
   // Sending phase

@@ -3,16 +3,7 @@ import * as anchor from '@project-serum/anchor';
 import { CreateMarketParams, JetMarket } from './market';
 import { programIds } from '../helpers/ids';
 import { PROGRAM_IDLS } from '../helpers/idls';
-
-export class DerivedAccount {
-  public address: PublicKey;
-  public bumpSeed: number;
-
-  constructor(address: PublicKey, bumpSeed: number) {
-    this.address = address;
-    this.bumpSeed = bumpSeed;
-  }
-}
+import { DerivedAccount } from './derived-account';
 
 interface ToBytes {
   toBytes(): Uint8Array;
@@ -34,7 +25,7 @@ export class JetClient {
    */
   static async connect(provider: anchor.Provider, devnet?: boolean): Promise<JetClient> {
     const network = devnet ? 'devnet' : 'mainnet-beta';
-    const idl = PROGRAM_IDLS.filter((value) => value.name == network)[0];
+    const idl = PROGRAM_IDLS.filter((value) => value.name === network)[0];
     const JET_ID = new PublicKey(programIds().jet.JET_ID);
     const program = new anchor.Program(idl.jet, JET_ID, provider);
 
@@ -50,7 +41,7 @@ export class JetClient {
     seeds: DerivedAccountSeed[]
   ): Promise<DerivedAccount> {
     const seedBytes = seeds.map((s) => {
-      if (typeof s == "string") {
+      if (typeof s === "string") {
         return Buffer.from(s);
       } else if ("publicKey" in s) {
         return s.publicKey.toBytes();
@@ -70,7 +61,7 @@ export class JetClient {
   async createMarket(params: CreateMarketParams): Promise<JetMarket> {
     let account = params.account;
 
-    if (account == undefined) {
+    if (account === undefined) {
       account = Keypair.generate();
     }
 

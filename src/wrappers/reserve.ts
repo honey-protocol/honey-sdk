@@ -10,11 +10,11 @@ import {
 } from "@solana/web3.js";
 import * as BL from "@solana/buffer-layout";
 
-import { DEX_ID, DEX_ID_DEVNET } from ".";
-import { JetClient, DerivedAccount } from "./client";
+import { JetClient } from "./client";
 import { JetMarket } from "./market";
 import * as util from "./util";
 import { BN } from "@project-serum/anchor";
+import { DerivedAccount } from "./derived-account";
 
 export interface ReserveConfig {
   utilizationRate1: number;
@@ -151,7 +151,7 @@ export class JetReserve {
   }
 
   async sendRefreshTx(): Promise<string> {
-    let tx = new Transaction().add(this.makeRefreshIx());
+    const tx = new Transaction().add(this.makeRefreshIx());
     return await this.client.program.provider.send(tx);
   }
 
@@ -184,49 +184,49 @@ export class JetReserve {
     });
   }
 
-  async loadDexMarketAccounts(): Promise<ReserveDexMarketAccounts> {
-    if (this.data.tokenMint.equals(this.market.quoteTokenMint)) {
-      // The quote token doesn't have a DEX market
-      const defaultAccount = this.data.dexSwapTokens;
-      return {
-        market: defaultAccount,
-        openOrders: defaultAccount,
-        requestQueue: defaultAccount,
-        eventQueue: defaultAccount,
-        bids: defaultAccount,
-        asks: defaultAccount,
-        coinVault: defaultAccount,
-        pcVault: defaultAccount,
-        vaultSigner: defaultAccount,
-      };
-    }
+  // async loadDexMarketAccounts(): Promise<ReserveDexMarketAccounts> {
+  //   if (this.data.tokenMint.equals(this.market.quoteTokenMint)) {
+  //     // The quote token doesn't have a DEX market
+  //     const defaultAccount = this.data.dexSwapTokens;
+  //     return {
+  //       market: defaultAccount,
+  //       openOrders: defaultAccount,
+  //       requestQueue: defaultAccount,
+  //       eventQueue: defaultAccount,
+  //       bids: defaultAccount,
+  //       asks: defaultAccount,
+  //       coinVault: defaultAccount,
+  //       pcVault: defaultAccount,
+  //       vaultSigner: defaultAccount,
+  //     };
+  //   }
 
-    const dexMarketData = await this.conn.getAccountInfo(this.data.dexMarket);
-    const dexMarket = await SerumMarket.getLayout(DEX_ID).decode(
-      dexMarketData?.data
-    );
+  //   const dexMarketData = await this.conn.getAccountInfo(this.data.dexMarket);
+  //   const dexMarket = await SerumMarket.getLayout(DEX_ID).decode(
+  //     dexMarketData?.data
+  //   );
 
-    const dexSignerNonce = dexMarket.vaultSignerNonce;
-    const vaultSigner = await PublicKey.createProgramAddress(
-      [
-        dexMarket.ownAddress.toBuffer(),
-        dexSignerNonce.toArrayLike(Buffer, "le", 8),
-      ],
-      this.client.devnet ? DEX_ID_DEVNET : DEX_ID
-    );
+  //   const dexSignerNonce = dexMarket.vaultSignerNonce;
+  //   const vaultSigner = await PublicKey.createProgramAddress(
+  //     [
+  //       dexMarket.ownAddress.toBuffer(),
+  //       dexSignerNonce.toArrayLike(Buffer, "le", 8),
+  //     ],
+  //     this.client.devnet ? DEX_ID_DEVNET : DEX_ID
+  //   );
 
-    return {
-      market: dexMarket.ownAddress,
-      openOrders: this.data.dexOpenOrders,
-      requestQueue: dexMarket.requestQueue,
-      eventQueue: dexMarket.eventQueue,
-      bids: dexMarket.bids,
-      asks: dexMarket.asks,
-      coinVault: dexMarket.baseVault,
-      pcVault: dexMarket.quoteVault,
-      vaultSigner,
-    };
-  }
+  //   return {
+  //     market: dexMarket.ownAddress,
+  //     openOrders: this.data.dexOpenOrders,
+  //     requestQueue: dexMarket.requestQueue,
+  //     eventQueue: dexMarket.eventQueue,
+  //     bids: dexMarket.bids,
+  //     asks: dexMarket.asks,
+  //     coinVault: dexMarket.baseVault,
+  //     pcVault: dexMarket.quoteVault,
+  //     vaultSigner,
+  //   };
+  // }
 
   async updateReserveConfig(params: UpdateReserveConfigParams): Promise<void> {
     await this.client.program.rpc.updateReserveConfig(params.config, {

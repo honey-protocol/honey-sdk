@@ -32,7 +32,7 @@ interface ConnectionContextProps {
 
 export const ConnectionContext = React.createContext<ConnectionContextProps>({
   endpoint: DEFAULT_ENDPOINT,
-  setNetwork: () => {},
+  setNetwork: () => ENDPOINTS[2].name,
   network: ENDPOINTS[2].name,
   connection: new Connection(DEFAULT_ENDPOINT, anchor.Provider.defaultOptions().commitment)
 });

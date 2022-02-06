@@ -58,6 +58,6 @@ export const withdrawCollateral = async (
     console.error(`Reserve with token mint ${withdrawTokenMint} does not exist`);
     return [TxnResponse.Failed, []]
   }
-  const withdrawCollateral = await jetUser.withdrawCollateral(withdrawReserve, Amount.tokens(tokenAmount));
-  return withdrawCollateral;
+  const withdrawCollateralTx = await jetUser.withdrawCollateral(withdrawReserve, Amount.tokens(tokenAmount));
+  return withdrawCollateralTx;
 }

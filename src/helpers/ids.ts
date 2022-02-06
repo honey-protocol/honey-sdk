@@ -29,8 +29,8 @@ export const PROGRAM_IDS = [
       METADATA_PROGRAM_ID: "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
     }),
     jet: () => ({
-      JET_ID: "HVtPSjE6Go3A1HhMg8rPivrSTp84gS3kNnUKLhKSfbYR", //devnet used  here
-      DEX_ID: "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin" //localnet used here
+      JET_ID: "HVtPSjE6Go3A1HhMg8rPivrSTp84gS3kNnUKLhKSfbYR", // devnet used  here
+      DEX_ID: "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin" // localnet used here
     })
   },
   {
@@ -41,7 +41,7 @@ export const PROGRAM_IDS = [
     }),
     jet: () => ({
       JET_ID: "GK53SsfAuRrPE1bEAa5isEDK6GjbK3Go7KcWZQtxQijn",
-      DEX_ID: "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin", //localnet used here
+      DEX_ID: "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin", // localnet used here
     })
   },
 ]
@@ -50,11 +50,11 @@ export const setProgramIds = (network: String) => {
   const instance = PROGRAM_IDS.find(id => id.network === network);
   if (!instance) return;
 
-  let farm = instance.farm();
+  const farm = instance.farm();
   MINE_PROGRAM_ID = farm.MINE_PROGRAM_ID;
   METADATA_PROGRAM_ID = farm.METADATA_PROGRAM_ID;
 
-  let jet = instance.jet();
+  const jet = instance.jet();
   JET_ID = jet.JET_ID
 }
 

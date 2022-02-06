@@ -5,6 +5,17 @@
         "tslint-config-prettier"
     ],
     "jsRules": {},
-    "rules": {},
-    "rulesDirectory": []
+    "rules": {
+        "no-console": false,
+        "jsdoc-format": false,
+        "ban-types": false,
+        "no-bitwise": false
+    },
+    "rulesDirectory": [],
+    "linterOptions": {
+        "exclude": [
+            "src/helpers/*.ts",
+            "src/wrappers/util.ts"
+        ]
+    }
 }

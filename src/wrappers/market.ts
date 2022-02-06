@@ -6,7 +6,6 @@ import * as BL from "@solana/buffer-layout";
 import { CreateReserveParams, JetReserve } from "./reserve";
 import * as util from "./util";
 import { JetClient } from "./client";
-import { DEX_ID_DEVNET, DEX_ID } from ".";
 
 const MAX_RESERVES = 32;
 
@@ -61,9 +60,9 @@ export class JetMarket implements JetMarketData {
     client: JetClient,
     address: PublicKey
   ): Promise<[any, JetMarketReserveInfo[]]> {
-    let data: any = await client.program.account.market.fetch(address);
-    let reserveInfoData = new Uint8Array(data.reserves);
-    let reserveInfoList = MarketReserveInfoList.decode(
+    const data: any = await client.program.account.market.fetch(address);
+    const reserveInfoData = new Uint8Array(data.reserves);
+    const reserveInfoList = MarketReserveInfoList.decode(
       reserveInfoData
     ) as JetMarketReserveInfo[];
 
@@ -124,7 +123,7 @@ export class JetMarket implements JetMarketData {
   async createReserve(params: CreateReserveParams): Promise<JetReserve> {
     let account = params.account;
 
-    if (account == undefined) {
+    if (account === undefined) {
       account = Keypair.generate();
     }
 
@@ -146,8 +145,6 @@ export class JetMarket implements JetMarketData {
 
     const createReserveAccount =
       await this.client.program.account.reserve.createInstruction(account);
-
-    const dexProgram = this.client.devnet ? DEX_ID_DEVNET : DEX_ID;
 
     await this.client.program.rpc.initReserve(bumpSeeds, params.config, {
       accounts: {
@@ -171,7 +168,7 @@ export class JetMarket implements JetMarketData {
         tokenMint: params.tokenMint,
 
         tokenProgram: TOKEN_PROGRAM_ID,
-        dexProgram: this.client.devnet ? DEX_ID_DEVNET : DEX_ID,
+        // dexProgram: this.client.devnet ? DEX_ID_DEVNET : DEX_ID, removed?
         clock: anchor.web3.SYSVAR_CLOCK_PUBKEY,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
         systemProgram: anchor.web3.SystemProgram.programId,

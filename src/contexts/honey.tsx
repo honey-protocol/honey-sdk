@@ -97,54 +97,6 @@ export default function HoneyProvider({ children = null as any }) {
       fetchReserves();
   }, [idlMetadata]);
 
-  // const findLoanNoteAddress = async (
-  //   program: anchor.Program,
-  //   reserve: PublicKey, 
-  //   obligation: PublicKey, 
-  //   wallet: PublicKey): Promise<[loanNotePubkey: PublicKey, loanNoteBump: number]>  => 
-  //   {
-  //   return await PublicKey.findProgramAddress(
-  //     [
-  //       Buffer.from("loan"), 
-  //       reserve.toBuffer(), 
-  //       obligation.toBuffer(), 
-  //       wallet.toBuffer()
-  //     ],
-  //     program.programId
-  //   );
-  // };
-
-  // const findObligation = async (market: Market, user: User) => {
-  //   return await PublicKey.findProgramAddress(
-  //     [
-  //       Buffer.from("obligation"), 
-  //       market.accountPubkey.toBuffer(),
-  //       user.wallet?.publicKey.toBuffer(),
-  //     ],
-  //     program.programId
-  //   );
-  // }
-
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     if (!idlMetadata || idlMetadata.reserves.length <= 0) return;
-  //     const solReserve = idlMetadata.reserves[0];
-  //     if (!user.wallet?.publicKey || !user.assets?.tokens) return; 
-
-  //     if (!user.assets?.tokens["SOL"].depositNotePubkey) return; // don't have balance account
-  //     const data = await program.provider.connection.getAccountInfo(user.assets?.tokens["SOL"].depositNotePubkey);
-  //     if (!data) return;
-  //     if (data && data.data.length != 165) {
-  //       console.log('account data length', data.data.length);
-  //     }
-  //     const decoded = parseTokenAccount(data, user.assets?.tokens["SOL"].depositNotePubkey);
-  //     const amount = TokenAmount.tokenAccount(decoded.data, 9);
-  //     console.log(decoded);
-  //     console.log(amount);
-  //   }
-  //   fetchData();
-  // }, [user])
-
   useEffect(() => {
     if (!program?.provider?.connection ||
       !idlMetadata || !user || !coder ||
@@ -158,7 +110,7 @@ export default function HoneyProvider({ children = null as any }) {
 
       promise = getAccountInfoAndSubscribe(program.provider.connection, idlMetadata?.market.market, account => {
         if (account != null) {
-          console.assert(MarketReserveInfoList.span == 12288);
+          console.assert(MarketReserveInfoList.span === 12288);
           const decoded = parseMarketAccount(account.data, coder);
           const nftList = [];
           for (const reserveStruct of decoded.reserves) {
@@ -171,7 +123,7 @@ export default function HoneyProvider({ children = null as any }) {
                 reserve.depositNoteExchangeRate = reserveStruct.depositNoteExchangeRate;
                 reserve.loanNoteExchangeRate = reserveStruct.loanNoteExchangeRate;
 
-                let { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
+                const { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
                 console.log(marketUpdate, userUpdate, assetUpdate);
                 found = true;
               }
@@ -206,7 +158,7 @@ export default function HoneyProvider({ children = null as any }) {
             reserve.accruedUntil = decoded.state.accruedUntil;
             reserve.config = decoded.config;
 
-            let { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
+            const { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
             console.log(marketUpdate, userUpdate, assetUpdate);
           }
         });
@@ -215,10 +167,10 @@ export default function HoneyProvider({ children = null as any }) {
         // Deposit Note Mint
         promise = getMintInfoAndSubscribe(program.provider.connection, reserveMeta.accounts.depositNoteMint, amount => {
           if (amount != null) {
-            let reserve = market.reserves[reserveMeta.abbrev];
+            const reserve = market.reserves[reserveMeta.abbrev];
             reserve.depositNoteMint = amount;
 
-            let { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
+            const { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
             console.log(marketUpdate, userUpdate, assetUpdate);
           }
         });
@@ -227,10 +179,10 @@ export default function HoneyProvider({ children = null as any }) {
         // Loan Note Mint
         promise = getMintInfoAndSubscribe(program.provider.connection, reserveMeta.accounts.loanNoteMint, amount => {
           if (amount != null) {
-            let reserve = market.reserves[reserveMeta.abbrev];
+            const reserve = market.reserves[reserveMeta.abbrev];
             reserve.loanNoteMint = amount;
 
-            let { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
+            const { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
             console.log(marketUpdate, userUpdate, assetUpdate);
           }
         });
@@ -239,10 +191,10 @@ export default function HoneyProvider({ children = null as any }) {
         // Reserve Vault
         promise = getTokenAccountAndSubscribe(program.provider.connection, reserveMeta.accounts.vault, reserveMeta.decimals, amount => {
           if (amount != null) {
-            let reserve = market.reserves[reserveMeta.abbrev];
+            const reserve = market.reserves[reserveMeta.abbrev];
             reserve.availableLiquidity = amount;
 
-            let { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
+            const { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
             console.log(marketUpdate, userUpdate, assetUpdate);
           }
         });
@@ -251,10 +203,10 @@ export default function HoneyProvider({ children = null as any }) {
         // Reserve Token Mint
         promise = getMintInfoAndSubscribe(program.provider.connection, reserveMeta.accounts.tokenMint, amount => {
           if (amount != null) {
-            let reserve = market.reserves[reserveMeta.abbrev];
+            const reserve = market.reserves[reserveMeta.abbrev];
             reserve.tokenMint = amount;
 
-            let { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
+            const { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
             console.log(marketUpdate, userUpdate, assetUpdate);
           }
         });
@@ -263,10 +215,10 @@ export default function HoneyProvider({ children = null as any }) {
         // Pyth Price
         promise = getAccountInfoAndSubscribe(program.provider.connection, reserveMeta.accounts.pythPrice, account => {
           if (account != null) {
-            let reserve = market.reserves[reserveMeta.abbrev];
+            const reserve = market.reserves[reserveMeta.abbrev];
             reserve.price = parsePriceData(account.data).price || 90; // default to 90 for now
 
-            let { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
+            const { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
             console.log(marketUpdate, userUpdate, assetUpdate);
           }
         });
@@ -280,131 +232,17 @@ export default function HoneyProvider({ children = null as any }) {
   }, [user])
 
   useEffect(() => {
-    const fetchNFTReserves = async () => {
-      const jetClient: JetClient = await JetClient.connect(program.provider, true);
-      nftPubKey.filter((v, i, a) => a.findIndex(t => (t.equals(v))) === i)
-      const promises = nftPubKey.map(async (pubkey) => {
-        const newReserve = await JetReserve.load(jetClient, pubkey);
-        let reserveMeta: Reserve = getEmptyReserve(newReserve);
-        return reserveMeta;
-      });
-      const results = await Promise.all(promises);
-      setNftReserves(results)
-      setNFTReady(true);
-    }
-    if (nftPubKey.length > 0 && program?.provider)
-      fetchNFTReserves();
-  }, [nftPubKey, program?.provider])
-
-  useEffect(() => {
-    const subscribeToNfts = async () => {
-      let promise: Promise<number>;
-      const promises: Promise<number>[] = [];
-
-      for (const reserveMeta of nftReserves) {
-        // Reserve
-        promise = getAccountInfoAndSubscribe(program.provider.connection, reserveMeta.accountPubkey, account => {
-          if (account != null) {
-            const decoded = parseReserveAccount(account.data, coder);
-
-            // Hardcoding min c-ratio to 130% for now
-            // market.minColRatio = decoded.config.minCollateralRatio / 10000;
-
-            let reserve: Reserve = reserveMeta
-
-            reserve.maximumLTV = decoded.config.minCollateralRatio;
-            reserve.liquidationPremium = decoded.config.liquidationPremium;
-            reserve.outstandingDebt = new TokenAmount(decoded.state.outstandingDebt, 0).divb(new anchor.BN(Math.pow(10, 15)));
-            reserve.accruedUntil = decoded.state.accruedUntil;
-            reserve.config = decoded.config;
-
-            let { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
-            console.log(marketUpdate, userUpdate, assetUpdate);
-          }
-        });
-        promises.push(promise);
-
-        // Deposit Note Mint
-        promise = getMintInfoAndSubscribe(program.provider.connection, reserveMeta.depositNoteMintPubkey, amount => {
-          if (amount != null) {
-            let reserve: Reserve = reserveMeta;
-            reserve.depositNoteMint = amount;
-
-            let { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
-            console.log(marketUpdate, userUpdate, assetUpdate);
-          }
-        });
-        promises.push(promise);
-
-        // Loan Note Mint
-        promise = getMintInfoAndSubscribe(program.provider.connection, reserveMeta.loanNoteMintPubkey, amount => {
-          if (amount != null) {
-            let reserve: Reserve = reserveMeta;
-            reserve.loanNoteMint = amount;
-
-            let { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
-            console.log(marketUpdate, userUpdate, assetUpdate);
-          }
-        });
-        promises.push(promise);
-
-        // Reserve Vault
-        promise = getTokenAccountAndSubscribe(program.provider.connection, reserveMeta.vaultPubkey, 0, amount => {
-          if (amount != null) {
-            let reserve: Reserve = reserveMeta;
-            reserve.availableLiquidity = amount;
-
-            let { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
-            console.log(marketUpdate, userUpdate, assetUpdate);
-          }
-        });
-        promises.push(promise);
-
-        // Reserve Token Mint
-        promise = getMintInfoAndSubscribe(program.provider.connection, reserveMeta.tokenMintPubkey, amount => {
-          if (amount != null) {
-            let reserve: Reserve = reserveMeta;
-            reserve.tokenMint = amount;
-
-            let { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
-            console.log(marketUpdate, userUpdate, assetUpdate);
-          }
-        });
-        promises.push(promise);
-
-        // Pyth Price
-        let pythOracle = reserveMeta.pythPricePubkey;
-        promise = getAccountInfoAndSubscribe(program.provider.connection, pythOracle, account => {
-          if (account != null) {
-            let reserve: Reserve = reserveMeta;
-            reserve.price = parsePriceData(account.data).price || 0;
-
-            let { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
-            console.log(marketUpdate, userUpdate, assetUpdate);
-          }
-        });
-        promises.push(promise);
-      }
-      await Promise.all(promises);
-    }
-
-    if (program?.provider?.connection && hasNFTs)
-      subscribeToNfts();
-  }, [nftPubKey, hasNFTs, program?.provider?.connection])
-
-  useEffect(() => {
     const fetchWallet = async () => {
       const provider = providers[0]; // hardcoded for Phatom now.
       const wallet = await getWalletAndAnchor(provider);
       setUser(current => ({
         ...current,
-        wallet: wallet
+        wallet
       }));
       setHasWallet(true);
     }
     fetchWallet();
   }, []);
-
 
   useEffect(() => {
     const fetchAssets = async () => {
@@ -427,7 +265,7 @@ export default function HoneyProvider({ children = null as any }) {
         return
 
       let promise: Promise<number>;
-      let promises: Promise<number>[] = [];
+      const promises: Promise<number>[] = [];
 
       // Obligation
       promise = getAccountInfoAndSubscribe(program.provider.connection, user.assets?.obligationPubkey!, account => {
@@ -443,7 +281,7 @@ export default function HoneyProvider({ children = null as any }) {
       // Wallet native SOL balance
       promise = getAccountInfoAndSubscribe(program.provider.connection, user.wallet?.publicKey, account => {
         if (user.assets) {
-          const reserve = market.reserves["SOL"];
+          const reserve = market.reserves.SOL;
 
           // Need to be careful constructing a BN from a number.
           // If the user has more than 2^53 lamports it will throw for not having enough precision.
@@ -452,7 +290,7 @@ export default function HoneyProvider({ children = null as any }) {
           user.assets.sol = user.assets.tokens.SOL.walletTokenBalance
           user.walletBalances.SOL = user.assets.tokens.SOL.walletTokenBalance.uiAmountFloat;
 
-          let { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
+          const { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
           console.log(marketUpdate, userUpdate, assetUpdate);
         }
         return user;
@@ -460,6 +298,7 @@ export default function HoneyProvider({ children = null as any }) {
       promises.push(promise);
 
       for (const abbrev in user.assets.tokens) {
+        if (!abbrev) continue;
         const asset = user.assets.tokens[abbrev];
         const reserve = market.reserves[abbrev];
 
@@ -473,7 +312,7 @@ export default function HoneyProvider({ children = null as any }) {
               user.walletBalances[reserve.abbrev] = asset.walletTokenBalance.uiAmountFloat;
             }
 
-            let { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
+            const { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
             console.log(marketUpdate, userUpdate, assetUpdate);
           }
           return user;
@@ -486,7 +325,7 @@ export default function HoneyProvider({ children = null as any }) {
             user.assets.tokens[reserve.abbrev].depositNoteDestBalance = amount ?? TokenAmount.zero(reserve.decimals);
             user.assets.tokens[reserve.abbrev].depositNoteDestExists = !!amount;
 
-            let { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
+            const { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
             console.log(marketUpdate, userUpdate, assetUpdate);
           }
           return user;
@@ -499,7 +338,7 @@ export default function HoneyProvider({ children = null as any }) {
             user.assets.tokens[reserve.abbrev].depositNoteBalance = amount ?? TokenAmount.zero(reserve.decimals);
             user.assets.tokens[reserve.abbrev].depositNoteExists = !!amount;
 
-            let { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
+            const { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
             console.log(marketUpdate, userUpdate, assetUpdate);
           }
         })
@@ -511,7 +350,7 @@ export default function HoneyProvider({ children = null as any }) {
             user.assets.tokens[reserve.abbrev].loanNoteBalance = amount ?? TokenAmount.zero(reserve.decimals);
             user.assets.tokens[reserve.abbrev].loanNoteExists = !!amount;
 
-            let { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
+            const { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
             console.log(marketUpdate, userUpdate, assetUpdate);
           }
         })
@@ -523,7 +362,7 @@ export default function HoneyProvider({ children = null as any }) {
             user.assets.tokens[reserve.abbrev].collateralNoteBalance = amount ?? TokenAmount.zero(reserve.decimals);
             user.assets.tokens[reserve.abbrev].collateralNoteExists = !!amount;
 
-            let { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
+            const { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
             console.log(marketUpdate, userUpdate, assetUpdate);
           }
         });
@@ -536,7 +375,7 @@ export default function HoneyProvider({ children = null as any }) {
   }, [user, program?.provider?.connection])
 
   const getEmptyReserve = (reserveMeta: JetReserve) => {
-    let reserve: Reserve = {
+    const reserve: Reserve = {
       name: "NFT PLACEHOLDER",
       abbrev: "NFT ABBREV PLACEHOLDER",
       marketSize: TokenAmount.zero(0),

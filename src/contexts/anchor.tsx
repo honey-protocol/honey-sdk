@@ -40,13 +40,13 @@ export function AnchorProvider({ children = null as any }) {
   useEffect(() => {      
     // setup coder for anchor operations
     const setup = async () => {
-      const idl = PROGRAM_IDLS.filter((value) => value.name == network)[0];
-      const idlMetadata = parseIdlMetadata(idl.jet.metadata as IdlMetadata);
+      const idl = PROGRAM_IDLS.filter((value) => value.name === network)[0];
+      const parsedIdlMetadata = parseIdlMetadata(idl.jet.metadata as IdlMetadata);
       setAnchorCoder(new anchor.Coder(idl.jet));
-      setIdlMetadata(idlMetadata);
+      setIdlMetadata(parsedIdlMetadata);
       const provider = new anchor.Provider(connection, wallet as unknown as Wallet, anchor.Provider.defaultOptions());
-      const program: Program = new anchor.Program(idl.jet, (new anchor.web3.PublicKey(idl.jet.metadata.address)), provider);
-      setProgram(program);
+      const anchorProgram: Program = new anchor.Program(idl.jet, (new anchor.web3.PublicKey(idl.jet.metadata.address)), provider);
+      setProgram(anchorProgram);
       setIsConfigured(true);
     };
     setup();

@@ -7,32 +7,10 @@ export { JetMarket, MarketFlags } from "./market";
 export { JetReserve } from "./reserve";
 export type { ReserveConfig } from "./reserve";
 export { JetUser } from "./user";
+export * from './derived-account';
+export * from './token-amount';
 
 export const PLACEHOLDER_ACCOUNT = PublicKey.default;
-
-// FIXME: this is probably different on devnet
-// export const DEX_ID = new PublicKey(
-//   "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
-// );
-
-// // actually my localnet for now
-// export const DEX_ID_DEVNET = new PublicKey(
-//   "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
-// );
-
-// FIXME: ???
-// export const JET_ID = new PublicKey(
-//   "JPv1rCqrhagNNmJVM5J1he7msQ5ybtvE1nNuHpDHMNU"
-// );
-
-// localnet
-// export const JET_ID = new PublicKey(
-//   "BcJAQhVWfgSqUi6R9RqJKAmua4oFhNJzxTMvfDQcHJ3Z"
-// );
-//devnet
-// export const JET_ID = new PublicKey(
-//   "5grfKt8ZxCfWphrXdFjd169CN3H5Ax8inzb9ZHxQnqJG"
-// );
 
 // export type AmountUnits = { tokens?: {} } | { depositNotes?: {} } | { loanNotes?: {} };
 export type AmountUnits = { tokens?: {}, depositNotes?: {}, loanNotes?: {} };

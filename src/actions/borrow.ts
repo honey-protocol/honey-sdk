@@ -92,12 +92,12 @@ export const borrow = async (
     console.error(`Ata could not be found`);
     return [TxnResponse.Failed, []]
   }
-  const borrow = await jetUser.borrow(
+  const borrowTx = await jetUser.borrow(
     borrowReserve,
     associatedTokenAccount,
     amount,
   );
-  return borrow;
+  return borrowTx;
 }
 
 export const repay = async (
