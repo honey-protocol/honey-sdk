@@ -11,14 +11,14 @@ export { JetUser } from "./user";
 export const PLACEHOLDER_ACCOUNT = PublicKey.default;
 
 // FIXME: this is probably different on devnet
-export const DEX_ID = new PublicKey(
-  "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
-);
+// export const DEX_ID = new PublicKey(
+//   "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
+// );
 
-// actually my localnet for now
-export const DEX_ID_DEVNET = new PublicKey(
-  "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
-);
+// // actually my localnet for now
+// export const DEX_ID_DEVNET = new PublicKey(
+//   "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
+// );
 
 // FIXME: ???
 // export const JET_ID = new PublicKey(

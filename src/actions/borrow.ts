@@ -1,7 +1,9 @@
 import { Metadata } from "@metaplex-foundation/mpl-token-metadata";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { Connection, PublicKey } from "@solana/web3.js";
-import { Amount, JetMarket, JetReserve, JetUser } from "../jet";
+import { TxnResponse } from "../helpers/jet/JetTypes";
+import { Amount, JetReserve, JetUser } from "../jet";
+import { TxResponse } from "./types";
 
 // Lend Actions
 export const deriveAssociatedTokenAccount = async (tokenMint: PublicKey, userPubkey: PublicKey) => {
@@ -30,23 +32,24 @@ export const depositNFT = async (
   connection: Connection,
   jetUser: JetUser,
   metadataPubKey: PublicKey,
-) => {
-  const data = await getNFTAssociatedMetadata(connection, metadataPubKey);
-  if (!data)
-    return
-  const tokenMetadata = new Metadata(metadataPubKey, data);
+): Promise<TxResponse> => {
+  const associatedMetadata = await getNFTAssociatedMetadata(connection, metadataPubKey);
+  if (!associatedMetadata) {
+    console.error(`Could not find NFT metadata account ${metadataPubKey}`);
+    return [TxnResponse.Failed, []]
+  }
+  const tokenMetadata = new Metadata(metadataPubKey, associatedMetadata);
   const tokenMint = new PublicKey(tokenMetadata.data.mint);
   const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(tokenMint, jetUser.address);
-  if (associatedTokenAccount) {
-    const depositSlipNFT = await jetUser.depositNFT(
-      associatedTokenAccount,
-      tokenMint,
-      new PublicKey(tokenMetadata.data.updateAuthority)
-    )
-    console.log(depositSlipNFT);
-  } else {
-    console.log("could not find the associated token account");
+  if (!associatedTokenAccount) {
+    console.error(`Could not find the associated token account: ${associatedTokenAccount}`)
+    return [TxnResponse.Failed, []];
   }
+  return await jetUser.depositNFT(
+    associatedTokenAccount,
+    tokenMint,
+    new PublicKey(tokenMetadata.data.updateAuthority)
+  )
 }
 
 export const withdrawNFT = async (
@@ -54,22 +57,25 @@ export const withdrawNFT = async (
   jetUser: JetUser,
   metadataPubKey: PublicKey,
   reserves: JetReserve[]
-) => {
-  const data = await getNFTAssociatedMetadata(connection, metadataPubKey);
-  if (!data)
-    return
-  const tokenMetadata = new Metadata(metadataPubKey, data);
+): Promise<TxResponse> => {
+  const associatedMetadata = await getNFTAssociatedMetadata(connection, metadataPubKey);
+  if (!associatedMetadata) {
+    console.error(`Could not find NFT metadata account ${metadataPubKey}`);
+    return [TxnResponse.Failed, []]
+  }
+  const tokenMetadata = new Metadata(metadataPubKey, associatedMetadata);
   const tokenMint = new PublicKey(tokenMetadata.data.mint);
   const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(tokenMint, jetUser.address);
-  if (associatedTokenAccount) {
-    const withdrawSlip = await jetUser.withdrawNFT(
-      associatedTokenAccount,
-      tokenMint,
-      new PublicKey(tokenMetadata.data.updateAuthority),
-      reserves
-    );
-    console.log(withdrawSlip);
+  if (!associatedTokenAccount) {
+    console.error(`Could not find the associated token account: ${associatedTokenAccount}`)
+    return [TxnResponse.Failed, []];
   }
+  return await jetUser.withdrawNFT(
+    associatedTokenAccount,
+    tokenMint,
+    new PublicKey(tokenMetadata.data.updateAuthority),
+    reserves
+  );
 }
 
 export const borrow = async (
@@ -77,21 +83,21 @@ export const borrow = async (
   borrowAmount: number,
   borrowTokenMint: PublicKey,
   borrowReserves: JetReserve[],
-  nftToBorrowAgainst: any
-  ): Promise<string[]> => {
+): Promise<TxResponse> => {
   const amount = Amount.tokens(borrowAmount);
   const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(borrowTokenMint, jetUser.address);
   const borrowReserve: JetReserve = borrowReserves.filter((reserve: JetReserve) => reserve.data.tokenMint.equals(borrowTokenMint))[0];
-  if (associatedTokenAccount) {
-    const borrow = await jetUser.borrow(
-      borrowReserve,
-      associatedTokenAccount, 
-      amount,
-      nftToBorrowAgainst
-    );
-    return borrow;
+
+  if (!associatedTokenAccount) {
+    console.error(`Ata could not be found`);
+    return [TxnResponse.Failed, []]
   }
-  return [];
+  const borrow = await jetUser.borrow(
+    borrowReserve,
+    associatedTokenAccount,
+    amount,
+  );
+  return borrow;
 }
 
 export const repay = async (
@@ -99,14 +105,14 @@ export const repay = async (
   repayAmount: number,
   repayTokenMint: PublicKey,
   repayReserves: JetReserve[]
-): Promise<string> => {
+): Promise<TxResponse> => {
   const amount = Amount.tokens(repayAmount); // basically just pay back double the loan for now
   const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(repayTokenMint, jetUser.address);
   const repayReserve: JetReserve = repayReserves.filter((reserve: JetReserve) => reserve.data.tokenMint.equals(repayTokenMint))[0];
+  if (!associatedTokenAccount) {
+    console.error(`Ata could not be found`);
+    return [TxnResponse.Failed, []];
 
-  if (associatedTokenAccount) {
-    const repay = await jetUser.repay(repayReserve, associatedTokenAccount, amount)
-    return repay;
   }
-  return '';
+  return await jetUser.repay(repayReserve, associatedTokenAccount, amount)
 }

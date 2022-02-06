@@ -9,8 +9,7 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 import * as anchor from "@project-serum/anchor";
-
-import { Amount, DEX_ID, DEX_ID_DEVNET } from ".";
+import { Amount } from ".";
 import { DerivedAccount, JetClient } from "./client";
 import { JetMarket, JetMarketReserveInfo } from "./market";
 import {
@@ -22,10 +21,13 @@ import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { JetReserve, ReserveData, ReserveStateData } from "./reserve";
-import { InstructionAndSigner, parseObligationAccount, sendAllTransactions } from "../helpers/jet/programUtil";
+import { InstructionAndSigner, parseObligationAccount, sendAllTransactions, transactionErrorToString } from "../helpers/jet/programUtil";
 import { METADATA_PROGRAM_ID } from "../helpers/ids";
 import * as util from "./util";
 import * as BL from "@solana/buffer-layout";
+import { makeError, makeSuccess, Result, TxResponse } from "../actions/types";
+import { ObligationAccount, TxnResponse } from "../helpers/jet/JetTypes";
+import { ObligationDoesNotExistError } from "../actions/types";
 
 export class TokenAmount {
   constructor(public mint: PublicKey, public amount: anchor.BN) { }
@@ -71,10 +73,6 @@ export const PositionStruct = BL.struct([
   BL.blob(66)
 ]);
 
-export interface Obligation {
-
-}
-
 export class JetUser implements User {
   private _deposits: TokenAmount[] = [];
   private _collateral: TokenAmount[] = [];
@@ -104,84 +102,16 @@ export class JetUser implements User {
       address,
     ]);
     const user = new JetUser(client, market, address, obligationAccount, reserves);
-
     user.refresh();
     return user;
   }
 
-  async getObligationData(): Promise<any> {
+  async getObligationData(): Promise<Result<ObligationAccount>> {
     const data = await this.conn.getAccountInfo(this.obligation.address);
-    if (!data) return;
+    if (!data) return makeError(new ObligationDoesNotExistError);
     const parsed = parseObligationAccount(data.data, this.client.program.coder);
-
-    // const loansData = new Uint8Array(data.loans);
-    // const loans = PositionStruct.decode(loansData);
-    // console.log("loans ", loans);
-
-    // const collateralData = new Uint8Array(data.collateral);
-    // const collateral = PositionStruct.decode(collateralData);
-    // console.log('collateral ', collateral);
-
-    return parsed;
+    return makeSuccess(parsed);
   }
-
-  // async liquidateDex(
-  //   loanReserve: JetReserve,
-  //   collateralReserve: JetReserve
-  // ): Promise<string> {
-  //   const tx = await this.makeLiquidateDexTx(loanReserve, collateralReserve);
-  //   return await this.client.program.provider.send(tx);
-  // }
-
-  // async makeLiquidateDexTx(
-  //   loanReserve: JetReserve,
-  //   collateralReserve: JetReserve
-  // ): Promise<Transaction> {
-  //   const loanDexAccounts = await loanReserve.loadDexMarketAccounts();
-  //   const collateralDexAccounts =
-  //     await collateralReserve.loadDexMarketAccounts();
-  //   const loanAccounts = await this.findReserveAccounts(loanReserve);
-  //   const collateralAccounts = await this.findReserveAccounts(
-  //     collateralReserve
-  //   );
-
-  //   const tx = new Transaction();
-
-  //   tx.add(loanReserve.makeRefreshIx());
-  //   tx.add(collateralReserve.makeRefreshIx());
-
-  //   tx.add(
-  //     this.client.program.instruction.liquidateDex({
-  //       accounts: {
-  //         sourceMarket: collateralDexAccounts,
-  //         targetMarket: loanDexAccounts,
-
-  //         market: this.market.address,
-  //         marketAuthority: this.market.marketAuthority,
-
-  //         obligation: this.obligation.address,
-
-  //         loanReserve: loanReserve.address,
-  //         loanReserveVault: loanReserve.data.vault,
-  //         loanNoteMint: loanReserve.data.loanNoteMint,
-  //         loanAccount: loanAccounts.loan.address,
-
-  //         collateralReserve: collateralReserve.address,
-  //         collateralReserveVault: collateralReserve.data.vault,
-  //         depositNoteMint: collateralReserve.data.depositNoteMint,
-  //         collateralAccount: collateralAccounts.collateral.address,
-
-  //         dexSwapTokens: loanReserve.data.dexSwapTokens,
-  //         dexProgram: this.client.devnet ? DEX_ID_DEVNET : DEX_ID,
-
-  //         tokenProgram: TOKEN_PROGRAM_ID,
-  //         rent: SYSVAR_RENT_PUBKEY
-  //       },
-  //     })
-  //   );
-
-  //   return tx;
-  // }
 
   async liquidate(
     loanReserve: JetReserve,
@@ -214,11 +144,14 @@ export class JetUser implements User {
     reserve: JetReserve,
     tokenAccount: PublicKey,
     amount: Amount
-  ): Promise<string> {
+  ): Promise<TxResponse> {
     const ixs = await this.makeRepayTx(reserve, tokenAccount, amount);
-    const [res, txids] = await sendAllTransactions(this.client.program.provider, ixs);
-    console.log(res, txids);
-    return "filler";
+    try {
+      return await sendAllTransactions(this.client.program.provider, ixs);
+    } catch (err) {
+      console.error(`Repay error: ${transactionErrorToString(err)}`);
+      return [TxnResponse.Failed, []];
+    }
   }
 
   async makeRepayTx(
@@ -227,12 +160,9 @@ export class JetUser implements User {
     amount: Amount
   ) {
     const accounts = await this.findReserveAccounts(reserve);
-
     let depositSourcePubkey = tokenAccount;
     // Optional signers
     let depositSourceKeypair: Keypair | undefined;
-
-
     // Optional instructions
     // Create wrapped sol ixs
     let createTokenAccountIx: TransactionInstruction | undefined;
@@ -246,10 +176,12 @@ export class JetUser implements User {
       depositSourceKeypair = Keypair.generate();
       depositSourcePubkey = depositSourceKeypair.publicKey;
 
+
+      // TODO: Need to derive the loanNoteExchangeRate
       // Do our best to estimate the lamports we need
       // 1.002 is a bit of room for interest
       // const lamports = amount.units.loanNotes
-      // ? reserve.loanNoteExchangeRate.mul(amount.value).div(new BN(Math.pow(10, 15))).muln(1.002)
+      // ? reserve.loanNoteExchangeRate.mul(amount.value).div(new anchor.BN(Math.pow(10, 15))).muln(1.002)
       // : amount.value;
 
       const rent = await this.conn.getMinimumBalanceForRentExemption(TokenAccountLayout.span);
@@ -259,7 +191,6 @@ export class JetUser implements User {
         programId: TOKEN_PROGRAM_ID,
         space: TokenAccountLayout.span,
         lamports: parseInt(amount.value.addn(rent).toString())
-        // lamports: parseInt(lamports.addn(rent).toString())
       })
 
       initTokenAccountIx = Token.createInitAccountInstruction(
@@ -317,9 +248,15 @@ export class JetUser implements User {
     tokenMint: PublicKey,
     updateAuthority: PublicKey,
     reserves: JetReserve[]
-  ): Promise<string> {
+  ): Promise<TxResponse> {
     const tx = await this.makeNFTWithdrawTx(tokenAccount, tokenMint, updateAuthority, reserves);
-    return await this.client.program.provider.send(tx, [], {skipPreflight:true});
+    try {
+      const txid = await this.client.program.provider.send(tx);
+      return [TxnResponse.Success, [txid]];
+    } catch (err) {
+      console.error(`Withdraw NFT error: ${transactionErrorToString(err)}`);
+      return [TxnResponse.Failed, []];
+    }
   }
 
   async makeNFTWithdrawTx(
@@ -363,7 +300,7 @@ export class JetUser implements User {
     };
 
     reserves.forEach((reserve) => tx.add(reserve.makeRefreshIx()));
-    
+
     tx.add(
       await this.client.program.instruction.withdrawNft(
         withdrawNFTBumpSeeds,
@@ -394,18 +331,16 @@ export class JetUser implements User {
     tokenAccount: PublicKey,
     tokenMint: PublicKey,
     updateAuthority: PublicKey
-  ): Promise<string> {
-    const tx = await this.makeNFTDepositTx(tokenAccount, tokenMint, updateAuthority);
-    return await this.client.program.provider.send(tx, [], { skipPreflight: true });
+  ): Promise<TxResponse> {
+    return await this.makeNFTDepositTx(tokenAccount, tokenMint, updateAuthority);
   }
 
   async makeNFTDepositTx(
     tokenAccount: PublicKey,
     tokenMint: PublicKey,
     updateAuthority: PublicKey
-  ) {
-    const tx = new Transaction();
-
+  ): Promise<TxResponse> {
+    const txids = [];
     const [obligationAddress, obligationBump] = await PublicKey.findProgramAddress(
       [
         Buffer.from("obligation"),
@@ -415,24 +350,29 @@ export class JetUser implements User {
       this.client.program.programId
     );
 
-    if (!await this.conn.getAccountInfo(obligationAddress)) {
-      console.log("create obligation account");
-      const initObligationIx = await this.client.program.rpc.initObligation(
-        obligationBump,
-        {
-          accounts: {
-            market: this.market.address,
-            marketAuthority: this.market.marketAuthority,
-            obligation: obligationAddress,
+    const obligationAccountData = !await this.conn.getAccountInfo(obligationAddress)
+    if (!obligationAccountData) {
+      try {
+        const txid = await this.client.program.rpc.initObligation(
+          obligationBump,
+          {
+            accounts: {
+              market: this.market.address,
+              marketAuthority: this.market.marketAuthority,
+              obligation: obligationAddress,
 
-            borrower: this.address,
-            tokenProgram: TOKEN_PROGRAM_ID,
+              borrower: this.address,
+              tokenProgram: TOKEN_PROGRAM_ID,
 
-            systemProgram: anchor.web3.SystemProgram.programId,
+              systemProgram: anchor.web3.SystemProgram.programId,
+            }
           }
-        });
-      console.log(initObligationIx);
-      // tx.add(initObligationIx);
+        );
+        txids.push(txid);
+      } catch (err) {
+        console.error(`Obligation account error: ${transactionErrorToString(err)}`);
+        return [TxnResponse.Failed, []];
+      }
     }
 
     const [collateralAddress, collateralBump] = await PublicKey.findProgramAddress(
@@ -456,7 +396,9 @@ export class JetUser implements User {
     );
 
     const derivedMetadata = await this.findNftMetadata(tokenMint);
-    if (!await this.conn.getAccountInfo(collateralAddress)) {
+    const collateralData = await this.conn.getAccountInfo(collateralAddress)
+    if (!collateralData) {
+      const tx = new Transaction();
       const ix = await this.client.program.instruction.initNftAccount(
         collateralBump,
         metadataBump,
@@ -477,11 +419,17 @@ export class JetUser implements User {
             systemProgram: anchor.web3.SystemProgram.programId,
           }
         });
-      const tx = new Transaction();
       tx.add(ix);
-      await this.client.program.provider.send(tx, [], {skipPreflight: true});
+      try {
+        const txid = await this.client.program.provider.send(tx);
+        txids.push(txid);
+      } catch (err) {
+        console.error(`Collateral account error: ${transactionErrorToString(err)}`);
+        return [TxnResponse.Failed, txids]
+      }
     }
 
+    const tx = new Transaction();
     const DepositNFTBumpSeeds = {
       collateralAccount: collateralBump
     };
@@ -507,23 +455,27 @@ export class JetUser implements User {
         }
       });
     tx.add(depositNFTIx);
-    return tx;
+    try {
+      const txid = await this.client.program.provider.send(tx);
+      txids.push(txid);
+      return [TxnResponse.Success, txids];
+    } catch (err) {
+      console.error(`Deposit NFT error: ${transactionErrorToString(err)}`);
+      return [TxnResponse.Failed, txids];
+    }
   }
 
   async withdrawCollateral(
     reserve: JetReserve,
     amount: Amount,
-    nftReserves?: JetReserve[]
-  ): Promise<string[]> {
-    const ixs = await this.makeWithdrawCollateralTx(reserve, amount, nftReserves);
-    const [res, txids] = await sendAllTransactions(this.client.program.provider, ixs);
-    return txids;
+  ): Promise<TxResponse> {
+    const ixs = await this.makeWithdrawCollateralTx(reserve, amount);
+    return await sendAllTransactions(this.client.program.provider, ixs);
   }
 
   async makeWithdrawCollateralTx(
     reserve: JetReserve,
     amount: Amount,
-    nftReserves?: JetReserve[]
   ): Promise<InstructionAndSigner[]> {
     const accounts = await this.findReserveAccounts(reserve);
     const bumpSeeds = {
@@ -532,24 +484,8 @@ export class JetUser implements User {
     };
 
     const refreshReserveIxs: TransactionInstruction[] = [];
-    let currentReserveRefreshIx: TransactionInstruction | null = null
-
     // need to refresh all reserves in market to withdraw
-    this.reserves.forEach((reserve) => {
-      if (reserve.address.equals(new PublicKey("5mT9SgBQnrn5sY2WN5Uv5VFJ8pQ5KovrnEMS3ve7Z177"))) // shouldnt be hardcoded but needs to to avoid the transaction size limit
-        currentReserveRefreshIx = reserve.makeRefreshIx();
-
-      refreshReserveIxs.push(reserve.makeRefreshIx())
-    });
-
-    if (nftReserves) {
-      nftReserves.forEach((reserve) => {
-        if (reserve.address.equals(new PublicKey("5mT9SgBQnrn5sY2WN5Uv5VFJ8pQ5KovrnEMS3ve7Z177"))) // shouldnt be hardcoded but needs to to avoid the transaction size limit
-          currentReserveRefreshIx = reserve.makeRefreshIx();
-        refreshReserveIxs.push(reserve.makeRefreshIx());
-      })
-    }
-
+    this.reserves.forEach((reserve) => refreshReserveIxs.push(reserve.makeRefreshIx()));
     const withdrawCollateralIx = this.client.program.instruction.withdrawCollateral(bumpSeeds, amount, {
       accounts: {
         market: this.market.address,
@@ -566,18 +502,9 @@ export class JetUser implements User {
       },
     });
 
-    // const splitRefreshIdx = this.split(refreshReserveIxs, 4);
     const ixs = [
-      // ...splitRefreshIdx.map((chunk) => {
-      //   return {
-      //     ix: [
-      //       ...chunk
-      //     ].filter(ix => ix) as TransactionInstruction[]
-      //   }
-      // }),
       {
         ix: [
-          currentReserveRefreshIx,
           ...refreshReserveIxs,
           withdrawCollateralIx
         ].filter(ix => ix) as TransactionInstruction[]
@@ -586,34 +513,19 @@ export class JetUser implements User {
     return ixs;
   }
 
-  split(array: TransactionInstruction[], n: any) {
-    let [...arr] = array;
-    var res = [];
-    while (arr.length) {
-      res.push(arr.splice(0, n));
-    }
-    return res;
-  }
-
   async withdraw(
     reserve: JetReserve,
     tokenAccount: PublicKey,
     amount: Amount
-  ): Promise<string> {
-    const [createTx, tx, signers] = await this.makeWithdrawTx(reserve, tokenAccount, amount);
-    if (createTx) {
-      await this.client.program.provider.send(createTx, signers);
-      return await this.client.program.provider.send(tx);
-    } else {
-      return await this.client.program.provider.send(tx);
-    }
+  ): Promise<TxResponse> {
+    return await this.makeWithdrawTx(reserve, tokenAccount, amount);
   }
 
   async makeWithdrawTx(
     reserve: JetReserve,
     tokenAccount: PublicKey,
     amount: Amount,
-  ): Promise<[Transaction | undefined, Transaction, Signer[] | undefined]> {
+  ): Promise<TxResponse> {
     const accounts = await this.findReserveAccounts(reserve);
     const tx = new Transaction();
     let supplementalTx: Transaction | null = null;
@@ -672,6 +584,16 @@ export class JetUser implements User {
       supplementalTx.add(createAssociatedTokenAccountIx);
     }
 
+    const txids: string[] = []
+    if (supplementalTx && signer) {
+      try {
+        const txid = await this.client.program.provider.send(supplementalTx, signer);
+        txids.push(txid);
+      } catch (err) {
+        console.error(`Ata or wSOL account creation error: ${transactionErrorToString(err)}`);
+        return [TxnResponse.Failed, txids];
+      }
+    }
     tx.add(reserve.makeRefreshIx());
     tx.add(
       this.client.program.instruction.withdraw(
@@ -705,26 +627,29 @@ export class JetUser implements User {
         []);
       tx.add(closeWsolIx);
     }
-    if (supplementalTx) {
-      if (signer && signer?.length > 0) {
-        return [supplementalTx, tx, signer]
-      } else
-        return [supplementalTx, tx, undefined];
+    try {
+      const txid = await this.client.program.provider.send(tx);
+      txids.push(txid);
+      return [TxnResponse.Success, txids];
+    } catch (err) {
+      console.error(`Withdraw collateral error: ${transactionErrorToString(err)}`);
+      return [TxnResponse.Failed, txids];
     }
-    else
-      return [undefined, tx, undefined]
   }
 
   async deposit(
     reserve: JetReserve,
     tokenAccount: PublicKey,
     amount: Amount
-  ): Promise<string> {
-    console.log({ reserve, tokenAccount: tokenAccount.toString(), amount: amount.value.toString() })
-    const tx = await this.makeDepositTx(reserve, tokenAccount, amount);
-    const transaction = tx[0];
-    const signers = tx[1];
-    return await this.client.program.provider.send(transaction, signers);
+  ): Promise<TxResponse> {
+    const [transaction, signers] = await this.makeDepositTx(reserve, tokenAccount, amount);
+    try {
+      const txid = await this.client.program.provider.send(transaction, signers);
+      return [TxnResponse.Success, [txid]];
+    } catch (err) {
+      console.error(`Deposit error: ${transactionErrorToString(err)}`);
+      return [TxnResponse.Failed, []];
+    }
   }
 
   async makeDepositTx(
@@ -827,9 +752,14 @@ export class JetUser implements User {
   async depositCollateral(
     reserve: JetReserve,
     amount: Amount
-  ): Promise<string> {
+  ): Promise<TxResponse> {
     const tx = await this.makeDepositCollateralTx(reserve, amount);
-    return await this.client.program.provider.send(tx);
+    try {
+      const txid = await this.client.program.provider.send(tx);
+      return [TxnResponse.Success, [txid]];
+    } catch (err) {
+      return [TxnResponse.Failed, []];
+    }
   }
 
   async makeDepositCollateralTx(reserve: JetReserve, amount: Amount) {
@@ -882,19 +812,15 @@ export class JetUser implements User {
     reserve: JetReserve,
     receiver: PublicKey,
     amount: Amount,
-    nftToBorrowAgainst: any,
-  ): Promise<string[]> {
-    const ixs = await this.makeBorrowTx(reserve, receiver, amount, nftToBorrowAgainst);
-    const [res, txids] = await sendAllTransactions(this.client.program.provider, ixs);
-    console.log(res, txids);
-    return txids;
+  ): Promise<TxResponse> {
+    const ixs = await this.makeBorrowTx(reserve, receiver, amount);
+    return await sendAllTransactions(this.client.program.provider, ixs);
   }
 
   async makeBorrowTx(
     reserve: JetReserve,
     receiver: PublicKey,
     amount: Amount,
-    nftToBorrowAgainst: any,
   ): Promise<InstructionAndSigner[]> {
 
     let receiverAccount: PublicKey = receiver;
@@ -960,7 +886,7 @@ export class JetUser implements User {
       // if (r.address.equals(new PublicKey("5mT9SgBQnrn5sY2WN5Uv5VFJ8pQ5KovrnEMS3ve7Z177"))) // shouldnt be hardcoded but needs to to avoid the transaction size limit
       //   currentReserveRefreshIx = r.makeRefreshIx();
       // if (!r.address.equals(reserve.address))
-        refreshReserveIxs.push(r.makeRefreshIx());
+      refreshReserveIxs.push(r.makeRefreshIx());
     })
 
     const [feeReceiverAccount, feeReceiverAccountBump] = await PublicKey.findProgramAddress(
@@ -1007,17 +933,7 @@ export class JetUser implements User {
         this.address,
         []);
     }
-
-    // const nftReserveDeposited = refreshReserveIxs.pop();
-    const splitRefreshIdx = this.split(refreshReserveIxs, 4);
     const ixs = [
-      // ...splitRefreshIdx.map((chunk) => {
-      //   return {
-      //     ix: [
-      //       ...chunk
-      //     ].filter(ix => ix) as TransactionInstruction[]
-      //   }
-      // }),
       {
         ix: [
           createTokenAccountIx,
