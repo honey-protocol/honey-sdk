@@ -1,4 +1,4 @@
-import { TxnResponse } from "../helpers/jet/JetTypes"
+import { TxnResponse } from "../helpers/JetTypes"
 
 
 // Onchain Error Handling

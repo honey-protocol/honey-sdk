@@ -1,6 +1,6 @@
 import { PublicKey } from "@solana/web3.js";
-import { TxnResponse } from "../helpers/jet/JetTypes";
-import { Amount, JetReserve, JetUser } from "../jet";
+import { TxnResponse } from "../helpers/JetTypes";
+import { Amount, JetReserve, JetUser } from "../wrappers";
 import { deriveAssociatedTokenAccount } from "./borrow";
 import { TxResponse } from "./types";
 

@@ -1,7 +1,7 @@
 import { Program } from '@project-serum/anchor';
 import React, { useContext, useEffect, useState } from 'react'
-import { IdlMetadata } from '../helpers/jet/JetTypes';
-import { parseIdlMetadata } from '../helpers/jet/programUtil';
+import { IdlMetadata } from '../helpers/JetTypes';
+import { parseIdlMetadata } from '../helpers/programUtil';
 import * as anchor from "@project-serum/anchor";
 import { useConnection, useNetwork } from './connection';
 import { useHoney } from './honey';

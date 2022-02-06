@@ -3,11 +3,10 @@ import * as anchor from "@project-serum/anchor";
 import { MintInfo, MintLayout, AccountInfo as TokenAccountInfo, AccountLayout as TokenAccountLayout } from "@solana/spl-token";
 import { AccountInfo, Commitment, ConfirmOptions, Connection, Context, PublicKey, Signer, Transaction, TransactionInstruction } from "@solana/web3.js";
 import { Buffer } from "buffer";
-import type { HasPublicKey, IdlMetadata, JetMarketReserveInfo, MarketAccount, ObligationAccount, ObligationPositionStruct, ReserveAccount, ReserveConfigStruct, ReserveStateStruct, ToBytes, User, SlopeTxn } from "./JetTypes";
+import type { HasPublicKey, IdlMetadata, JetMarketReserveInfo, MarketAccount, ObligationAccount, ObligationPositionStruct, ReserveAccount, ReserveConfigStruct, ReserveStateStruct, ToBytes, User, SlopeTxn, CustomProgramError } from "./JetTypes";
 import { TxnResponse } from "./JetTypes";
 import { MarketReserveInfoList, PositionInfoList, ReserveStateLayout } from "./layout";
 import { TokenAmount } from "./util";
-import { getCustomProgramErrorCode, getErrNameAndMsg, inDevelopment } from "./jet";
 import bs58 from 'bs58';
 
 let user: User;
@@ -314,7 +313,6 @@ export const sendTransaction = async (
     rawTransaction,
     provider.opts
   );
-  console.log(`Transaction ${explorerUrl(txid)} ${rawTransaction.byteLength} of 1232 bytes...`, transaction);
 
   // Confirming phase
   let res = TxnResponse.Success;
@@ -331,6 +329,60 @@ export const sendTransaction = async (
     }
   }
   return [res, [txid]];
+};
+
+export const inDevelopment: boolean = window.location.hostname.indexOf('devnet') !== -1;
+
+export const explorerUrl = (txid: string) => {
+  const clusterParam = inDevelopment ? `?cluster=devnet` : "";
+  return `https://explorer.solana.com/transaction/${txid}${clusterParam}`
+};
+
+let customProgramErrors: CustomProgramError[];
+//Take error code and and return error explanation
+export const getErrNameAndMsg = (errCode: number): string => {
+  const code = Number(errCode);
+
+  if (code >=100 && code < 300) {
+    return `This is an Anchor program error code ${code}. Please check here: https://github.com/project-serum/anchor/blob/master/lang/src/error.rs`;
+  }
+
+  for (let i = 0; i < customProgramErrors.length; i++) {
+    const err = customProgramErrors[i];
+    if (err.code === code) {
+      return `\n\nCustom Program Error Code: ${errCode} \n- ${err.name} \n- ${err.msg}`;
+    }
+  } 
+  return `No matching error code description or translation for ${errCode}`;
+};
+
+//get the custom program error code if there's any in the error message and return parsed error code hex to number string
+
+  /**
+   * Get the custom program error code if there's any in the error message and return parsed error code hex to number string
+   * @param errMessage string - error message that would contain the word "custom program error:" if it's a customer program error
+   * @returns [boolean, string] - probably not a custom program error if false otherwise the second element will be the code number in string
+   */
+export const getCustomProgramErrorCode = (errMessage: string): [boolean, string] => {
+  const index = errMessage.indexOf('custom program error:');
+  if(index == -1) {
+    return [false, 'May not be a custom program error']
+  } else {
+    return [true, `${parseInt(errMessage.substring(index + 22,  index + 28).replace(' ', ''), 16)}`];
+  }
+};
+
+/**
+ * Transaction errors contain extra goodies like a message and error code. Log them
+ * @param error An error object from anchor.
+ * @returns A stringified error.
+ */
+export const transactionErrorToString = (error: any) => {
+  if (error.code) {
+    return `Code ${error.code}: ${error.msg}\n${error.logs}\n${error.stack}`
+  } else {
+    return `${error} ${getErrNameAndMsg(Number(getCustomProgramErrorCode(JSON.stringify(error))[1]))}`;
+  }
 };
 
 export interface InstructionAndSigner { ix: TransactionInstruction[], signers?: Signer[] };
@@ -418,7 +470,6 @@ export const sendAllTransactions = async (
 
     const rawTransaction = transaction.serialize();
     const txid = await provider.connection.sendRawTransaction(rawTransaction, opts);
-    console.log(`Transaction ${explorerUrl(txid)} ${rawTransaction.byteLength} of 1232 bytes...`);
     txids.push(txid);
 
     // Confirming phase
@@ -436,24 +487,6 @@ export const sendAllTransactions = async (
     }
   }
   return [res, txids];
-};
-
-export const explorerUrl = (txid: string) => {
-  const clusterParam = inDevelopment ? `?cluster=devnet` : "";
-  return `https://explorer.solana.com/transaction/${txid}${clusterParam}`
-};
-
-/**
- * Transaction errors contain extra goodies like a message and error code. Log them
- * @param error An error object from anchor.
- * @returns A stringified error.
- */
-export const transactionErrorToString = (error: any) => {
-  if (error.code) {
-    return `Code ${error.code}: ${error.msg}\n${error.logs}\n${error.stack}`
-  } else {
-    return `${error} ${getErrNameAndMsg(Number(getCustomProgramErrorCode(JSON.stringify(error))[1]))}`;
-  }
 };
 
 export const parseTokenAccount = (account: AccountInfo<Buffer>, accountPubkey: PublicKey) => {

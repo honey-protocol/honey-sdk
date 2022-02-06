@@ -1,8 +1,8 @@
 import { Metadata } from "@metaplex-foundation/mpl-token-metadata";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { Connection, PublicKey } from "@solana/web3.js";
-import { TxnResponse } from "../helpers/jet/JetTypes";
-import { Amount, JetReserve, JetUser } from "../jet";
+import { TxnResponse } from "../helpers/JetTypes";
+import { Amount, JetReserve, JetUser } from "../wrappers";
 import { TxResponse } from "./types";
 
 // Lend Actions

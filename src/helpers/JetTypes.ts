@@ -1,6 +1,6 @@
 import type { AccountInfo, PublicKey } from '@solana/web3.js';
 import type BN from 'bn.js';
-import type WalletAdapter from '../walletAdapter';
+import type WalletAdapter from './walletAdapter';
 import type { TokenAmount } from './util';
 
 // Web3

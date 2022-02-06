@@ -1,4 +1,4 @@
-import { AssetStore, User } from "../helpers/jet/JetTypes";
+import { AssetStore, User } from "../helpers/JetTypes";
 
 export const getEmptyUserState = (): User => ({
   // Location

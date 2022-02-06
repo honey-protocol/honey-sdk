@@ -1,19 +1,19 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react'
-import { getAssetPubkeys, getReserveStructures } from '../helpers/jet/jet';
-import { AssetStore, Market, Reserve, User, WalletProvider } from '../helpers/jet/JetTypes';
-import { findDepositNoteDestAddress, getAccountInfoAndSubscribe, getMintInfoAndSubscribe, getTokenAccountAndSubscribe, parseMarketAccount, parseObligationAccount, parseReserveAccount, parseTokenAccount, SOL_DECIMALS } from '../helpers/jet/programUtil';
-import { deriveValues } from '../helpers/jet/subscribe';
-import { TokenAmount } from '../helpers/jet/util';
+import { AssetStore, Market, Reserve, User, WalletProvider } from '../helpers/JetTypes';
+import { findDepositNoteDestAddress, getAccountInfoAndSubscribe, getMintInfoAndSubscribe, getTokenAccountAndSubscribe, parseMarketAccount, parseObligationAccount, parseReserveAccount, parseTokenAccount, SOL_DECIMALS } from '../helpers/programUtil';
+import { deriveValues } from '../helpers/subscribe';
+import { TokenAmount } from '../helpers/util';
 import { useAnchor } from './anchor';
 import { getEmptyMarketState } from './getEmptyMarket';
 import * as anchor from "@project-serum/anchor";
-import { MarketReserveInfoList } from '../helpers/jet/layout';
+import { MarketReserveInfoList } from '../helpers/layout';
 import { PublicKey } from '@solana/web3.js';
 import { parsePriceData } from '@pythnetwork/client';
 import { getEmptyUserState } from './getEmptyUser';
 import { NATIVE_MINT } from '@solana/spl-token';
 import { getWalletAndAnchor } from '../helpers/connectWallet';
-import { JetClient, JetReserve } from '../jet';
+import { JetClient, JetReserve } from '../wrappers';
+import { getAssetPubkeys, getReserveStructures } from '../helpers/honey-protocol-helpers';
 
 export const providers: WalletProvider[] = [
   {

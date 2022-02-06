@@ -21,12 +21,12 @@ import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { JetReserve, ReserveData, ReserveStateData } from "./reserve";
-import { InstructionAndSigner, parseObligationAccount, sendAllTransactions, transactionErrorToString } from "../helpers/jet/programUtil";
+import { InstructionAndSigner, parseObligationAccount, sendAllTransactions, transactionErrorToString } from "../helpers/programUtil";
 import { METADATA_PROGRAM_ID } from "../helpers/ids";
 import * as util from "./util";
 import * as BL from "@solana/buffer-layout";
 import { makeError, makeSuccess, Result, TxResponse } from "../actions/types";
-import { ObligationAccount, TxnResponse } from "../helpers/jet/JetTypes";
+import { ObligationAccount, TxnResponse } from "../helpers/JetTypes";
 import { ObligationDoesNotExistError } from "../actions/types";
 
 export class TokenAmount {
