@@ -1,6 +1,14 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react'
 import { AssetStore, Market, Reserve, User, WalletProvider } from '../helpers/JetTypes';
-import { findDepositNoteDestAddress, getAccountInfoAndSubscribe, getMintInfoAndSubscribe, getTokenAccountAndSubscribe, parseMarketAccount, parseObligationAccount, parseReserveAccount, parseTokenAccount, SOL_DECIMALS } from '../helpers/programUtil';
+import {
+  getAccountInfoAndSubscribe,
+  getMintInfoAndSubscribe,
+  getTokenAccountAndSubscribe,
+  parseMarketAccount,
+  parseObligationAccount,
+  parseReserveAccount,
+  SOL_DECIMALS
+} from '../helpers/programUtil';
 import { deriveValues } from '../helpers/subscribe';
 import { TokenAmount } from '../helpers/util';
 import { useAnchor } from './anchor';
@@ -12,7 +20,7 @@ import { parsePriceData } from '@pythnetwork/client';
 import { getEmptyUserState } from './getEmptyUser';
 import { NATIVE_MINT } from '@solana/spl-token';
 import { getWalletAndAnchor } from '../helpers/connectWallet';
-import { JetClient, JetReserve } from '../wrappers';
+import { JetReserve } from '../wrappers';
 import { getAssetPubkeys, getReserveStructures } from '../helpers/honey-protocol-helpers';
 
 export const providers: WalletProvider[] = [

@@ -4,18 +4,18 @@ let FARM_IDL: String;
 export const PROGRAM_IDLS = [
   {
     name: "localnet",
-    farm: require('../idl/mainnet-beta/farm.json'),
-    jet: require('../idl/localnet/jet.json'),
+    farm: require('../src/idl/mainnet-beta/farm.json'),
+    jet: require('../src/idl/devnet/jet.json'),
   },
   {
     name: "mainnet-beta",
-    farm: require('../idl/mainnet-beta/farm.json'),
-    jet: require('../idl/mainnet-beta/jet.json'),
+    farm: require('../src/idl/mainnet-beta/farm.json'),
+    jet: require('../src/idl/mainnet-beta/jet.json'),
   },
   {
     name: "devnet",
-    farm: require('../idl/mainnet-beta/farm.json'),
-    jet: require('../idl/devnet/jet.json')
+    farm: require('../src/idl/mainnet-beta/farm.json'),
+    jet: require('../src/idl/devnet/jet.json')
   },
 ]
 

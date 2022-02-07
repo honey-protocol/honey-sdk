@@ -102,11 +102,11 @@ export class JetUser implements User {
     return user;
   }
 
-  async getObligationData(): Promise<Result<ObligationAccount>> {
+  async getObligationData(): Promise<ObligationAccount | Error> {
     const data = await this.conn.getAccountInfo(this.obligation.address);
-    if (!data) return makeError(new Error('Could not get obligation data'));
+    if (!data) return new Error('Could not get obligation data');
     const parsed = parseObligationAccount(data.data, this.client.program.coder);
-    return makeSuccess(parsed);
+    return parsed;
   }
 
   async liquidate(

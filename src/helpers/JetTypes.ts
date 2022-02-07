@@ -437,6 +437,8 @@ export interface ObligationAccount {
   collateral: ObligationPositionStruct[],
   /** The storage for the information on positions owed by this obligation */
   loans: ObligationPositionStruct[],
+
+  collateralNFTMint: PublicKey[]
 };
 export interface ObligationPositionStruct {
   /** The token account holding the bank notes */
