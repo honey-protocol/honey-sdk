@@ -1,3 +1,3 @@
-import formatAmount from "./formatAmount";
+import formatAmount from './formatAmount';
 
 export { formatAmount };

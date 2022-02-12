@@ -1,14 +1,25 @@
 // Subscribe to solana accounts
 // Todo: keep subscription IDs and unsubscribe at end of lifetime
-import type { Connection } from "@solana/web3.js";
-import { NATIVE_MINT } from "@solana/spl-token";
-import type * as anchor from "@project-serum/anchor";
-import { BN } from "@project-serum/anchor";
-import { parsePriceData } from "@pythnetwork/client";
-import type { Market, User, Asset, IdlMetadata, Reserve } from "./JetTypes";
-import { getAccountInfoAndSubscribe, getMintInfoAndSubscribe, getTokenAccountAndSubscribe, parseMarketAccount, parseObligationAccount, parseReserveAccount, SOL_DECIMALS, getCcRate, getBorrowRate, getDepositRate } from "./programUtil";
-import { TokenAmount } from "./util";
-import { MarketReserveInfoList } from "./layout";
+import type { Connection } from '@solana/web3.js';
+import { NATIVE_MINT } from '@solana/spl-token';
+import type * as anchor from '@project-serum/anchor';
+import { BN } from '@project-serum/anchor';
+import { parsePriceData } from '@pythnetwork/client';
+import type { Market, User, Asset, IdlMetadata, Reserve } from './JetTypes';
+import {
+  getAccountInfoAndSubscribe,
+  getMintInfoAndSubscribe,
+  getTokenAccountAndSubscribe,
+  parseMarketAccount,
+  parseObligationAccount,
+  parseReserveAccount,
+  SOL_DECIMALS,
+  getCcRate,
+  getBorrowRate,
+  getDepositRate,
+} from './programUtil';
+import { TokenAmount } from './util';
+import { MarketReserveInfoList } from './layout';
 
 // let market: Market;
 // let user: User;
@@ -20,7 +31,7 @@ import { MarketReserveInfoList } from "./layout";
 //   let promise: Promise<number>;
 //   const promises: Promise<number>[] = [];
 
-//   // Market subscription 
+//   // Market subscription
 //   let timeStart = Date.now();
 //   promise = getAccountInfoAndSubscribe(connection, idlMetadata.market.market, account => {
 //     if (account != null) {
@@ -189,7 +200,7 @@ import { MarketReserveInfoList } from "./layout";
 
 //         user.assets.sol = user.assets.tokens.SOL.walletTokenBalance
 //         user.walletBalances.SOL = user.assets.tokens.SOL.walletTokenBalance.uiAmountFloat;
-        
+
 //         deriveValues(reserve, user.assets.tokens.SOL);
 //       }
 //       return user;
@@ -225,7 +236,7 @@ import { MarketReserveInfoList } from "./layout";
 //         if (user.assets) {
 //           user.assets.tokens[reserve.abbrev].depositNoteDestBalance = amount ?? TokenAmount.zero(reserve.decimals);
 //           user.assets.tokens[reserve.abbrev].depositNoteDestExists = !!amount;
-          
+
 //           deriveValues(reserve, user.assets.tokens[reserve.abbrev]);
 //         }
 //         return user;
@@ -283,8 +294,9 @@ import { MarketReserveInfoList } from "./layout";
 export const deriveValues = (reserve: Reserve, market: Market, user?: User, asset?: Asset) => {
   // Derive market reserve values
   reserve.marketSize = reserve.outstandingDebt.add(reserve.availableLiquidity);
-  reserve.utilizationRate = reserve.marketSize.isZero() ? 0
-      : reserve.outstandingDebt.uiAmountFloat / reserve.marketSize.uiAmountFloat;
+  reserve.utilizationRate = reserve.marketSize.isZero()
+    ? 0
+    : reserve.outstandingDebt.uiAmountFloat / reserve.marketSize.uiAmountFloat;
   const ccRate = getCcRate(reserve.config, reserve.utilizationRate);
   reserve.borrowRate = getBorrowRate(ccRate, reserve.config.manageFeeRate);
   reserve.depositRate = getDepositRate(ccRate, reserve.utilizationRate);
@@ -302,9 +314,13 @@ export const deriveValues = (reserve: Reserve, market: Market, user?: User, asse
 
   // Derive user asset values
   if (asset && user) {
-    asset.depositBalance = asset.depositNoteBalance.mulb(reserve.depositNoteExchangeRate).divb(new BN(Math.pow(10, 15)));
+    asset.depositBalance = asset.depositNoteBalance
+      .mulb(reserve.depositNoteExchangeRate)
+      .divb(new BN(Math.pow(10, 15)));
     asset.loanBalance = asset.loanNoteBalance.mulb(reserve.loanNoteExchangeRate).divb(new BN(Math.pow(10, 15)));
-    asset.collateralBalance = asset.collateralNoteBalance.mulb(reserve.depositNoteExchangeRate).divb(new BN(Math.pow(10, 15)));
+    asset.collateralBalance = asset.collateralNoteBalance
+      .mulb(reserve.depositNoteExchangeRate)
+      .divb(new BN(Math.pow(10, 15)));
 
     // Update user obligation balances
     user.collateralBalances[reserve.abbrev] = asset.collateralBalance.uiAmountFloat;
@@ -315,15 +331,19 @@ export const deriveValues = (reserve: Reserve, market: Market, user?: User, asse
       depositedValue: 0,
       borrowedValue: 0,
       colRatio: 0,
-      utilizationRate: 0
-    }
+      utilizationRate: 0,
+    };
 
-    //update user positions 
+    //update user positions
     for (let t in user.assets?.tokens) {
       user.position.depositedValue += user.collateralBalances[t] * market.reserves[t].price;
       user.position.borrowedValue += user.loanBalances[t] * market.reserves[t].price;
-      user.position.colRatio = user.position.borrowedValue ? user.position.depositedValue / user.position.borrowedValue : 0;
-      user.position.utilizationRate = user.position.depositedValue ? user.position.borrowedValue / user.position.depositedValue : 0;
+      user.position.colRatio = user.position.borrowedValue
+        ? user.position.depositedValue / user.position.borrowedValue
+        : 0;
+      user.position.utilizationRate = user.position.depositedValue
+        ? user.position.borrowedValue / user.position.depositedValue
+        : 0;
     }
 
     //update user positions store
@@ -337,14 +357,15 @@ export const deriveValues = (reserve: Reserve, market: Market, user?: User, asse
 
     // Max withdraw
     asset.maxWithdrawAmount = user.position.borrowedValue
-      ? (user.position.depositedValue - (market.programMinColRatio * user.position.borrowedValue)) / reserve.price
-        : asset.collateralBalance.uiAmountFloat;
+      ? (user.position.depositedValue - market.programMinColRatio * user.position.borrowedValue) / reserve.price
+      : asset.collateralBalance.uiAmountFloat;
     if (asset.maxWithdrawAmount > asset.collateralBalance.uiAmountFloat) {
       asset.maxWithdrawAmount = asset.collateralBalance.uiAmountFloat;
     }
 
     // Max borrow
-    asset.maxBorrowAmount = ((user.position.depositedValue / market.minColRatio) - user.position.borrowedValue) / reserve.price;
+    asset.maxBorrowAmount =
+      (user.position.depositedValue / market.minColRatio - user.position.borrowedValue) / reserve.price;
     if (asset.maxBorrowAmount > reserve.availableLiquidity.uiAmountFloat) {
       asset.maxBorrowAmount = reserve.availableLiquidity.uiAmountFloat;
     }
@@ -355,6 +376,6 @@ export const deriveValues = (reserve: Reserve, market: Market, user?: User, asse
     } else {
       asset.maxRepayAmount = asset.loanBalance.uiAmountFloat;
     }
-  };
+  }
   return { marketUpdate: market, userUpdate: user, assetUpdate: asset };
 };

@@ -12,10 +12,7 @@ export default class WalletAdapter extends EventEmitter {
   private _handlerAdded = false;
   private _nextRequestId = 1;
   private _autoApprove = false;
-  private _responsePromises: Map<
-    number,
-    [(value: string) => void, (reason: Error) => void]
-  > = new Map();
+  private _responsePromises: Map<number, [(value: string) => void, (reason: Error) => void]> = new Map();
 
   constructor(provider: unknown, private _network?: string) {
     super();
@@ -28,9 +25,7 @@ export default class WalletAdapter extends EventEmitter {
         network: this._network,
       } as any).toString();
     } else {
-      throw new Error(
-        'provider parameter must be an injected provider or a URL string.',
-      );
+      throw new Error('provider parameter must be an injected provider or a URL string.');
     }
   }
 
@@ -89,11 +84,7 @@ export default class WalletAdapter extends EventEmitter {
       });
     } else {
       window.name = 'parent';
-      this._popup = window.open(
-        this._providerUrl?.toString(),
-        '_blank',
-        'location,resizable,width=460,height=675',
-      );
+      this._popup = window.open(this._providerUrl?.toString(), '_blank', 'location,resizable,width=460,height=675');
       return new Promise((resolve) => {
         this.once('connect', resolve);
       });
@@ -218,9 +209,7 @@ export default class WalletAdapter extends EventEmitter {
     return transaction;
   }
 
-  async signAllTransactions(
-    transactions: Transaction[],
-  ): Promise<Transaction[]> {
+  async signAllTransactions(transactions: Transaction[]): Promise<Transaction[]> {
     const response = (await this.sendRequest('signAllTransactions', {
       messages: transactions.map((tx) => bs58.encode(tx.serializeMessage())),
     })) as { publicKey: string; signatures: string[] };
@@ -239,9 +228,7 @@ function isString(a: unknown): a is string {
 }
 
 function isInjectedProvider(a: unknown): a is InjectedProvider {
-  return (
-    isObject(a) && 'postMessage' in a && typeof a.postMessage === 'function'
-  );
+  return isObject(a) && 'postMessage' in a && typeof a.postMessage === 'function';
 }
 
 function isObject(a: unknown): a is Record<string, unknown> {

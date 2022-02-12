@@ -1,20 +1,14 @@
-import * as anchor from "@project-serum/anchor";
-import { Market as SerumMarket } from "@project-serum/serum";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import {
-  Connection,
-  Keypair,
-  PublicKey,
-  Transaction,
-  TransactionInstruction,
-} from "@solana/web3.js";
-import * as BL from "@solana/buffer-layout";
+import * as anchor from '@project-serum/anchor';
+import { Market as SerumMarket } from '@project-serum/serum';
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { Connection, Keypair, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
+import * as BL from '@solana/buffer-layout';
 
-import { JetClient } from "./client";
-import { JetMarket } from "./market";
-import * as util from "./util";
-import { BN } from "@project-serum/anchor";
-import { DerivedAccount } from "./derived-account";
+import { JetClient } from './client';
+import { JetMarket } from './market';
+import * as util from './util';
+import { BN } from '@project-serum/anchor';
+import { DerivedAccount } from './derived-account';
 
 export interface ReserveConfig {
   utilizationRate1: number;
@@ -95,12 +89,12 @@ export interface ReserveData {
 }
 
 export interface ReserveStateData {
-  accruedUntil: anchor.BN,
-  outstandingDebt: anchor.BN,
-  uncollectedFees: anchor.BN,
-  totalDeposits: anchor.BN,
-  totalDepositNotes: anchor.BN,
-  totalLoanNotes: anchor.BN,
+  accruedUntil: anchor.BN;
+  outstandingDebt: anchor.BN;
+  uncollectedFees: anchor.BN;
+  totalDeposits: anchor.BN;
+  totalDepositNotes: anchor.BN;
+  totalLoanNotes: anchor.BN;
 }
 
 export interface ReserveDexMarketAccounts {
@@ -134,7 +128,7 @@ export class JetReserve {
     private market: JetMarket,
     public address: PublicKey,
     public data: ReserveData,
-    public state?: ReserveStateData
+    public state?: ReserveStateData,
   ) {
     this.conn = this.client.program.provider.connection;
   }
@@ -142,9 +136,7 @@ export class JetReserve {
   async refresh(): Promise<void> {
     await this.market.refresh();
 
-    const data: any = (await this.client.program.account.reserve.fetch(
-      this.address
-    ));
+    const data: any = await this.client.program.account.reserve.fetch(this.address);
     const stateData = new Uint8Array(data.state);
     this.state = ReserveStateStruct.decode(stateData) as ReserveStateData;
     this.data = data as ReserveData;
@@ -156,8 +148,8 @@ export class JetReserve {
   }
 
   async refreshOldReserves(): Promise<void> {
-    if(!this.state){
-      console.log("State is not set, call refresh");
+    if (!this.state) {
+      console.log('State is not set, call refresh');
       return;
     }
     let accruedUntil = this.state.accruedUntil;
@@ -168,7 +160,7 @@ export class JetReserve {
   }
 
   makeRefreshIx(): TransactionInstruction {
-    console.log("reserve being refreshed: ", this.address);
+    console.log('reserve being refreshed: ', this.address);
     return this.client.program.instruction.refreshReserve({
       accounts: {
         market: this.market.address,
@@ -239,14 +231,8 @@ export class JetReserve {
     });
   }
 
-  static async load(
-    client: JetClient,
-    address: PublicKey,
-    maybeMarket?: JetMarket
-  ): Promise<JetReserve> {
-    const data = (await client.program.account.reserve.fetch(
-      address
-    )) as ReserveData;
+  static async load(client: JetClient, address: PublicKey, maybeMarket?: JetMarket): Promise<JetReserve> {
+    const data = (await client.program.account.reserve.fetch(address)) as ReserveData;
     const market = maybeMarket || (await JetMarket.load(client, data.market));
 
     return new JetReserve(client, market, address, data);
@@ -258,43 +244,25 @@ export class JetReserve {
    * @param tokenMint The address of the mint for the token stored in the reserve.
    * @param market The address of the market the reserve belongs to.
    */
-  static async deriveAccounts(
-    client: JetClient,
-    address: PublicKey,
-    tokenMint: PublicKey
-  ): Promise<ReserveAccounts> {
+  static async deriveAccounts(client: JetClient, address: PublicKey, tokenMint: PublicKey): Promise<ReserveAccounts> {
     return {
-      vault: await client.findDerivedAccount(["vault", address]),
-      feeNoteVault: await client.findDerivedAccount(["fee-vault", address]),
-      dexSwapTokens: await client.findDerivedAccount([
-        "dex-swap-tokens",
-        address,
-      ]),
-      dexOpenOrders: await client.findDerivedAccount([
-        "dex-open-orders",
-        address,
-      ]),
+      vault: await client.findDerivedAccount(['vault', address]),
+      feeNoteVault: await client.findDerivedAccount(['fee-vault', address]),
+      dexSwapTokens: await client.findDerivedAccount(['dex-swap-tokens', address]),
+      dexOpenOrders: await client.findDerivedAccount(['dex-open-orders', address]),
 
-      loanNoteMint: await client.findDerivedAccount([
-        "loans",
-        address,
-        tokenMint,
-      ]),
-      depositNoteMint: await client.findDerivedAccount([
-        "deposits",
-        address,
-        tokenMint,
-      ]),
+      loanNoteMint: await client.findDerivedAccount(['loans', address, tokenMint]),
+      depositNoteMint: await client.findDerivedAccount(['deposits', address, tokenMint]),
     };
   }
 }
 
 const ReserveStateStruct = BL.struct([
-  util.u64Field("accruedUntil"),
-  util.numberField("outstandingDebt"),
-  util.numberField("uncollectedFees"),
-  util.u64Field("totalDeposits"),
-  util.u64Field("totalDepositNotes"),
-  util.u64Field("totalLoanNotes"),
-  BL.blob(416 + 16, "_RESERVED_")
+  util.u64Field('accruedUntil'),
+  util.numberField('outstandingDebt'),
+  util.numberField('uncollectedFees'),
+  util.u64Field('totalDeposits'),
+  util.u64Field('totalDepositNotes'),
+  util.u64Field('totalLoanNotes'),
+  BL.blob(416 + 16, '_RESERVED_'),
 ]);

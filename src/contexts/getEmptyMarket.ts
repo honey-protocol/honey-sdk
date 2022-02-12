@@ -1,5 +1,5 @@
-import { PublicKey } from "@solana/web3.js";
-import { Market } from "../helpers/JetTypes";
+import { PublicKey } from '@solana/web3.js';
+import { Market } from '../helpers/JetTypes';
 
 export const getEmptyMarketState = (): Market => ({
   marketInit: false,
@@ -11,5 +11,5 @@ export const getEmptyMarketState = (): Market => ({
   reserves: {},
   reservesArray: [],
   nativeValues: false,
-  rerender: false
+  rerender: false,
 });

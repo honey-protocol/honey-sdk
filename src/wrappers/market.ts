@@ -1,24 +1,24 @@
-import { PublicKey, Keypair } from "@solana/web3.js";
-import { TOKEN_PROGRAM_ID, u64 } from "@solana/spl-token";
-import * as anchor from "@project-serum/anchor";
-import * as BL from "@solana/buffer-layout";
+import { PublicKey, Keypair } from '@solana/web3.js';
+import { TOKEN_PROGRAM_ID, u64 } from '@solana/spl-token';
+import * as anchor from '@project-serum/anchor';
+import * as BL from '@solana/buffer-layout';
 
-import { CreateReserveParams, JetReserve } from "./reserve";
-import * as util from "./util";
-import { JetClient } from "./client";
+import { CreateReserveParams, JetReserve } from './reserve';
+import * as util from './util';
+import { JetClient } from './client';
 
 const MAX_RESERVES = 32;
 
 const ReserveInfoStruct = BL.struct([
-  util.pubkeyField("address"),
-  BL.blob(80, "_UNUSED_0_"),
-  util.numberField("price"),
-  util.numberField("depositNoteExchangeRate"),
-  util.numberField("loanNoteExchangeRate"),
-  util.numberField("minCollateralRatio"),
-  BL.u16("liquidationBonus"),
-  BL.blob(158, "_UNUSED_1_"),
-  BL.blob(16, "_CACHE_TAIL")
+  util.pubkeyField('address'),
+  BL.blob(80, '_UNUSED_0_'),
+  util.numberField('price'),
+  util.numberField('depositNoteExchangeRate'),
+  util.numberField('loanNoteExchangeRate'),
+  util.numberField('minCollateralRatio'),
+  BL.u16('liquidationBonus'),
+  BL.blob(158, '_UNUSED_1_'),
+  BL.blob(16, '_CACHE_TAIL'),
 ]);
 
 const MarketReserveInfoList = BL.seq(ReserveInfoStruct, MAX_RESERVES);
@@ -53,18 +53,13 @@ export class JetMarket implements JetMarketData {
     public reserves: JetMarketReserveInfo[],
     public pythOraclePrice: PublicKey,
     public pythOracleProduct: PublicKey,
-    public updateAuthority: PublicKey
-  ) { }
+    public updateAuthority: PublicKey,
+  ) {}
 
-  public static async fetchData(
-    client: JetClient,
-    address: PublicKey
-  ): Promise<[any, JetMarketReserveInfo[]]> {
+  public static async fetchData(client: JetClient, address: PublicKey): Promise<[any, JetMarketReserveInfo[]]> {
     const data: any = await client.program.account.market.fetch(address);
     const reserveInfoData = new Uint8Array(data.reserves);
-    const reserveInfoList = MarketReserveInfoList.decode(
-      reserveInfoData
-    ) as JetMarketReserveInfo[];
+    const reserveInfoList = MarketReserveInfoList.decode(reserveInfoData) as JetMarketReserveInfo[];
 
     return [data, reserveInfoList];
   }
@@ -88,7 +83,7 @@ export class JetMarket implements JetMarketData {
       reserveInfoList,
       data.nftPythOraclePrice,
       data.nftPythOracleProduct,
-      data.updateAuthority
+      data.updateAuthority,
     );
   }
 
@@ -96,10 +91,7 @@ export class JetMarket implements JetMarketData {
    * Get the latest market account data from the network.
    */
   async refresh(): Promise<void> {
-    const [data, reserveInfoList] = await JetMarket.fetchData(
-      this.client,
-      this.address
-    );
+    const [data, reserveInfoList] = await JetMarket.fetchData(this.client, this.address);
 
     this.reserves = reserveInfoList;
     this.owner = data.owner;
@@ -115,8 +107,8 @@ export class JetMarket implements JetMarketData {
     await this.client.program.rpc.setMarketFlags(flags, {
       accounts: {
         market: this.address,
-        owner: this.owner
-      }
+        owner: this.owner,
+      },
     });
   }
 
@@ -127,11 +119,7 @@ export class JetMarket implements JetMarketData {
       account = Keypair.generate();
     }
 
-    const derivedAccounts = await JetReserve.deriveAccounts(
-      this.client,
-      account.publicKey,
-      params.tokenMint
-    );
+    const derivedAccounts = await JetReserve.deriveAccounts(this.client, account.publicKey, params.tokenMint);
 
     const bumpSeeds = {
       vault: derivedAccounts.vault.bumpSeed,
@@ -143,8 +131,7 @@ export class JetMarket implements JetMarketData {
       depositNoteMint: derivedAccounts.depositNoteMint.bumpSeed,
     };
 
-    const createReserveAccount =
-      await this.client.program.account.reserve.createInstruction(account);
+    const createReserveAccount = await this.client.program.account.reserve.createInstruction(account);
 
     await this.client.program.rpc.initReserve(bumpSeeds, params.config, {
       accounts: {
@@ -208,19 +195,18 @@ export interface CreateMarketParams {
   account?: Keypair;
 
   /**
- *  Update authority of the NFT held in the associated metadata
- */
+   *  Update authority of the NFT held in the associated metadata
+   */
   updateAuthority: PublicKey;
 
   oraclePrice: PublicKey;
 
   oracleProduct: PublicKey;
-
 }
 
 export enum MarketFlags {
   HaltBorrows = 1 << 0,
   HaltRepays = 1 << 1,
   HaltDeposits = 1 << 2,
-  HaltAll = HaltBorrows | HaltRepays | HaltDeposits
+  HaltAll = HaltBorrows | HaltRepays | HaltDeposits,
 }

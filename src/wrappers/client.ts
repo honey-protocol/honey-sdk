@@ -34,27 +34,22 @@ export class JetClient {
 
   /**
    * Find a PDA
-   * @param seeds 
-   * @returns 
+   * @param seeds
+   * @returns
    */
-  async findDerivedAccount(
-    seeds: DerivedAccountSeed[]
-  ): Promise<DerivedAccount> {
+  async findDerivedAccount(seeds: DerivedAccountSeed[]): Promise<DerivedAccount> {
     const seedBytes = seeds.map((s) => {
-      if (typeof s === "string") {
+      if (typeof s === 'string') {
         return Buffer.from(s);
-      } else if ("publicKey" in s) {
+      } else if ('publicKey' in s) {
         return s.publicKey.toBytes();
-      } else if ("toBytes" in s) {
+      } else if ('toBytes' in s) {
         return s.toBytes();
       } else {
         return s;
       }
     });
-    const [address, bumpSeed] = await PublicKey.findProgramAddress(
-      seedBytes,
-      this.program.programId
-    );
+    const [address, bumpSeed] = await PublicKey.findProgramAddress(seedBytes, this.program.programId);
     return new DerivedAccount(address, bumpSeed);
   }
 
@@ -77,10 +72,8 @@ export class JetClient {
           oracleProduct: params.oracleProduct,
         },
         signers: [account],
-        instructions: [
-          await this.program.account.market.createInstruction(account),
-        ],
-      }
+        instructions: [await this.program.account.market.createInstruction(account)],
+      },
     );
 
     return JetMarket.load(this, account.publicKey);

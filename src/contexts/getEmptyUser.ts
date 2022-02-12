@@ -1,4 +1,4 @@
-import { AssetStore, User } from "../helpers/JetTypes";
+import { AssetStore, User } from '../helpers/JetTypes';
 
 export const getEmptyUserState = (): User => ({
   // Location
@@ -10,37 +10,35 @@ export const getEmptyUserState = (): User => ({
   wallet: null,
 
   walletInit: false,
-  tradeAction: "",
+  tradeAction: '',
 
   // Assets and position
   assets: {} as AssetStore,
-  walletBalances: {"": 0},
-  collateralBalances: {"": 0},
-  loanBalances: {"": 0},
+  walletBalances: { '': 0 },
+  collateralBalances: { '': 0 },
+  loanBalances: { '': 0 },
   position: {
     depositedValue: 0,
     borrowedValue: 0,
     colRatio: 0,
-    utilizationRate: 0
+    utilizationRate: 0,
   },
 
   // Transaction logs
   transactionLogs: [],
   transactionLogsInit: false,
-  
+
   // Notifications
   notifications: [],
   addNotification: () => null,
   clearNotification: () => null,
 
   // Settings
-  language: "",
+  language: '',
   darkTheme: false,
   navExpanded: false,
   rpcNode: null,
   rpcPing: 0,
 
-  rerender: false
+  rerender: false,
 });
-
-

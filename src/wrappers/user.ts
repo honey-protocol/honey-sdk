@@ -7,11 +7,11 @@ import {
   SYSVAR_RENT_PUBKEY,
   Transaction,
   TransactionInstruction,
-} from "@solana/web3.js";
-import * as anchor from "@project-serum/anchor";
-import { Amount, DerivedAccount } from ".";
-import { JetClient } from "./client";
-import { JetMarket, JetMarketReserveInfo } from "./market";
+} from '@solana/web3.js';
+import * as anchor from '@project-serum/anchor';
+import { Amount, DerivedAccount } from '.';
+import { JetClient } from './client';
+import { JetMarket, JetMarketReserveInfo } from './market';
 import {
   AccountLayout as TokenAccountLayout,
   AccountInfo as TokenAccount,
@@ -19,14 +19,19 @@ import {
   NATIVE_MINT,
   Token,
   ASSOCIATED_TOKEN_PROGRAM_ID,
-} from "@solana/spl-token";
-import { JetReserve } from "./reserve";
-import { InstructionAndSigner, parseObligationAccount, sendAllTransactions, transactionErrorToString } from "../helpers/programUtil";
-import * as util from "./util";
-import * as BL from "@solana/buffer-layout";
-import { TxResponse } from "../actions/types";
-import { ObligationAccount, TxnResponse } from "../helpers/JetTypes";
-import { TokenAmount } from "./token-amount";
+} from '@solana/spl-token';
+import { JetReserve } from './reserve';
+import {
+  InstructionAndSigner,
+  parseObligationAccount,
+  sendAllTransactions,
+  transactionErrorToString,
+} from '../helpers/programUtil';
+import * as util from './util';
+import * as BL from '@solana/buffer-layout';
+import { TxResponse } from '../actions/types';
+import { ObligationAccount, TxnResponse } from '../helpers/JetTypes';
+import { TokenAmount } from './token-amount';
 
 export const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
 export interface User {
@@ -44,29 +49,29 @@ export interface User {
 
 export interface HasPublicKey {
   publicKey: PublicKey;
-};
+}
 export interface ToBytes {
   toBytes(): Uint8Array;
-};
+}
 
 export const ObligationStateStruct = BL.struct([
-  BL.u32("version"),
-  BL.u32("_reserved0"),
-  util.pubkeyField("market"),
-  util.pubkeyField("owner"),
+  BL.u32('version'),
+  BL.u32('_reserved0'),
+  util.pubkeyField('market'),
+  util.pubkeyField('owner'),
   BL.blob(184, '_reserved1'),
   BL.seq(util.pubkeyField('collateral_nft_mint'), 11), // 4 byte alignment because a u32 is following
   BL.blob(256, 'cached'),
   BL.blob(2048, 'collateral'),
-  BL.blob(2048, 'loans')
+  BL.blob(2048, 'loans'),
 ]);
 
 export const PositionStruct = BL.struct([
-  util.pubkeyField("account"),
-  util.numberField("amount"),
+  util.pubkeyField('account'),
+  util.numberField('amount'),
   BL.u32('side'),
   BL.u16('reserve_index'),
-  BL.blob(66)
+  BL.blob(66),
 ]);
 
 export class JetUser implements User {
@@ -81,7 +86,7 @@ export class JetUser implements User {
     public market: JetMarket,
     public address: PublicKey,
     private obligation: DerivedAccount,
-    public reserves: JetReserve[]
+    public reserves: JetReserve[],
   ) {
     this.conn = this.client.program.provider.connection;
   }
@@ -90,13 +95,9 @@ export class JetUser implements User {
     client: JetClient,
     market: JetMarket,
     address: PublicKey,
-    reserves: JetReserve[]
+    reserves: JetReserve[],
   ): Promise<JetUser> {
-    const obligationAccount = await client.findDerivedAccount([
-      "obligation",
-      market.address,
-      address,
-    ]);
+    const obligationAccount = await client.findDerivedAccount(['obligation', market.address, address]);
     const user = new JetUser(client, market, address, obligationAccount, reserves);
     user.refresh();
     return user;
@@ -114,15 +115,9 @@ export class JetUser implements User {
     collateralReserve: JetReserve,
     payerAccount: PublicKey,
     receiverAccount: PublicKey,
-    amount: Amount
+    amount: Amount,
   ): Promise<string> {
-    const tx = await this.makeLiquidateTx(
-      loanReserve,
-      collateralReserve,
-      payerAccount,
-      receiverAccount,
-      amount
-    );
+    const tx = await this.makeLiquidateTx(loanReserve, collateralReserve, payerAccount, receiverAccount, amount);
     return await this.client.program.provider.send(tx);
   }
 
@@ -131,16 +126,12 @@ export class JetUser implements User {
     _collateralReserve: JetReserve,
     _payerAccount: PublicKey,
     _receiverAccount: PublicKey,
-    _amount: Amount
+    _amount: Amount,
   ): Promise<Transaction> {
-    throw new Error("not yet implemented");
+    throw new Error('not yet implemented');
   }
 
-  async repay(
-    reserve: JetReserve,
-    tokenAccount: PublicKey,
-    amount: Amount
-  ): Promise<TxResponse> {
+  async repay(reserve: JetReserve, tokenAccount: PublicKey, amount: Amount): Promise<TxResponse> {
     const ixs = await this.makeRepayTx(reserve, tokenAccount, amount);
     try {
       return await sendAllTransactions(this.client.program.provider, ixs);
@@ -150,11 +141,7 @@ export class JetUser implements User {
     }
   }
 
-  async makeRepayTx(
-    reserve: JetReserve,
-    tokenAccount: PublicKey,
-    amount: Amount
-  ) {
+  async makeRepayTx(reserve: JetReserve, tokenAccount: PublicKey, amount: Amount) {
     const accounts = await this.findReserveAccounts(reserve);
     let depositSourcePubkey = tokenAccount;
     // Optional signers
@@ -172,7 +159,6 @@ export class JetUser implements User {
       depositSourceKeypair = Keypair.generate();
       depositSourcePubkey = depositSourceKeypair.publicKey;
 
-
       // TODO: Need to derive the loanNoteExchangeRate
       // Do our best to estimate the lamports we need
       // 1.002 is a bit of room for interest
@@ -186,14 +172,14 @@ export class JetUser implements User {
         newAccountPubkey: depositSourcePubkey,
         programId: TOKEN_PROGRAM_ID,
         space: TokenAccountLayout.span,
-        lamports: Number(amount.value.addn(rent).toString())
-      })
+        lamports: Number(amount.value.addn(rent).toString()),
+      });
 
       initTokenAccountIx = Token.createInitAccountInstruction(
         TOKEN_PROGRAM_ID,
         NATIVE_MINT,
         depositSourcePubkey,
-        this.address
+        this.address,
       );
 
       closeTokenAccountIx = Token.createCloseAccountInstruction(
@@ -201,7 +187,8 @@ export class JetUser implements User {
         depositSourcePubkey,
         this.address,
         this.address,
-        []);
+        [],
+      );
     }
 
     const refreshReserveIx = reserve.makeRefreshIx();
@@ -221,20 +208,16 @@ export class JetUser implements User {
 
         tokenProgram: TOKEN_PROGRAM_ID,
       },
-    })
+    });
 
     const ixs = [
       {
-        ix: [
-          createTokenAccountIx,
-          initTokenAccountIx,
-          refreshReserveIx,
-          repayIx,
-          closeTokenAccountIx,
-        ].filter(ix => ix) as TransactionInstruction[],
-        signers: [depositSourceKeypair].filter(signer => signer) as Signer[]
-      }
-    ]
+        ix: [createTokenAccountIx, initTokenAccountIx, refreshReserveIx, repayIx, closeTokenAccountIx].filter(
+          (ix) => ix,
+        ) as TransactionInstruction[],
+        signers: [depositSourceKeypair].filter((signer) => signer) as Signer[],
+      },
+    ];
 
     return ixs;
   }
@@ -243,7 +226,7 @@ export class JetUser implements User {
     tokenAccount: PublicKey,
     tokenMint: PublicKey,
     updateAuthority: PublicKey,
-    reserves: JetReserve[]
+    reserves: JetReserve[],
   ): Promise<TxResponse> {
     const tx = await this.makeNFTWithdrawTx(tokenAccount, tokenMint, updateAuthority, reserves);
     try {
@@ -259,111 +242,83 @@ export class JetUser implements User {
     tokenAccount: PublicKey,
     tokenMint: PublicKey,
     updateAuthority: PublicKey,
-    reserves: JetReserve[]
+    reserves: JetReserve[],
   ): Promise<Transaction> {
     const tx = new Transaction();
 
     const [obligationAddress, obligationBump] = await PublicKey.findProgramAddress(
-      [
-        Buffer.from("obligation"),
-        this.market.address.toBuffer(),
-        this.address.toBuffer()
-      ],
-      this.client.program.programId
+      [Buffer.from('obligation'), this.market.address.toBuffer(), this.address.toBuffer()],
+      this.client.program.programId,
     );
 
     const [collateralAddress, collateralBump] = await PublicKey.findProgramAddress(
-      [
-        Buffer.from("nft"),
-        this.market.address.toBuffer(),
-        tokenMint.toBuffer(),
-        this.address.toBuffer()
-      ],
-      this.client.program.programId
+      [Buffer.from('nft'), this.market.address.toBuffer(), tokenMint.toBuffer(), this.address.toBuffer()],
+      this.client.program.programId,
     );
 
     const metadataPubKey = new PublicKey(METADATA_PROGRAM_ID);
     const [nftMetadata, metadataBump] = await PublicKey.findProgramAddress(
-      [
-        Buffer.from("metadata"),
-        metadataPubKey.toBuffer(),
-        tokenMint.toBuffer()
-      ],
-      metadataPubKey
+      [Buffer.from('metadata'), metadataPubKey.toBuffer(), tokenMint.toBuffer()],
+      metadataPubKey,
     );
     const withdrawNFTBumpSeeds = {
-      collateralAccount: collateralBump
+      collateralAccount: collateralBump,
     };
 
     reserves.forEach((reserve) => tx.add(reserve.makeRefreshIx()));
 
     tx.add(
-      await this.client.program.instruction.withdrawNft(
-        withdrawNFTBumpSeeds,
-        metadataBump,
-        {
-          accounts: {
-            market: this.market.address,
-            marketAuthority: this.market.marketAuthority,
-            obligation: obligationAddress,
+      await this.client.program.instruction.withdrawNft(withdrawNFTBumpSeeds, metadataBump, {
+        accounts: {
+          market: this.market.address,
+          marketAuthority: this.market.marketAuthority,
+          obligation: obligationAddress,
 
-            depositNftMint: tokenMint,
-            updateAuthority,
-            metadata: nftMetadata,
-            owner: this.address,
-            collateralAccount: collateralAddress,
-            tokenProgram: TOKEN_PROGRAM_ID,
+          depositNftMint: tokenMint,
+          updateAuthority,
+          metadata: nftMetadata,
+          owner: this.address,
+          collateralAccount: collateralAddress,
+          tokenProgram: TOKEN_PROGRAM_ID,
 
-            depositTo: tokenAccount
-          }
-        })
+          depositTo: tokenAccount,
+        },
+      }),
     );
 
     return tx;
   }
 
-
-  async depositNFT(
-    tokenAccount: PublicKey,
-    tokenMint: PublicKey,
-    updateAuthority: PublicKey
-  ): Promise<TxResponse> {
+  async depositNFT(tokenAccount: PublicKey, tokenMint: PublicKey, updateAuthority: PublicKey): Promise<TxResponse> {
     return await this.makeNFTDepositTx(tokenAccount, tokenMint, updateAuthority);
   }
 
   async makeNFTDepositTx(
     tokenAccount: PublicKey,
     tokenMint: PublicKey,
-    updateAuthority: PublicKey
+    updateAuthority: PublicKey,
   ): Promise<TxResponse> {
     const txids = [];
     const [obligationAddress, obligationBump] = await PublicKey.findProgramAddress(
-      [
-        Buffer.from("obligation"),
-        this.market.address.toBuffer(),
-        this.address.toBuffer()
-      ],
-      this.client.program.programId
+      [Buffer.from('obligation'), this.market.address.toBuffer(), this.address.toBuffer()],
+      this.client.program.programId,
     );
 
-    const obligationAccountData = await this.conn.getAccountInfo(obligationAddress)
+    const obligationAccountData = await this.conn.getAccountInfo(obligationAddress);
     if (!obligationAccountData) {
       try {
-        const txid = await this.client.program.rpc.initObligation(
-          obligationBump,
-          {
-            accounts: {
-              market: this.market.address,
-              marketAuthority: this.market.marketAuthority,
-              obligation: obligationAddress,
+        const txid = await this.client.program.rpc.initObligation(obligationBump, {
+          accounts: {
+            market: this.market.address,
+            marketAuthority: this.market.marketAuthority,
+            obligation: obligationAddress,
 
-              borrower: this.address,
-              tokenProgram: TOKEN_PROGRAM_ID,
+            borrower: this.address,
+            tokenProgram: TOKEN_PROGRAM_ID,
 
-              systemProgram: anchor.web3.SystemProgram.programId,
-            }
-          }
-        );
+            systemProgram: anchor.web3.SystemProgram.programId,
+          },
+        });
         txids.push(txid);
       } catch (err) {
         console.error(`Obligation account error: ${transactionErrorToString(err)}`);
@@ -372,62 +327,50 @@ export class JetUser implements User {
     }
 
     const [collateralAddress, collateralBump] = await PublicKey.findProgramAddress(
-      [
-        Buffer.from("nft"),
-        this.market.address.toBuffer(),
-        tokenMint.toBuffer(),
-        this.address.toBuffer()
-      ],
-      this.client.program.programId
+      [Buffer.from('nft'), this.market.address.toBuffer(), tokenMint.toBuffer(), this.address.toBuffer()],
+      this.client.program.programId,
     );
 
     const metadataPubKey = new PublicKey(METADATA_PROGRAM_ID);
     const [nftMetadata, metadataBump] = await PublicKey.findProgramAddress(
-      [
-        Buffer.from("metadata"),
-        metadataPubKey.toBuffer(),
-        tokenMint.toBuffer()
-      ],
-      metadataPubKey
+      [Buffer.from('metadata'), metadataPubKey.toBuffer(), tokenMint.toBuffer()],
+      metadataPubKey,
     );
 
     const derivedMetadata = await this.findNftMetadata(tokenMint);
-    const collateralData = await this.conn.getAccountInfo(collateralAddress)
+    const collateralData = await this.conn.getAccountInfo(collateralAddress);
     if (!collateralData) {
       const collateralTx = new Transaction();
-      const ix = await this.client.program.instruction.initNftAccount(
-        collateralBump,
-        metadataBump,
-        {
-          accounts: {
-            market: this.market.address,
-            marketAuthority: this.market.marketAuthority,
-            obligation: obligationAddress,
+      const ix = await this.client.program.instruction.initNftAccount(collateralBump, metadataBump, {
+        accounts: {
+          market: this.market.address,
+          marketAuthority: this.market.marketAuthority,
+          obligation: obligationAddress,
 
-            depositNftMint: tokenMint,
-            updateAuthority, // should make a call to get this info or just do it on the program side
-            metadata: nftMetadata,
-            owner: this.address,
-            collateralAccount: collateralAddress,
-            tokenProgram: TOKEN_PROGRAM_ID,
+          depositNftMint: tokenMint,
+          updateAuthority, // should make a call to get this info or just do it on the program side
+          metadata: nftMetadata,
+          owner: this.address,
+          collateralAccount: collateralAddress,
+          tokenProgram: TOKEN_PROGRAM_ID,
 
-            rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-            systemProgram: anchor.web3.SystemProgram.programId,
-          }
-        });
+          rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        },
+      });
       collateralTx.add(ix);
       try {
         const txid = await this.client.program.provider.send(collateralTx);
         txids.push(txid);
       } catch (err) {
         console.error(`Collateral account error: ${transactionErrorToString(err)}`);
-        return [TxnResponse.Failed, txids]
+        return [TxnResponse.Failed, txids];
       }
     }
 
     const tx = new Transaction();
     const DepositNFTBumpSeeds = {
-      collateralAccount: collateralBump
+      collateralAccount: collateralBump,
     };
     const depositNFTIx = await this.client.program.instruction.depositNft(
       DepositNFTBumpSeeds,
@@ -448,8 +391,9 @@ export class JetUser implements User {
           depositSource: tokenAccount,
           rent: anchor.web3.SYSVAR_RENT_PUBKEY,
           systemProgram: anchor.web3.SystemProgram.programId,
-        }
-      });
+        },
+      },
+    );
     tx.add(depositNFTIx);
     try {
       const txid = await this.client.program.provider.send(tx);
@@ -461,18 +405,12 @@ export class JetUser implements User {
     }
   }
 
-  async withdrawCollateral(
-    reserve: JetReserve,
-    amount: Amount,
-  ): Promise<TxResponse> {
+  async withdrawCollateral(reserve: JetReserve, amount: Amount): Promise<TxResponse> {
     const ixs = await this.makeWithdrawCollateralTx(reserve, amount);
     return await sendAllTransactions(this.client.program.provider, ixs);
   }
 
-  async makeWithdrawCollateralTx(
-    reserve: JetReserve,
-    amount: Amount,
-  ): Promise<InstructionAndSigner[]> {
+  async makeWithdrawCollateralTx(reserve: JetReserve, amount: Amount): Promise<InstructionAndSigner[]> {
     const accounts = await this.findReserveAccounts(reserve);
     const bumpSeeds = {
       collateralAccount: accounts.collateral.bumpSeed,
@@ -500,28 +438,17 @@ export class JetUser implements User {
 
     const ixs = [
       {
-        ix: [
-          ...refreshReserveIxs,
-          withdrawCollateralIx
-        ].filter(ix => ix) as TransactionInstruction[]
-      }
-    ]
+        ix: [...refreshReserveIxs, withdrawCollateralIx].filter((ix) => ix) as TransactionInstruction[],
+      },
+    ];
     return ixs;
   }
 
-  async withdraw(
-    reserve: JetReserve,
-    tokenAccount: PublicKey,
-    amount: Amount
-  ): Promise<TxResponse> {
+  async withdraw(reserve: JetReserve, tokenAccount: PublicKey, amount: Amount): Promise<TxResponse> {
     return await this.makeWithdrawTx(reserve, tokenAccount, amount);
   }
 
-  async makeWithdrawTx(
-    reserve: JetReserve,
-    tokenAccount: PublicKey,
-    amount: Amount,
-  ): Promise<TxResponse> {
+  async makeWithdrawTx(reserve: JetReserve, tokenAccount: PublicKey, amount: Amount): Promise<TxResponse> {
     const accounts = await this.findReserveAccounts(reserve);
     const tx = new Transaction();
     let supplementalTx: Transaction | null = null;
@@ -536,14 +463,12 @@ export class JetUser implements User {
     let createWsolIx: TransactionInstruction | undefined;
     let initWsolIx: TransactionInstruction | undefined;
     let closeWsolIx: TransactionInstruction | undefined;
-    const walletTokenExists = await this.conn.getAccountInfo(
-      tokenAccount
-    );
+    const walletTokenExists = await this.conn.getAccountInfo(tokenAccount);
 
     if (reserve.data.tokenMint.equals(NATIVE_MINT)) {
       // Create a token account to receive wrapped sol.
       // There isn't an easy way to unwrap sol without
-      // closing the account, so we avoid closing the 
+      // closing the account, so we avoid closing the
       // associated token account.
       supplementalTx = new Transaction();
       const rent = await Token.getMinBalanceRentForExemptAccount(this.conn);
@@ -556,17 +481,17 @@ export class JetUser implements User {
         programId: TOKEN_PROGRAM_ID,
         space: TokenAccountLayout.span,
         lamports: rent,
-      })
+      });
       initWsolIx = Token.createInitAccountInstruction(
         TOKEN_PROGRAM_ID,
         reserve.data.tokenMint,
         withdrawAccount,
-        this.address);
+        this.address,
+      );
 
       supplementalTx.add(createWsolIx);
       supplementalTx.add(initWsolIx);
       signer = [wsolKeypair] as Signer[];
-
     } else if (!walletTokenExists) {
       // Create the wallet token account if it doesn't exist
       supplementalTx = new Transaction();
@@ -576,11 +501,12 @@ export class JetUser implements User {
         this.address,
         withdrawAccount,
         this.address,
-        this.address);
+        this.address,
+      );
       supplementalTx.add(createAssociatedTokenAccountIx);
     }
 
-    const txids: string[] = []
+    const txids: string[] = [];
     if (supplementalTx && signer) {
       try {
         const txid = await this.client.program.provider.send(supplementalTx, signer);
@@ -592,25 +518,21 @@ export class JetUser implements User {
     }
     tx.add(reserve.makeRefreshIx());
     tx.add(
-      this.client.program.instruction.withdraw(
-        accounts.deposits.bumpSeed,
-        amount,
-        {
-          accounts: {
-            market: this.market.address,
-            marketAuthority: this.market.marketAuthority,
-            withdrawAccount,
-            depositAccount: accounts.deposits.address,
-            depositor: this.address,
+      this.client.program.instruction.withdraw(accounts.deposits.bumpSeed, amount, {
+        accounts: {
+          market: this.market.address,
+          marketAuthority: this.market.marketAuthority,
+          withdrawAccount,
+          depositAccount: accounts.deposits.address,
+          depositor: this.address,
 
-            reserve: reserve.address,
-            vault: reserve.data.vault,
-            depositNoteMint: reserve.data.depositNoteMint,
+          reserve: reserve.address,
+          vault: reserve.data.vault,
+          depositNoteMint: reserve.data.depositNoteMint,
 
-            tokenProgram: TOKEN_PROGRAM_ID,
-          },
-        }
-      )
+          tokenProgram: TOKEN_PROGRAM_ID,
+        },
+      }),
     );
 
     if (reserve.data.tokenMint.equals(NATIVE_MINT) && wsolKeypair) {
@@ -619,7 +541,8 @@ export class JetUser implements User {
         withdrawAccount,
         this.address,
         this.address,
-        []);
+        [],
+      );
       tx.add(closeWsolIx);
     }
     try {
@@ -632,11 +555,7 @@ export class JetUser implements User {
     }
   }
 
-  async deposit(
-    reserve: JetReserve,
-    tokenAccount: PublicKey,
-    amount: Amount
-  ): Promise<TxResponse> {
+  async deposit(reserve: JetReserve, tokenAccount: PublicKey, amount: Amount): Promise<TxResponse> {
     const [transaction, signers] = await this.makeDepositTx(reserve, tokenAccount, amount);
     try {
       const txid = await this.client.program.provider.send(transaction, signers);
@@ -647,15 +566,9 @@ export class JetUser implements User {
     }
   }
 
-  async makeDepositTx(
-    reserve: JetReserve,
-    tokenAccount: PublicKey,
-    amount: Amount
-  ): Promise<[Transaction, Keypair[]]> {
+  async makeDepositTx(reserve: JetReserve, tokenAccount: PublicKey, amount: Amount): Promise<[Transaction, Keypair[]]> {
     const accounts = await this.findReserveAccounts(reserve);
-    const depositAccountInfo = await this.conn.getAccountInfo(
-      accounts.deposits.address
-    );
+    const depositAccountInfo = await this.conn.getAccountInfo(accounts.deposits.address);
 
     let depositSourcePubkey = tokenAccount;
 
@@ -682,14 +595,14 @@ export class JetUser implements User {
         newAccountPubkey: depositSourcePubkey,
         programId: TOKEN_PROGRAM_ID,
         space: TokenAccountLayout.span,
-        lamports: Number(amount.value.addn(rent).toString())
-      })
+        lamports: Number(amount.value.addn(rent).toString()),
+      });
 
       initTokenAccountIx = Token.createInitAccountInstruction(
         TOKEN_PROGRAM_ID,
         NATIVE_MINT,
         depositSourcePubkey,
-        this.address
+        this.address,
       );
 
       closeTokenAccountIx = Token.createCloseAccountInstruction(
@@ -697,7 +610,8 @@ export class JetUser implements User {
         depositSourcePubkey,
         this.address,
         this.address,
-        []);
+        [],
+      );
 
       tx.add(createTokenAccountIx);
       tx.add(initTokenAccountIx);
@@ -709,39 +623,31 @@ export class JetUser implements User {
 
     tx.add(reserve.makeRefreshIx());
     tx.add(
-      this.client.program.instruction.deposit(
-        accounts.deposits.bumpSeed,
-        amount,
-        {
-          accounts: {
-            market: this.market.address,
-            marketAuthority: this.market.marketAuthority,
+      this.client.program.instruction.deposit(accounts.deposits.bumpSeed, amount, {
+        accounts: {
+          market: this.market.address,
+          marketAuthority: this.market.marketAuthority,
 
-            depositSource: depositSourcePubkey,
-            depositAccount: accounts.deposits.address,
-            depositor: this.address,
+          depositSource: depositSourcePubkey,
+          depositAccount: accounts.deposits.address,
+          depositor: this.address,
 
-            reserve: reserve.address,
-            vault: reserve.data.vault,
-            depositNoteMint: reserve.data.depositNoteMint,
+          reserve: reserve.address,
+          vault: reserve.data.vault,
+          depositNoteMint: reserve.data.depositNoteMint,
 
-            tokenProgram: TOKEN_PROGRAM_ID,
-          },
-        }
-      )
+          tokenProgram: TOKEN_PROGRAM_ID,
+        },
+      }),
     );
 
-    const signers = [depositSourceKeypair].filter(signer => signer) as Keypair[];
-    if (closeTokenAccountIx)
-      tx.add(closeTokenAccountIx);
+    const signers = [depositSourceKeypair].filter((signer) => signer) as Keypair[];
+    if (closeTokenAccountIx) tx.add(closeTokenAccountIx);
 
     return [tx, signers];
   }
 
-  async depositCollateral(
-    reserve: JetReserve,
-    amount: Amount
-  ): Promise<TxResponse> {
+  async depositCollateral(reserve: JetReserve, amount: Amount): Promise<TxResponse> {
     const tx = await this.makeDepositCollateralTx(reserve, amount);
     try {
       const txid = await this.client.program.provider.send(tx);
@@ -753,12 +659,8 @@ export class JetUser implements User {
 
   async makeDepositCollateralTx(reserve: JetReserve, amount: Amount) {
     const accounts = await this.findReserveAccounts(reserve);
-    const obligationAccountInfo = await this.conn.getAccountInfo(
-      this.obligation.address
-    );
-    const collateralAccountInfo = await this.conn.getAccountInfo(
-      accounts.collateral.address
-    );
+    const obligationAccountInfo = await this.conn.getAccountInfo(this.obligation.address);
+    const collateralAccountInfo = await this.conn.getAccountInfo(accounts.collateral.address);
 
     const tx = new Transaction();
 
@@ -791,27 +693,18 @@ export class JetUser implements User {
 
           tokenProgram: TOKEN_PROGRAM_ID,
         },
-      })
+      }),
     );
 
     return tx;
   }
 
-  async borrow(
-    reserve: JetReserve,
-    receiver: PublicKey,
-    amount: Amount,
-  ): Promise<TxResponse> {
+  async borrow(reserve: JetReserve, receiver: PublicKey, amount: Amount): Promise<TxResponse> {
     const ixs = await this.makeBorrowTx(reserve, receiver, amount);
     return await sendAllTransactions(this.client.program.provider, ixs);
   }
 
-  async makeBorrowTx(
-    reserve: JetReserve,
-    receiver: PublicKey,
-    amount: Amount,
-  ): Promise<InstructionAndSigner[]> {
-
+  async makeBorrowTx(reserve: JetReserve, receiver: PublicKey, amount: Amount): Promise<InstructionAndSigner[]> {
     let receiverAccount: PublicKey = receiver;
     // Create token account ix
     let createTokenAccountIx: TransactionInstruction | undefined;
@@ -823,18 +716,14 @@ export class JetUser implements User {
     let closeTokenAccountIx: TransactionInstruction | undefined;
 
     const accounts = await this.findReserveAccounts(reserve);
-    const loanAccountInfo = await this.conn.getAccountInfo(
-      accounts.loan.address
-    );
+    const loanAccountInfo = await this.conn.getAccountInfo(accounts.loan.address);
 
-    const walletTokenExists = await this.conn.getAccountInfo(
-      receiverAccount
-    );
+    const walletTokenExists = await this.conn.getAccountInfo(receiverAccount);
 
     if (reserve.data.tokenMint.equals(NATIVE_MINT)) {
       // Create a token account to receive wrapped sol.
       // There isn't an easy way to unwrap sol without
-      // closing the account, so we avoid closing the 
+      // closing the account, so we avoid closing the
       // associated token account.
       const rent = await Token.getMinBalanceRentForExemptAccount(this.conn);
 
@@ -846,12 +735,13 @@ export class JetUser implements User {
         programId: TOKEN_PROGRAM_ID,
         space: TokenAccountLayout.span,
         lamports: rent,
-      })
+      });
       initWsoltokenAccountIx = Token.createInitAccountInstruction(
         TOKEN_PROGRAM_ID,
         reserve.data.tokenMint,
         wsolKeypair.publicKey,
-        this.address);
+        this.address,
+      );
     } else if (!walletTokenExists) {
       // Create the wallet token account if it doesn't exist
       createTokenAccountIx = Token.createAssociatedTokenAccountInstruction(
@@ -860,7 +750,8 @@ export class JetUser implements User {
         reserve.data.tokenMint,
         receiverAccount,
         this.address,
-        this.address);
+        this.address,
+      );
     }
 
     let initLoanAccountIx;
@@ -870,19 +761,18 @@ export class JetUser implements User {
 
     const refreshReserveIxs: TransactionInstruction[] = [];
 
-    this.reserves.forEach((r) => {refreshReserveIxs.push(r.makeRefreshIx())})
+    this.reserves.forEach((r) => {
+      refreshReserveIxs.push(r.makeRefreshIx());
+    });
     const [feeReceiverAccount, feeReceiverAccountBump] = await PublicKey.findProgramAddress(
-      [
-        Buffer.from("honey-protocol-fee"),
-        new PublicKey('So11111111111111111111111111111111111111112').toBuffer(),
-      ],
-      this.client.program.programId
+      [Buffer.from('honey-protocol-fee'), new PublicKey('So11111111111111111111111111111111111111112').toBuffer()],
+      this.client.program.programId,
     );
 
     const borrowSeeds = {
       loanAccount: accounts.loan.bumpSeed,
-      feeReceiverAccount: feeReceiverAccountBump
-    }
+      feeReceiverAccount: feeReceiverAccountBump,
+    };
     const borrowIx = this.client.program.instruction.borrow(borrowSeeds, amount, {
       accounts: {
         market: this.market.address,
@@ -899,9 +789,7 @@ export class JetUser implements User {
         receiverAccount,
         tokenProgram: TOKEN_PROGRAM_ID,
       },
-    }
-    )
-
+    });
 
     if (reserve.data.tokenMint.equals(NATIVE_MINT)) {
       closeTokenAccountIx = Token.createCloseAccountInstruction(
@@ -909,112 +797,87 @@ export class JetUser implements User {
         receiverAccount,
         this.address,
         this.address,
-        []);
+        [],
+      );
     }
     const ixs = [
       {
-        ix: [
-          createTokenAccountIx,
-          createWsolTokenAccountIx,
-          initWsoltokenAccountIx,
-          initLoanAccountIx
-        ].filter(ix => ix) as TransactionInstruction[],
-        signers: [wsolKeypair].filter(ix => ix) as Signer[]
+        ix: [createTokenAccountIx, createWsolTokenAccountIx, initWsoltokenAccountIx, initLoanAccountIx].filter(
+          (ix) => ix,
+        ) as TransactionInstruction[],
+        signers: [wsolKeypair].filter((ix) => ix) as Signer[],
       },
       {
-        ix: [
-          ...refreshReserveIxs,
-          borrowIx,
-          closeTokenAccountIx
-        ].filter(ix => ix) as TransactionInstruction[]
-      }
-    ]
+        ix: [...refreshReserveIxs, borrowIx, closeTokenAccountIx].filter((ix) => ix) as TransactionInstruction[],
+      },
+    ];
     return ixs;
   }
 
+  private makeInitDepositAccountIx(reserve: JetReserve, account: DerivedAccount): TransactionInstruction {
+    return this.client.program.instruction.initDepositAccount(account.bumpSeed, {
+      accounts: {
+        market: this.market.address,
+        marketAuthority: this.market.marketAuthority,
 
-  private makeInitDepositAccountIx(
-    reserve: JetReserve,
-    account: DerivedAccount
-  ): TransactionInstruction {
-    return this.client.program.instruction.initDepositAccount(
-      account.bumpSeed,
-      {
-        accounts: {
-          market: this.market.address,
-          marketAuthority: this.market.marketAuthority,
+        reserve: reserve.address,
+        depositNoteMint: reserve.data.depositNoteMint,
 
-          reserve: reserve.address,
-          depositNoteMint: reserve.data.depositNoteMint,
+        depositor: this.address,
+        depositAccount: account.address,
 
-          depositor: this.address,
-          depositAccount: account.address,
-
-          tokenProgram: TOKEN_PROGRAM_ID,
-          systemProgram: SystemProgram.programId,
-          rent: SYSVAR_RENT_PUBKEY,
-        },
-      }
-    );
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+        rent: SYSVAR_RENT_PUBKEY,
+      },
+    });
   }
 
   private async makeInitNFTCollateralAccountIx(
     tokenMint: PublicKey,
     nftCollateral: DerivedAccount,
     metadata: DerivedAccount,
-    updateAuthority: PublicKey
+    updateAuthority: PublicKey,
   ): Promise<TransactionInstruction> {
-    return this.client.program.instruction.initNftAccount(
-      nftCollateral.bumpSeed,
-      metadata.bumpSeed,
-      {
-        accounts: {
-          market: this.market.address,
-          marketAuthority: this.market.marketAuthority,
-          obligation: this.obligation.address,
+    return this.client.program.instruction.initNftAccount(nftCollateral.bumpSeed, metadata.bumpSeed, {
+      accounts: {
+        market: this.market.address,
+        marketAuthority: this.market.marketAuthority,
+        obligation: this.obligation.address,
 
-          depositNftMint: tokenMint,
-          updateAuthority,
-          metadata: metadata.address,
-          owner: this.address,
-          collateralAccount: nftCollateral.address,
-          tokenProgram: TOKEN_PROGRAM_ID,
+        depositNftMint: tokenMint,
+        updateAuthority,
+        metadata: metadata.address,
+        owner: this.address,
+        collateralAccount: nftCollateral.address,
+        tokenProgram: TOKEN_PROGRAM_ID,
 
-          rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        }
-      });
+        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      },
+    });
   }
 
-  private makeInitCollateralAccountIx(
-    reserve: JetReserve,
-    account: DerivedAccount
-  ): TransactionInstruction {
-    return this.client.program.instruction.initCollateralAccount(
-      account.bumpSeed,
-      {
-        accounts: {
-          market: this.market.address,
-          marketAuthority: this.market.marketAuthority,
+  private makeInitCollateralAccountIx(reserve: JetReserve, account: DerivedAccount): TransactionInstruction {
+    return this.client.program.instruction.initCollateralAccount(account.bumpSeed, {
+      accounts: {
+        market: this.market.address,
+        marketAuthority: this.market.marketAuthority,
 
-          reserve: reserve.address,
-          depositNoteMint: reserve.data.depositNoteMint,
-          owner: this.address,
-          obligation: this.obligation.address,
-          collateralAccount: account.address,
+        reserve: reserve.address,
+        depositNoteMint: reserve.data.depositNoteMint,
+        owner: this.address,
+        obligation: this.obligation.address,
+        collateralAccount: account.address,
 
-          tokenProgram: TOKEN_PROGRAM_ID,
-          systemProgram: SystemProgram.programId,
-          rent: SYSVAR_RENT_PUBKEY,
-        },
-      }
-    );
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+        rent: SYSVAR_RENT_PUBKEY,
+      },
+    });
   }
 
-  private makeInitLoanAccountIx(
-    reserve: JetReserve,
-    account: DerivedAccount
-  ): TransactionInstruction {
+  private makeInitLoanAccountIx(reserve: JetReserve, account: DerivedAccount): TransactionInstruction {
     return this.client.program.instruction.initLoanAccount(account.bumpSeed, {
       accounts: {
         market: this.market.address,
@@ -1034,21 +897,18 @@ export class JetUser implements User {
   }
 
   private makeInitObligationAccountIx(): TransactionInstruction {
-    return this.client.program.instruction.initObligation(
-      this.obligation.bumpSeed,
-      {
-        accounts: {
-          market: this.market.address,
-          marketAuthority: this.market.marketAuthority,
+    return this.client.program.instruction.initObligation(this.obligation.bumpSeed, {
+      accounts: {
+        market: this.market.address,
+        marketAuthority: this.market.marketAuthority,
 
-          obligation: this.obligation.address,
-          borrower: this.address,
+        obligation: this.obligation.address,
+        borrower: this.address,
 
-          tokenProgram: TOKEN_PROGRAM_ID,
-          systemProgram: SystemProgram.programId,
-        },
-      }
-    );
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+      },
+    });
   }
 
   async refresh() {
@@ -1072,10 +932,7 @@ export class JetUser implements User {
     await this.refreshAccount(this._collateral, accounts.collateral);
   }
 
-  private async refreshAccount(
-    appendTo: TokenAmount[],
-    account: DerivedAccount
-  ) {
+  private async refreshAccount(appendTo: TokenAmount[], account: DerivedAccount) {
     try {
       const info = await this.conn.getAccountInfo(account.address);
 
@@ -1087,7 +944,7 @@ export class JetUser implements User {
 
       appendTo.push({
         mint: new PublicKey(tokenAccount.mint),
-        amount: new anchor.BN(tokenAccount.amount, undefined, "le"),
+        amount: new anchor.BN(tokenAccount.amount, undefined, 'le'),
       });
     } catch (e) {
       console.log(`error getting user account: ${e}`);
@@ -1095,36 +952,31 @@ export class JetUser implements User {
     }
   }
 
-  private async findNftMetadata(
-    tokenMint: PublicKey
-  ): Promise<DerivedAccount> {
+  private async findNftMetadata(tokenMint: PublicKey): Promise<DerivedAccount> {
     const metadataPubKey = new PublicKey(METADATA_PROGRAM_ID);
     const [address, bump] = await PublicKey.findProgramAddress(
-      [
-        Buffer.from("metadata"),
-        metadataPubKey.toBuffer(),
-        tokenMint.toBuffer()
-      ],
-      metadataPubKey);
+      [Buffer.from('metadata'), metadataPubKey.toBuffer(), tokenMint.toBuffer()],
+      metadataPubKey,
+    );
     return new DerivedAccount(address, bump);
   }
 
   /**
- * Find a program derived address
- * @param programId The program the address is being derived for
- * @param seeds The seeds to find the address
- * @returns The address found and the bump seed required
- */
+   * Find a program derived address
+   * @param programId The program the address is being derived for
+   * @param seeds The seeds to find the address
+   * @returns The address found and the bump seed required
+   */
   private async findProgramAddress(
     programId: PublicKey,
-    seeds: (HasPublicKey | ToBytes | Uint8Array | string)[]
+    seeds: (HasPublicKey | ToBytes | Uint8Array | string)[],
   ): Promise<[PublicKey, number]> {
     const SEEDBYTES = seeds.map((s) => {
-      if (typeof s === "string") {
+      if (typeof s === 'string') {
         return new TextEncoder().encode(s);
-      } else if ("publicKey" in s) {
+      } else if ('publicKey' in s) {
         return s.publicKey.toBytes();
-      } else if ("toBytes" in s) {
+      } else if ('toBytes' in s) {
         return s.toBytes();
       } else {
         return s;
@@ -1132,42 +984,52 @@ export class JetUser implements User {
     });
 
     return await anchor.web3.PublicKey.findProgramAddress(SEEDBYTES, programId);
-  };
+  }
 
   /** Find reserve deposit note account for wallet */
-  private async findDepositNoteAddress(program: anchor.Program, reserve: PublicKey, wallet: PublicKey)
-    : Promise<[depositNotePubkey: PublicKey, depositAccountBump: number]> {
-    return await this.findProgramAddress(
-      program.programId,
-      ["deposits", reserve, wallet]
-    );
-  };
+  private async findDepositNoteAddress(
+    program: anchor.Program,
+    reserve: PublicKey,
+    wallet: PublicKey,
+  ): Promise<[depositNotePubkey: PublicKey, depositAccountBump: number]> {
+    return await this.findProgramAddress(program.programId, ['deposits', reserve, wallet]);
+  }
 
   /** Find loan note token account for the reserve, obligation and wallet. */
-  private async findLoanNoteAddress(program: anchor.Program, reserve: PublicKey, obligation: PublicKey, wallet: PublicKey)
-    : Promise<[loanNotePubkey: PublicKey, loanNoteBump: number]> {
-    return await this.findProgramAddress(
-      program.programId,
-      ["loan", reserve, obligation, wallet]
-    );
-  };
+  private async findLoanNoteAddress(
+    program: anchor.Program,
+    reserve: PublicKey,
+    obligation: PublicKey,
+    wallet: PublicKey,
+  ): Promise<[loanNotePubkey: PublicKey, loanNoteBump: number]> {
+    return await this.findProgramAddress(program.programId, ['loan', reserve, obligation, wallet]);
+  }
 
   /** Find collateral account for the reserve, obligation and wallet. */
-  private async findCollateralAddress(program: anchor.Program, reserve: PublicKey, obligation: PublicKey, wallet: PublicKey)
-    : Promise<[collateralPubkey: PublicKey, collateralBump: number]> {
-    return await this.findProgramAddress(
-      program.programId,
-      ["collateral", reserve, obligation, wallet]
-    );
-  };
+  private async findCollateralAddress(
+    program: anchor.Program,
+    reserve: PublicKey,
+    obligation: PublicKey,
+    wallet: PublicKey,
+  ): Promise<[collateralPubkey: PublicKey, collateralBump: number]> {
+    return await this.findProgramAddress(program.programId, ['collateral', reserve, obligation, wallet]);
+  }
 
-  private async findReserveAccounts(
-    reserve: JetMarketReserveInfo | JetReserve
-  ): Promise<UserReserveAccounts> {
+  private async findReserveAccounts(reserve: JetMarketReserveInfo | JetReserve): Promise<UserReserveAccounts> {
     const reserveAddress = typeof reserve.address === 'string' ? new PublicKey(reserve.address) : reserve.address;
     const deposits = await this.findDepositNoteAddress(this.client.program, reserveAddress, this.address);
-    const loan = await this.findLoanNoteAddress(this.client.program, reserveAddress, this.obligation.address, this.address);
-    const collateral = await this.findCollateralAddress(this.client.program, reserveAddress, this.obligation.address, this.address);
+    const loan = await this.findLoanNoteAddress(
+      this.client.program,
+      reserveAddress,
+      this.obligation.address,
+      this.address,
+    );
+    const collateral = await this.findCollateralAddress(
+      this.client.program,
+      reserveAddress,
+      this.obligation.address,
+      this.address,
+    );
 
     const dDeposits = new DerivedAccount(...deposits);
     const dLoan = new DerivedAccount(...loan);

@@ -1,6 +1,6 @@
-import * as BL from "@solana/buffer-layout";
-import { BN } from "@project-serum/anchor";
-import { PublicKey } from "@solana/web3.js";
+import * as BL from '@solana/buffer-layout';
+import { BN } from '@project-serum/anchor';
+import { PublicKey } from '@solana/web3.js';
 
 export class NumberField extends BL.Layout {
   constructor(property?: string) {
@@ -63,11 +63,11 @@ export class U64Field extends BL.Layout {
 }
 
 export function numberField(property?: string): NumberField {
-    return new NumberField(property);
+  return new NumberField(property);
 }
 
-export function pubkeyField(property? :string): PubkeyField {
-    return new PubkeyField(property);
+export function pubkeyField(property?: string): PubkeyField {
+  return new PubkeyField(property);
 }
 
 export function u64Field(property?: string): U64Field {

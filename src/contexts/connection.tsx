@@ -87,16 +87,6 @@ export const ConnectionProvider: FC<ConnectionContextProps> = ({ children = unde
   useEffect(() => {
     setEndpoint(ENDPOINTS.find((end) => end.name === network)?.endpoint || DEFAULT_ENDPOINT)
   }, [network])
-
-  useEffect(() => {
-    const fetchWallet = async () => {
-      const provider = providers[0]; // hardcoded for Phatom now.
-      const wallet = await getWalletAndAnchor(provider) as Wallet;
-      setWallet(wallet);
-      setHasWallet(true);
-    }
-    fetchWallet();
-  }, []);
   
   setProgramIds(network);
   setProgramIdls(network);
