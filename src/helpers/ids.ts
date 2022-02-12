@@ -1,13 +1,13 @@
 // import farms from '../pages/FarmPage/farms.json';
 
 // farm
-export let MINE_PROGRAM_ID: String;
-export let QUARRY_KEYS: String[];
-export let METADATA_PROGRAM_ID: String;
+export let MINE_PROGRAM_ID: string;
+export let QUARRY_KEYS: string[];
+export let METADATA_PROGRAM_ID: string;
 
 // jet
-export let JET_ID: String;
-export let DEX_ID: String;
+export let JET_ID: string;
+export let DEX_ID: string;
 
 
 export const PROGRAM_IDS = [
@@ -46,7 +46,7 @@ export const PROGRAM_IDS = [
   },
 ]
 
-export const setProgramIds = (network: String) => {
+export const setProgramIds = (network: string) => {
   const instance = PROGRAM_IDS.find(id => id.network === network);
   if (!instance) return;
 

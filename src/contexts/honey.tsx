@@ -23,40 +23,6 @@ import { getWalletAndAnchor } from '../helpers/connectWallet';
 import { JetReserve } from '../wrappers';
 import { getAssetPubkeys, getReserveStructures } from '../helpers/honey-protocol-helpers';
 
-export const providers: WalletProvider[] = [
-  {
-    name: "Phantom",
-    logo: "img/wallets/phantom.png",
-    url: "https://phantom.app/"
-  },
-  {
-    name: "Slope",
-    logo: "img/wallets/slope.png",
-    url: "https://slope.finance/"
-  },
-  {
-    name: "Solflare",
-    logo: "img/wallets/solflare.png",
-    url: "https://solflare.com/"
-  },
-  {
-    name: "Solong",
-    logo: "img/wallets/solong.png",
-    url: "https://solongwallet.com/"
-  },
-  {
-    name: "Sollet",
-    logo: "img/wallets/sollet.png",
-    url: "https://www.sollet.io/"
-  },
-  {
-    name: "Math Wallet",
-    logo: "img/wallets/math_wallet.png",
-    url: "https://mathwallet.org/en-us/"
-  }
-];
-
-
 interface HoneyContext {
   market: Market,
   user: User,
@@ -75,7 +41,7 @@ export const useHoney = () => {
   return context;
 };
 
-export default function HoneyProvider({ children = null as any }) {
+export function HoneyProvider({ children = null as any }) {
   const { program, idlMetadata, coder, isConfigured } = useAnchor();
 
   const [market, setMarket] = useState<Market>(getEmptyMarketState());
@@ -239,18 +205,18 @@ export default function HoneyProvider({ children = null as any }) {
 
   }, [user])
 
-  useEffect(() => {
-    const fetchWallet = async () => {
-      const provider = providers[0]; // hardcoded for Phatom now.
-      const wallet = await getWalletAndAnchor(provider);
-      setUser(current => ({
-        ...current,
-        wallet
-      }));
-      setHasWallet(true);
-    }
-    fetchWallet();
-  }, []);
+  // useEffect(() => {
+  //   const fetchWallet = async () => {
+  //     const provider = providers[0]; // hardcoded for Phatom now.
+  //     const wallet = await getWalletAndAnchor(provider);
+  //     setUser(current => ({
+  //       ...current,
+  //       wallet
+  //     }));
+  //     setHasWallet(true);
+  //   }
+  //   fetchWallet();
+  // }, []);
 
   useEffect(() => {
     const fetchAssets = async () => {

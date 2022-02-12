@@ -23,10 +23,10 @@ export class JetClient {
    * @param provider The provider with wallet/network access that can be used to send transactions.
    * @returns The client
    */
-  static async connect(provider: anchor.Provider, devnet?: boolean): Promise<JetClient> {
+  static async connect(provider: anchor.Provider, jetId: string, devnet?: boolean): Promise<JetClient> {
     const network = devnet ? 'devnet' : 'mainnet-beta';
     const idl = PROGRAM_IDLS.filter((value) => value.name === network)[0];
-    const JET_ID = new PublicKey(programIds().jet.JET_ID);
+    const JET_ID = new PublicKey(jetId);
     const program = new anchor.Program(idl.jet, JET_ID, provider);
 
     return new JetClient(program, devnet);

@@ -22,13 +22,13 @@ import {
 } from "@solana/spl-token";
 import { JetReserve } from "./reserve";
 import { InstructionAndSigner, parseObligationAccount, sendAllTransactions, transactionErrorToString } from "../helpers/programUtil";
-import { METADATA_PROGRAM_ID } from "../helpers/ids";
 import * as util from "./util";
 import * as BL from "@solana/buffer-layout";
-import { makeError, makeSuccess, Result, TxResponse } from "../actions/types";
+import { TxResponse } from "../actions/types";
 import { ObligationAccount, TxnResponse } from "../helpers/JetTypes";
 import { TokenAmount } from "./token-amount";
 
+export const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
 export interface User {
   address: PublicKey;
 
@@ -346,7 +346,7 @@ export class JetUser implements User {
       this.client.program.programId
     );
 
-    const obligationAccountData = !await this.conn.getAccountInfo(obligationAddress)
+    const obligationAccountData = await this.conn.getAccountInfo(obligationAddress)
     if (!obligationAccountData) {
       try {
         const txid = await this.client.program.rpc.initObligation(
