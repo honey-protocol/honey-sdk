@@ -1,9 +1,9 @@
-import { JetReserve } from "..";
+import { HoneyReserve } from "..";
 import { Reserve } from "../helpers/JetTypes";
 import * as anchor from "@project-serum/anchor";
 import { TokenAmount } from '../helpers/util';
 
-const getEmptyReserve = (reserveMeta: JetReserve) => {
+const getEmptyReserve = (reserveMeta: HoneyReserve) => {
     const reserve: Reserve = {
       name: "NFT PLACEHOLDER",
       abbrev: "NFT ABBREV PLACEHOLDER",

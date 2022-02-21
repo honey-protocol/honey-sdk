@@ -1,6 +1,6 @@
 import { PublicKey, Keypair } from '@solana/web3.js';
 import * as anchor from '@project-serum/anchor';
-import { CreateMarketParams, JetMarket } from './market';
+import { CreateMarketParams, HoneyMarket } from './market';
 import { PROGRAM_IDLS } from '../helpers/idls';
 import { DerivedAccount } from './derived-account';
 
@@ -14,7 +14,7 @@ interface HasPublicKey {
 
 type DerivedAccountSeed = HasPublicKey | ToBytes | Uint8Array | string;
 
-export class JetClient {
+export class HoneyClient {
   constructor(public program: anchor.Program, public devnet?: boolean) {}
 
   /**
@@ -22,13 +22,13 @@ export class JetClient {
    * @param provider The provider with wallet/network access that can be used to send transactions.
    * @returns The client
    */
-  static async connect(provider: anchor.Provider, jetId: string, devnet?: boolean): Promise<JetClient> {
+  static async connect(provider: anchor.Provider, jetId: string, devnet?: boolean): Promise<HoneyClient> {
     const network = devnet ? 'devnet' : 'mainnet-beta';
     const idl = PROGRAM_IDLS.filter((value) => value.name === network)[0];
     const JET_ID = new PublicKey(jetId);
     const program = new anchor.Program(idl.jet, JET_ID, provider);
 
-    return new JetClient(program, devnet);
+    return new HoneyClient(program, devnet);
   }
 
   /**
@@ -52,7 +52,7 @@ export class JetClient {
     return new DerivedAccount(address, bumpSeed);
   }
 
-  async createMarket(params: CreateMarketParams): Promise<JetMarket> {
+  async createMarket(params: CreateMarketParams): Promise<HoneyMarket> {
     let account = params.account;
 
     if (account === undefined) {
@@ -75,6 +75,6 @@ export class JetClient {
       },
     );
 
-    return JetMarket.load(this, account.publicKey);
+    return HoneyMarket.load(this, account.publicKey);
   }
 }

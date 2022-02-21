@@ -21,7 +21,7 @@ import { Buffer } from 'buffer';
 import type {
   HasPublicKey,
   IdlMetadata,
-  JetMarketReserveInfo,
+  HoneyMarketReserveInfo,
   MarketAccount,
   ObligationAccount,
   ObligationPositionStruct,
@@ -545,7 +545,7 @@ export const parseMarketAccount = (account: Buffer, coder: anchor.Coder) => {
   let market = coder.accounts.decode<MarketAccount>('Market', account);
 
   let reserveInfoData = new Uint8Array(market.reserves as any as number[]);
-  let reserveInfoList = MarketReserveInfoList.decode(reserveInfoData) as JetMarketReserveInfo[];
+  let reserveInfoList = MarketReserveInfoList.decode(reserveInfoData) as HoneyMarketReserveInfo[];
 
   market.reserves = reserveInfoList;
   return market;

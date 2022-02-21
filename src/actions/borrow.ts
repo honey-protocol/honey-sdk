@@ -2,7 +2,7 @@ import { Metadata } from '@metaplex-foundation/mpl-token-metadata';
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { TxnResponse } from '../helpers/JetTypes';
-import { Amount, JetReserve, JetUser } from '../wrappers';
+import { Amount, HoneyReserve, HoneyUser } from '../wrappers';
 import { TxResponse } from './types';
 
 // Lend Actions
@@ -25,7 +25,7 @@ export const getNFTAssociatedMetadata = async (connection: Connection, metadataP
 
 export const depositNFT = async (
   connection: Connection,
-  jetUser: JetUser,
+  HoneyUser: HoneyUser,
   metadataPubKey: PublicKey,
 ): Promise<TxResponse> => {
   const associatedMetadata = await getNFTAssociatedMetadata(connection, metadataPubKey);
@@ -35,19 +35,19 @@ export const depositNFT = async (
   }
   const tokenMetadata = new Metadata(metadataPubKey, associatedMetadata);
   const tokenMint = new PublicKey(tokenMetadata.data.mint);
-  const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(tokenMint, jetUser.address);
+  const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(tokenMint, HoneyUser.address);
   if (!associatedTokenAccount) {
     console.error(`Could not find the associated token account: ${associatedTokenAccount}`);
     return [TxnResponse.Failed, []];
   }
-  return await jetUser.depositNFT(associatedTokenAccount, tokenMint, new PublicKey(tokenMetadata.data.updateAuthority));
+  return await HoneyUser.depositNFT(associatedTokenAccount, tokenMint, new PublicKey(tokenMetadata.data.updateAuthority));
 };
 
 export const withdrawNFT = async (
   connection: Connection,
-  jetUser: JetUser,
+  HoneyUser: HoneyUser,
   metadataPubKey: PublicKey,
-  reserves: JetReserve[],
+  reserves: HoneyReserve[],
 ): Promise<TxResponse> => {
   const associatedMetadata = await getNFTAssociatedMetadata(connection, metadataPubKey);
   if (!associatedMetadata) {
@@ -56,12 +56,12 @@ export const withdrawNFT = async (
   }
   const tokenMetadata = new Metadata(metadataPubKey, associatedMetadata);
   const tokenMint = new PublicKey(tokenMetadata.data.mint);
-  const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(tokenMint, jetUser.address);
+  const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(tokenMint, HoneyUser.address);
   if (!associatedTokenAccount) {
     console.error(`Could not find the associated token account: ${associatedTokenAccount}`);
     return [TxnResponse.Failed, []];
   }
-  return await jetUser.withdrawNFT(
+  return await HoneyUser.withdrawNFT(
     associatedTokenAccount,
     tokenMint,
     new PublicKey(tokenMetadata.data.updateAuthority),
@@ -70,17 +70,17 @@ export const withdrawNFT = async (
 };
 
 export const borrow = async (
-  jetUser: JetUser,
+  HoneyUser: HoneyUser,
   borrowAmount: number,
   borrowTokenMint: PublicKey,
-  borrowReserves: JetReserve[],
+  borrowReserves: HoneyReserve[],
 ): Promise<TxResponse> => {
   const amount = Amount.tokens(borrowAmount);
   const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(
     borrowTokenMint,
-    jetUser.address,
+    HoneyUser.address,
   );
-  const borrowReserve: JetReserve = borrowReserves.filter((reserve: JetReserve) =>
+  const borrowReserve: HoneyReserve = borrowReserves.filter((reserve: HoneyReserve) =>
     reserve.data.tokenMint.equals(borrowTokenMint),
   )[0];
 
@@ -88,27 +88,27 @@ export const borrow = async (
     console.error(`Ata could not be found`);
     return [TxnResponse.Failed, []];
   }
-  const borrowTx = await jetUser.borrow(borrowReserve, associatedTokenAccount, amount);
+  const borrowTx = await HoneyUser.borrow(borrowReserve, associatedTokenAccount, amount);
   return borrowTx;
 };
 
 export const repay = async (
-  jetUser: JetUser,
+  HoneyUser: HoneyUser,
   repayAmount: number,
   repayTokenMint: PublicKey,
-  repayReserves: JetReserve[],
+  repayReserves: HoneyReserve[],
 ): Promise<TxResponse> => {
   const amount = Amount.tokens(repayAmount); // basically just pay back double the loan for now
   const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(
     repayTokenMint,
-    jetUser.address,
+    HoneyUser.address,
   );
-  const repayReserve: JetReserve = repayReserves.filter((reserve: JetReserve) =>
+  const repayReserve: HoneyReserve = repayReserves.filter((reserve: HoneyReserve) =>
     reserve.data.tokenMint.equals(repayTokenMint),
   )[0];
   if (!associatedTokenAccount) {
     console.error(`Ata could not be found`);
     return [TxnResponse.Failed, []];
   }
-  return await jetUser.repay(repayReserve, associatedTokenAccount, amount);
+  return await HoneyUser.repay(repayReserve, associatedTokenAccount, amount);
 };

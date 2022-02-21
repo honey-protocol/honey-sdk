@@ -4,8 +4,8 @@ import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { Connection, Keypair, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
 import * as BL from '@solana/buffer-layout';
 
-import { JetClient } from './client';
-import { JetMarket } from './market';
+import { HoneyClient } from './client';
+import { HoneyMarket } from './market';
 import * as util from './util';
 import { BN } from '@project-serum/anchor';
 import { DerivedAccount } from './derived-account';
@@ -120,12 +120,12 @@ const SECONDS_PER_HOUR: BN = new BN(3600);
 const SECONDS_PER_DAY: BN = SECONDS_PER_HOUR.muln(24);
 const SECONDS_PER_WEEK: BN = SECONDS_PER_DAY.muln(7);
 const MAX_ACCRUAL_SECONDS: BN = SECONDS_PER_WEEK;
-export class JetReserve {
+export class HoneyReserve {
   private conn: Connection;
 
   constructor(
-    private client: JetClient,
-    private market: JetMarket,
+    private client: HoneyClient,
+    private market: HoneyMarket,
     public address: PublicKey,
     public data: ReserveData,
     public state?: ReserveStateData,
@@ -231,11 +231,11 @@ export class JetReserve {
     });
   }
 
-  static async load(client: JetClient, address: PublicKey, maybeMarket?: JetMarket): Promise<JetReserve> {
+  static async load(client: HoneyClient, address: PublicKey, maybeMarket?: HoneyMarket): Promise<HoneyReserve> {
     const data = (await client.program.account.reserve.fetch(address)) as ReserveData;
-    const market = maybeMarket || (await JetMarket.load(client, data.market));
+    const market = maybeMarket || (await HoneyMarket.load(client, data.market));
 
-    return new JetReserve(client, market, address, data);
+    return new HoneyReserve(client, market, address, data);
   }
 
   /**
@@ -244,7 +244,7 @@ export class JetReserve {
    * @param tokenMint The address of the mint for the token stored in the reserve.
    * @param market The address of the market the reserve belongs to.
    */
-  static async deriveAccounts(client: JetClient, address: PublicKey, tokenMint: PublicKey): Promise<ReserveAccounts> {
+  static async deriveAccounts(client: HoneyClient, address: PublicKey, tokenMint: PublicKey): Promise<ReserveAccounts> {
     return {
       vault: await client.findDerivedAccount(['vault', address]),
       feeNoteVault: await client.findDerivedAccount(['fee-vault', address]),

@@ -2,11 +2,11 @@ import { PublicKey } from '@solana/web3.js';
 import * as anchor from '@project-serum/anchor';
 import { u64 } from '@solana/spl-token';
 
-export { JetClient } from './client';
-export { JetMarket, MarketFlags } from './market';
-export { JetReserve } from './reserve';
+export { HoneyClient } from './client';
+export { HoneyMarket, MarketFlags } from './market';
+export { HoneyReserve } from './reserve';
 export type { ReserveConfig } from './reserve';
-export { JetUser } from './user';
+export { HoneyUser } from './user';
 export * from './derived-account';
 export * from './token-amount';
 

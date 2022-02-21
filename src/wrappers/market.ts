@@ -3,9 +3,9 @@ import { TOKEN_PROGRAM_ID, u64 } from '@solana/spl-token';
 import * as anchor from '@project-serum/anchor';
 import * as BL from '@solana/buffer-layout';
 
-import { CreateReserveParams, JetReserve } from './reserve';
+import { CreateReserveParams, HoneyReserve } from './reserve';
 import * as util from './util';
-import { JetClient } from './client';
+import { HoneyClient } from './client';
 
 const MAX_RESERVES = 32;
 
@@ -23,43 +23,43 @@ const ReserveInfoStruct = BL.struct([
 
 const MarketReserveInfoList = BL.seq(ReserveInfoStruct, MAX_RESERVES);
 
-export interface JetMarketReserveInfo {
+export interface HoneyMarketReserveInfo {
   address: PublicKey;
   price: anchor.BN;
   depositNoteExchangeRate: anchor.BN;
   loanNoteExchangeRate: anchor.BN;
 }
 
-export interface JetMarketData {
+export interface HoneyMarketData {
   quoteTokenMint: PublicKey;
   quoteCurrency: string;
   marketAuthority: PublicKey;
   owner: PublicKey;
 
-  reserves: JetMarketReserveInfo[];
+  reserves: HoneyMarketReserveInfo[];
   pythOraclePrice: PublicKey;
   pythOracleProduct: PublicKey;
   updateAuthority: PublicKey;
 }
 
-export class JetMarket implements JetMarketData {
+export class HoneyMarket implements HoneyMarketData {
   private constructor(
-    private client: JetClient,
+    private client: HoneyClient,
     public address: PublicKey,
     public quoteTokenMint: PublicKey,
     public quoteCurrency: string,
     public marketAuthority: PublicKey,
     public owner: PublicKey,
-    public reserves: JetMarketReserveInfo[],
+    public reserves: HoneyMarketReserveInfo[],
     public pythOraclePrice: PublicKey,
     public pythOracleProduct: PublicKey,
     public updateAuthority: PublicKey,
   ) {}
 
-  public static async fetchData(client: JetClient, address: PublicKey): Promise<[any, JetMarketReserveInfo[]]> {
+  public static async fetchData(client: HoneyClient, address: PublicKey): Promise<[any, HoneyMarketReserveInfo[]]> {
     const data: any = await client.program.account.market.fetch(address);
     const reserveInfoData = new Uint8Array(data.reserves);
-    const reserveInfoList = MarketReserveInfoList.decode(reserveInfoData) as JetMarketReserveInfo[];
+    const reserveInfoList = MarketReserveInfoList.decode(reserveInfoData) as HoneyMarketReserveInfo[];
 
     return [data, reserveInfoList];
   }
@@ -70,10 +70,10 @@ export class JetMarket implements JetMarketData {
    * @param address The address of the market.
    * @returns An object for interacting with the Jet market.
    */
-  static async load(client: JetClient, address: PublicKey): Promise<JetMarket> {
-    const [data, reserveInfoList] = await JetMarket.fetchData(client, address);
+  static async load(client: HoneyClient, address: PublicKey): Promise<HoneyMarket> {
+    const [data, reserveInfoList] = await HoneyMarket.fetchData(client, address);
 
-    return new JetMarket(
+    return new HoneyMarket(
       client,
       address,
       data.quoteTokenMint,
@@ -91,7 +91,7 @@ export class JetMarket implements JetMarketData {
    * Get the latest market account data from the network.
    */
   async refresh(): Promise<void> {
-    const [data, reserveInfoList] = await JetMarket.fetchData(this.client, this.address);
+    const [data, reserveInfoList] = await HoneyMarket.fetchData(this.client, this.address);
 
     this.reserves = reserveInfoList;
     this.owner = data.owner;
@@ -112,14 +112,14 @@ export class JetMarket implements JetMarketData {
     });
   }
 
-  async createReserve(params: CreateReserveParams): Promise<JetReserve> {
+  async createReserve(params: CreateReserveParams): Promise<HoneyReserve> {
     let account = params.account;
 
     if (account === undefined) {
       account = Keypair.generate();
     }
 
-    const derivedAccounts = await JetReserve.deriveAccounts(this.client, account.publicKey, params.tokenMint);
+    const derivedAccounts = await HoneyReserve.deriveAccounts(this.client, account.publicKey, params.tokenMint);
 
     const bumpSeeds = {
       vault: derivedAccounts.vault.bumpSeed,
@@ -164,7 +164,7 @@ export class JetMarket implements JetMarketData {
       signers: [account],
     });
 
-    return JetReserve.load(this.client, account.publicKey, this);
+    return HoneyReserve.load(this.client, account.publicKey, this);
   }
 }
 

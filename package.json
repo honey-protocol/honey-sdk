@@ -1,5 +1,5 @@
 {
-    "name": "honey-sdk",
+    "name": "@honey-defi/sdk",
     "version": "1.0.2",
     "description": "",
     "main": "lib/index.js",
@@ -34,6 +34,7 @@
     },
     "devDependencies": {
         "@types/bs58": "^4.0.1",
+        "@types/mocha": "^9.1.0",
         "@types/react": "^17.0.39",
         "chai": "^4.3.6",
         "copyfiles": "^2.4.1",

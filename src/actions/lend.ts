@@ -1,21 +1,21 @@
 import { PublicKey } from '@solana/web3.js';
 import { TxnResponse } from '../helpers/JetTypes';
-import { Amount, JetReserve, JetUser } from '../wrappers';
+import { Amount, HoneyReserve, HoneyUser } from '../wrappers';
 import { deriveAssociatedTokenAccount } from './borrow';
 import { TxResponse } from './types';
 
 export const deposit = async (
-  jetUser: JetUser,
+  HoneyUser: HoneyUser,
   tokenAmount: number,
   depositTokenMint: PublicKey,
-  depositReserves: JetReserve[],
+  depositReserves: HoneyReserve[],
 ): Promise<TxResponse> => {
-  const depositReserve = depositReserves.filter((reserve: JetReserve) =>
+  const depositReserve = depositReserves.filter((reserve: HoneyReserve) =>
     reserve.data.tokenMint.equals(depositTokenMint),
   )[0];
   const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(
     depositTokenMint,
-    jetUser.address,
+    HoneyUser.address,
   );
   const amount = Amount.tokens(tokenAmount);
 
@@ -23,55 +23,55 @@ export const deposit = async (
     console.error(`Could not find the associated token account: ${associatedTokenAccount}`);
     return [TxnResponse.Failed, []];
   }
-  return await jetUser.deposit(depositReserve, associatedTokenAccount, amount);
+  return await HoneyUser.deposit(depositReserve, associatedTokenAccount, amount);
 };
 
 export const depositCollateral = async (
-  jetUser: JetUser,
+  HoneyUser: HoneyUser,
   tokenAmount: number,
   depositTokenMint: PublicKey,
-  depositReserves: JetReserve[],
+  depositReserves: HoneyReserve[],
 ): Promise<TxResponse> => {
-  const depositReserve = depositReserves.filter((reserve: JetReserve) =>
+  const depositReserve = depositReserves.filter((reserve: HoneyReserve) =>
     reserve.data.tokenMint.equals(depositTokenMint),
   )[0];
-  return await jetUser.depositCollateral(depositReserve, Amount.tokens(tokenAmount));
+  return await HoneyUser.depositCollateral(depositReserve, Amount.tokens(tokenAmount));
 };
 
 export const withdraw = async (
-  jetUser: JetUser,
+  HoneyUser: HoneyUser,
   tokenAmount: number,
   withdrawTokenMint: PublicKey,
-  withdrawReserves: JetReserve[],
+  withdrawReserves: HoneyReserve[],
 ): Promise<TxResponse> => {
-  const withdrawReserve = withdrawReserves.filter((reserve: JetReserve) =>
+  const withdrawReserve = withdrawReserves.filter((reserve: HoneyReserve) =>
     reserve.data.tokenMint.equals(withdrawTokenMint),
   )[0];
   const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(
     withdrawTokenMint,
-    jetUser.address,
+    HoneyUser.address,
   );
   const amount = Amount.tokens(tokenAmount);
   if (!associatedTokenAccount) {
     console.error(`Could not find the associated token account: ${associatedTokenAccount}`);
     return [TxnResponse.Failed, []];
   }
-  return await jetUser.withdraw(withdrawReserve, associatedTokenAccount, amount);
+  return await HoneyUser.withdraw(withdrawReserve, associatedTokenAccount, amount);
 };
 
 export const withdrawCollateral = async (
-  jetUser: JetUser,
+  HoneyUser: HoneyUser,
   tokenAmount: number,
   withdrawTokenMint: PublicKey,
-  withdrawReserves: JetReserve[],
+  withdrawReserves: HoneyReserve[],
 ): Promise<TxResponse> => {
-  const withdrawReserve = withdrawReserves.find((reserve: JetReserve) =>
+  const withdrawReserve = withdrawReserves.find((reserve: HoneyReserve) =>
     reserve.data.tokenMint.equals(withdrawTokenMint),
   );
   if (!withdrawReserve) {
     console.error(`Reserve with token mint ${withdrawTokenMint} does not exist`);
     return [TxnResponse.Failed, []];
   }
-  const withdrawCollateralTx = await jetUser.withdrawCollateral(withdrawReserve, Amount.tokens(tokenAmount));
+  const withdrawCollateralTx = await HoneyUser.withdrawCollateral(withdrawReserve, Amount.tokens(tokenAmount));
   return withdrawCollateralTx;
 };

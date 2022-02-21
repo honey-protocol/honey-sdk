@@ -7,7 +7,7 @@ import { useMarket } from './useMarket';
 
 export const usePools = (connection: Connection, wallet: SupportedWallet, jetId: string) => {
   const { market, user } = useHoney();
-  const { jetUser } = useMarket(connection, wallet, jetId);
+  const { HoneyUser } = useMarket(connection, wallet, jetId);
   const [status, setStatus] = useState<{
     loading: boolean;
     data: TPool[];
@@ -16,10 +16,10 @@ export const usePools = (connection: Connection, wallet: SupportedWallet, jetId:
 
   useEffect(() => {
     const fetchPools = async () => {
-      if (!market.reserves.SOL || !jetUser || !user.assets) return;
+      if (!market.reserves.SOL || !HoneyUser || !user.assets) return;
       setStatus({ loading: true, data: [] });
       const reserve = market.reserves.SOL;
-      const obligation = (await jetUser.getObligationData()) as ObligationAccount;
+      const obligation = (await HoneyUser.getObligationData()) as ObligationAccount;
       if (!obligation.collateralNftMint) return;
       const collateralNftMint: PublicKey[] = obligation.collateralNftMint;
       const numOfPositions =
@@ -49,7 +49,7 @@ export const usePools = (connection: Connection, wallet: SupportedWallet, jetId:
       setStatus({ loading: false, data: [data as unknown as TPool] });
     };
     fetchPools();
-  }, [market.reserves, user.assets, jetUser]);
+  }, [market.reserves, user.assets, HoneyUser]);
 
   return { ...status };
 };

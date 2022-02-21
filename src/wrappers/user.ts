@@ -10,8 +10,8 @@ import {
 } from '@solana/web3.js';
 import * as anchor from '@project-serum/anchor';
 import { Amount, DerivedAccount } from '.';
-import { JetClient } from './client';
-import { JetMarket, JetMarketReserveInfo } from './market';
+import { HoneyClient } from './client';
+import { HoneyMarket, HoneyMarketReserveInfo } from './market';
 import {
   AccountLayout as TokenAccountLayout,
   AccountInfo as TokenAccount,
@@ -20,7 +20,7 @@ import {
   Token,
   ASSOCIATED_TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
-import { JetReserve } from './reserve';
+import { HoneyReserve } from './reserve';
 import {
   InstructionAndSigner,
   parseObligationAccount,
@@ -74,7 +74,7 @@ export const PositionStruct = BL.struct([
   BL.blob(66),
 ]);
 
-export class JetUser implements User {
+export class HoneyUser implements User {
   private _deposits: TokenAmount[] = [];
   private _collateral: TokenAmount[] = [];
   private _loans: TokenAmount[] = [];
@@ -82,23 +82,23 @@ export class JetUser implements User {
   private conn: Connection;
 
   private constructor(
-    private client: JetClient,
-    public market: JetMarket,
+    private client: HoneyClient,
+    public market: HoneyMarket,
     public address: PublicKey,
     private obligation: DerivedAccount,
-    public reserves: JetReserve[],
+    public reserves: HoneyReserve[],
   ) {
     this.conn = this.client.program.provider.connection;
   }
 
   static async load(
-    client: JetClient,
-    market: JetMarket,
+    client: HoneyClient,
+    market: HoneyMarket,
     address: PublicKey,
-    reserves: JetReserve[],
-  ): Promise<JetUser> {
+    reserves: HoneyReserve[],
+  ): Promise<HoneyUser> {
     const obligationAccount = await client.findDerivedAccount(['obligation', market.address, address]);
-    const user = new JetUser(client, market, address, obligationAccount, reserves);
+    const user = new HoneyUser(client, market, address, obligationAccount, reserves);
     user.refresh();
     return user;
   }
@@ -111,8 +111,8 @@ export class JetUser implements User {
   }
 
   async liquidate(
-    loanReserve: JetReserve,
-    collateralReserve: JetReserve,
+    loanReserve: HoneyReserve,
+    collateralReserve: HoneyReserve,
     payerAccount: PublicKey,
     receiverAccount: PublicKey,
     amount: Amount,
@@ -122,8 +122,8 @@ export class JetUser implements User {
   }
 
   async makeLiquidateTx(
-    _loanReserve: JetReserve,
-    _collateralReserve: JetReserve,
+    _loanReserve: HoneyReserve,
+    _collateralReserve: HoneyReserve,
     _payerAccount: PublicKey,
     _receiverAccount: PublicKey,
     _amount: Amount,
@@ -131,7 +131,7 @@ export class JetUser implements User {
     throw new Error('not yet implemented');
   }
 
-  async repay(reserve: JetReserve, tokenAccount: PublicKey, amount: Amount): Promise<TxResponse> {
+  async repay(reserve: HoneyReserve, tokenAccount: PublicKey, amount: Amount): Promise<TxResponse> {
     const ixs = await this.makeRepayTx(reserve, tokenAccount, amount);
     try {
       return await sendAllTransactions(this.client.program.provider, ixs);
@@ -141,7 +141,7 @@ export class JetUser implements User {
     }
   }
 
-  async makeRepayTx(reserve: JetReserve, tokenAccount: PublicKey, amount: Amount) {
+  async makeRepayTx(reserve: HoneyReserve, tokenAccount: PublicKey, amount: Amount) {
     const accounts = await this.findReserveAccounts(reserve);
     let depositSourcePubkey = tokenAccount;
     // Optional signers
@@ -226,7 +226,7 @@ export class JetUser implements User {
     tokenAccount: PublicKey,
     tokenMint: PublicKey,
     updateAuthority: PublicKey,
-    reserves: JetReserve[],
+    reserves: HoneyReserve[],
   ): Promise<TxResponse> {
     const tx = await this.makeNFTWithdrawTx(tokenAccount, tokenMint, updateAuthority, reserves);
     try {
@@ -242,7 +242,7 @@ export class JetUser implements User {
     tokenAccount: PublicKey,
     tokenMint: PublicKey,
     updateAuthority: PublicKey,
-    reserves: JetReserve[],
+    reserves: HoneyReserve[],
   ): Promise<Transaction> {
     const tx = new Transaction();
 
@@ -405,12 +405,12 @@ export class JetUser implements User {
     }
   }
 
-  async withdrawCollateral(reserve: JetReserve, amount: Amount): Promise<TxResponse> {
+  async withdrawCollateral(reserve: HoneyReserve, amount: Amount): Promise<TxResponse> {
     const ixs = await this.makeWithdrawCollateralTx(reserve, amount);
     return await sendAllTransactions(this.client.program.provider, ixs);
   }
 
-  async makeWithdrawCollateralTx(reserve: JetReserve, amount: Amount): Promise<InstructionAndSigner[]> {
+  async makeWithdrawCollateralTx(reserve: HoneyReserve, amount: Amount): Promise<InstructionAndSigner[]> {
     const accounts = await this.findReserveAccounts(reserve);
     const bumpSeeds = {
       collateralAccount: accounts.collateral.bumpSeed,
@@ -419,7 +419,7 @@ export class JetUser implements User {
 
     const refreshReserveIxs: TransactionInstruction[] = [];
     // need to refresh all reserves in market to withdraw
-    this.reserves.forEach((jetReserve) => refreshReserveIxs.push(jetReserve.makeRefreshIx()));
+    this.reserves.forEach((HoneyReserve) => refreshReserveIxs.push(HoneyReserve.makeRefreshIx()));
     const withdrawCollateralIx = this.client.program.instruction.withdrawCollateral(bumpSeeds, amount, {
       accounts: {
         market: this.market.address,
@@ -444,11 +444,11 @@ export class JetUser implements User {
     return ixs;
   }
 
-  async withdraw(reserve: JetReserve, tokenAccount: PublicKey, amount: Amount): Promise<TxResponse> {
+  async withdraw(reserve: HoneyReserve, tokenAccount: PublicKey, amount: Amount): Promise<TxResponse> {
     return await this.makeWithdrawTx(reserve, tokenAccount, amount);
   }
 
-  async makeWithdrawTx(reserve: JetReserve, tokenAccount: PublicKey, amount: Amount): Promise<TxResponse> {
+  async makeWithdrawTx(reserve: HoneyReserve, tokenAccount: PublicKey, amount: Amount): Promise<TxResponse> {
     const accounts = await this.findReserveAccounts(reserve);
     const tx = new Transaction();
     let supplementalTx: Transaction | null = null;
@@ -555,7 +555,7 @@ export class JetUser implements User {
     }
   }
 
-  async deposit(reserve: JetReserve, tokenAccount: PublicKey, amount: Amount): Promise<TxResponse> {
+  async deposit(reserve: HoneyReserve, tokenAccount: PublicKey, amount: Amount): Promise<TxResponse> {
     const [transaction, signers] = await this.makeDepositTx(reserve, tokenAccount, amount);
     try {
       const txid = await this.client.program.provider.send(transaction, signers);
@@ -566,7 +566,7 @@ export class JetUser implements User {
     }
   }
 
-  async makeDepositTx(reserve: JetReserve, tokenAccount: PublicKey, amount: Amount): Promise<[Transaction, Keypair[]]> {
+  async makeDepositTx(reserve: HoneyReserve, tokenAccount: PublicKey, amount: Amount): Promise<[Transaction, Keypair[]]> {
     const accounts = await this.findReserveAccounts(reserve);
     const depositAccountInfo = await this.conn.getAccountInfo(accounts.deposits.address);
 
@@ -647,7 +647,7 @@ export class JetUser implements User {
     return [tx, signers];
   }
 
-  async depositCollateral(reserve: JetReserve, amount: Amount): Promise<TxResponse> {
+  async depositCollateral(reserve: HoneyReserve, amount: Amount): Promise<TxResponse> {
     const tx = await this.makeDepositCollateralTx(reserve, amount);
     try {
       const txid = await this.client.program.provider.send(tx);
@@ -657,7 +657,7 @@ export class JetUser implements User {
     }
   }
 
-  async makeDepositCollateralTx(reserve: JetReserve, amount: Amount) {
+  async makeDepositCollateralTx(reserve: HoneyReserve, amount: Amount) {
     const accounts = await this.findReserveAccounts(reserve);
     const obligationAccountInfo = await this.conn.getAccountInfo(this.obligation.address);
     const collateralAccountInfo = await this.conn.getAccountInfo(accounts.collateral.address);
@@ -699,12 +699,12 @@ export class JetUser implements User {
     return tx;
   }
 
-  async borrow(reserve: JetReserve, receiver: PublicKey, amount: Amount): Promise<TxResponse> {
+  async borrow(reserve: HoneyReserve, receiver: PublicKey, amount: Amount): Promise<TxResponse> {
     const ixs = await this.makeBorrowTx(reserve, receiver, amount);
     return await sendAllTransactions(this.client.program.provider, ixs);
   }
 
-  async makeBorrowTx(reserve: JetReserve, receiver: PublicKey, amount: Amount): Promise<InstructionAndSigner[]> {
+  async makeBorrowTx(reserve: HoneyReserve, receiver: PublicKey, amount: Amount): Promise<InstructionAndSigner[]> {
     let receiverAccount: PublicKey = receiver;
     // Create token account ix
     let createTokenAccountIx: TransactionInstruction | undefined;
@@ -814,7 +814,7 @@ export class JetUser implements User {
     return ixs;
   }
 
-  private makeInitDepositAccountIx(reserve: JetReserve, account: DerivedAccount): TransactionInstruction {
+  private makeInitDepositAccountIx(reserve: HoneyReserve, account: DerivedAccount): TransactionInstruction {
     return this.client.program.instruction.initDepositAccount(account.bumpSeed, {
       accounts: {
         market: this.market.address,
@@ -858,7 +858,7 @@ export class JetUser implements User {
     });
   }
 
-  private makeInitCollateralAccountIx(reserve: JetReserve, account: DerivedAccount): TransactionInstruction {
+  private makeInitCollateralAccountIx(reserve: HoneyReserve, account: DerivedAccount): TransactionInstruction {
     return this.client.program.instruction.initCollateralAccount(account.bumpSeed, {
       accounts: {
         market: this.market.address,
@@ -877,7 +877,7 @@ export class JetUser implements User {
     });
   }
 
-  private makeInitLoanAccountIx(reserve: JetReserve, account: DerivedAccount): TransactionInstruction {
+  private makeInitLoanAccountIx(reserve: HoneyReserve, account: DerivedAccount): TransactionInstruction {
     return this.client.program.instruction.initLoanAccount(account.bumpSeed, {
       accounts: {
         market: this.market.address,
@@ -924,7 +924,7 @@ export class JetUser implements User {
     }
   }
 
-  private async refreshReserve(reserve: JetMarketReserveInfo) {
+  private async refreshReserve(reserve: HoneyMarketReserveInfo) {
     const accounts = await this.findReserveAccounts(reserve);
 
     await this.refreshAccount(this._deposits, accounts.deposits);
@@ -1015,7 +1015,7 @@ export class JetUser implements User {
     return await this.findProgramAddress(program.programId, ['collateral', reserve, obligation, wallet]);
   }
 
-  private async findReserveAccounts(reserve: JetMarketReserveInfo | JetReserve): Promise<UserReserveAccounts> {
+  private async findReserveAccounts(reserve: HoneyMarketReserveInfo | HoneyReserve): Promise<UserReserveAccounts> {
     const reserveAddress = typeof reserve.address === 'string' ? new PublicKey(reserve.address) : reserve.address;
     const deposits = await this.findDepositNoteAddress(this.client.program, reserveAddress, this.address);
     const loan = await this.findLoanNoteAddress(

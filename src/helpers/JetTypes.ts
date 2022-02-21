@@ -61,9 +61,9 @@ export interface MarketAccount {
   /** Reserved space */
   _reserved: number[];
   /** Tracks the current prices of the tokens in reserve accounts */
-  reserves: JetMarketReserveInfo[];
+  reserves: HoneyMarketReserveInfo[];
 }
-export interface JetMarketReserveInfo {
+export interface HoneyMarketReserveInfo {
   reserve: PublicKey;
   price: BN;
   depositNoteExchangeRate: BN;
