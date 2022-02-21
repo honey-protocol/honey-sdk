@@ -1,7 +1,6 @@
 import { PublicKey, Keypair } from '@solana/web3.js';
 import * as anchor from '@project-serum/anchor';
 import { CreateMarketParams, JetMarket } from './market';
-import { programIds } from '../helpers/ids';
 import { PROGRAM_IDLS } from '../helpers/idls';
 import { DerivedAccount } from './derived-account';
 

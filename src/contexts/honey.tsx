@@ -1,5 +1,5 @@
-import React, { useContext, useEffect, useMemo, useState } from 'react'
-import { AssetStore, Market, Reserve, User, WalletProvider } from '../helpers/JetTypes';
+import React, { ReactNode, useContext, useEffect, useMemo, useState } from 'react'
+import { AssetStore, Market, Reserve, User } from '../helpers/JetTypes';
 import {
   getAccountInfoAndSubscribe,
   getMintInfoAndSubscribe,
@@ -15,25 +15,21 @@ import { useAnchor } from './anchor';
 import { getEmptyMarketState } from './getEmptyMarket';
 import * as anchor from "@project-serum/anchor";
 import { MarketReserveInfoList } from '../helpers/layout';
-import { PublicKey } from '@solana/web3.js';
 import { parsePriceData } from '@pythnetwork/client';
 import { getEmptyUserState } from './getEmptyUser';
 import { NATIVE_MINT } from '@solana/spl-token';
-import { getWalletAndAnchor } from '../helpers/connectWallet';
-import { JetReserve } from '../wrappers';
 import { getAssetPubkeys, getReserveStructures } from '../helpers/honey-protocol-helpers';
+import { SolongWallet, Wallet } from '../helpers/walletType';
 
 interface HoneyContext {
   market: Market,
   user: User,
-  nfts: Reserve[],
-  userConfigured: boolean
+  assetStore: AssetStore | null;
 }
 const HoneyContext = React.createContext<HoneyContext>({
   market: getEmptyMarketState(),
   user: getEmptyUserState(),
-  nfts: [],
-  userConfigured: false
+  assetStore: null
 });
 
 export const useHoney = () => {
@@ -41,17 +37,18 @@ export const useHoney = () => {
   return context;
 };
 
-export function HoneyProvider({ children = null as any }) {
+export interface HoneyProps {
+  children: ReactNode,
+  wallet: Wallet | SolongWallet | null;
+}
+
+export function HoneyProvider(props: HoneyProps) {
   const { program, idlMetadata, coder, isConfigured } = useAnchor();
 
   const [market, setMarket] = useState<Market>(getEmptyMarketState());
   const [user, setUser] = useState<User>(getEmptyUserState());
-
-  const [nftPubKey, setNftPubKey] = useState<PublicKey[]>([]);
-  const [nftReserves, setNftReserves] = useState<Reserve[]>([]);
-  const [hasWallet, setHasWallet] = useState<boolean>(false);
-  const [hasData, setHasData] = useState<boolean>(false);
-  const [hasNFTs, setNFTReady] = useState<boolean>(false);
+  const [assetStore, setAssetStore] = useState<AssetStore | null>(null);
+  const wallet = props.wallet;
 
   useEffect(() => {
 
@@ -86,9 +83,7 @@ export function HoneyProvider({ children = null as any }) {
         if (account != null) {
           console.assert(MarketReserveInfoList.span === 12288);
           const decoded = parseMarketAccount(account.data, coder);
-          const nftList = [];
           for (const reserveStruct of decoded.reserves) {
-            let found = false;
             for (const abbrev in market.reserves) {
               if (market.reserves[abbrev].accountPubkey.equals(reserveStruct.reserve)) {
                 const reserve = market.reserves[abbrev];
@@ -99,19 +94,9 @@ export function HoneyProvider({ children = null as any }) {
 
                 const { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
                 console.log(marketUpdate, userUpdate, assetUpdate);
-                found = true;
               }
-            }
-            if (!found && !reserveStruct.reserve.equals(new PublicKey('11111111111111111111111111111111'))) {
-              if (!nftPubKey.includes(reserveStruct.reserve)) {
-                nftList.push(reserveStruct.reserve);
-              }
-              console.log('NFT Reserves');
-              console.log(reserveStruct.reserve.toString());
-              console.log('Price: ', reserveStruct.price.toString());
             }
           }
-          setNftPubKey(nftList);
         }
       });
 
@@ -203,35 +188,17 @@ export function HoneyProvider({ children = null as any }) {
     if (idlMetadata?.market?.market && program?.provider?.connection && market.reserves && user)
       subscribeToMarket();
 
-  }, [user])
-
-  // useEffect(() => {
-  //   const fetchWallet = async () => {
-  //     const provider = providers[0]; // hardcoded for Phatom now.
-  //     const wallet = await getWalletAndAnchor(provider);
-  //     setUser(current => ({
-  //       ...current,
-  //       wallet
-  //     }));
-  //     setHasWallet(true);
-  //   }
-  //   fetchWallet();
-  // }, []);
+  }, [idlMetadata?.market?.market, program?.provider?.connection, market.reserves, user]);
 
   useEffect(() => {
     const fetchAssets = async () => {
-      if (!user || !user.assets)
-        return
-      const assetStore: AssetStore | null = await getAssetPubkeys(market, user, program);
-      setUser(current => ({
-        ...current,
-        assets: assetStore
-      }));
-      setHasData(true);
+      const fetchedAssetStore: AssetStore | null = await getAssetPubkeys(market, user, program, wallet);
+      user.assets = fetchedAssetStore;
+      setAssetStore(fetchedAssetStore);
     }
-    if (hasWallet && program.provider.connection)
+    if (market && user && program?.provider?.connection && wallet)
       fetchAssets();
-  }, [hasWallet, program?.provider?.connection])
+  }, [market, user, program?.provider?.connection, wallet])
 
   useEffect(() => {
     const subscribeToAssets = async () => {
@@ -242,7 +209,7 @@ export function HoneyProvider({ children = null as any }) {
       const promises: Promise<number>[] = [];
 
       // Obligation
-      promise = getAccountInfoAndSubscribe(program.provider.connection, user.assets?.obligationPubkey!, account => {
+      promise = getAccountInfoAndSubscribe(program.provider.connection, assetStore?.obligationPubkey!, account => {
         if (account != null && user.assets) {
           user.assets.obligation = {
             ...account,
@@ -253,7 +220,7 @@ export function HoneyProvider({ children = null as any }) {
       promises.push(promise);
 
       // Wallet native SOL balance
-      promise = getAccountInfoAndSubscribe(program.provider.connection, user.wallet?.publicKey, account => {
+      promise = getAccountInfoAndSubscribe(program.provider.connection, wallet?.publicKey, account => {
         if (user.assets) {
           const reserve = market.reserves.SOL;
 
@@ -272,7 +239,7 @@ export function HoneyProvider({ children = null as any }) {
       promises.push(promise);
 
       for (const abbrev in user.assets.tokens) {
-        if (!abbrev) continue;
+        if (!abbrev || abbrev !== "SOL") continue;
         const asset = user.assets.tokens[abbrev];
         const reserve = market.reserves[abbrev];
 
@@ -344,72 +311,20 @@ export function HoneyProvider({ children = null as any }) {
       }
       Promise.all([promise]);
     }
-    if (user.assets?.tokens && program?.provider?.connection)
+    if (user.assets?.tokens && program?.provider?.connection && assetStore && wallet)
       subscribeToAssets()
-  }, [user, program?.provider?.connection])
-
-  const getEmptyReserve = (reserveMeta: JetReserve) => {
-    const reserve: Reserve = {
-      name: "NFT PLACEHOLDER",
-      abbrev: "NFT ABBREV PLACEHOLDER",
-      marketSize: TokenAmount.zero(0),
-      outstandingDebt: TokenAmount.zero(0),
-      utilizationRate: 0,
-      depositRate: 0,
-      borrowRate: 0,
-      maximumLTV: 0,
-      liquidationPremium: 0,
-      price: 0,
-      decimals: 0,
-      depositNoteExchangeRate: new anchor.BN(0),
-      loanNoteExchangeRate: new anchor.BN(0),
-      accruedUntil: new anchor.BN(0),
-      config: {
-        utilizationRate1: 0,
-        utilizationRate2: 0,
-        borrowRate0: 0,
-        borrowRate1: 0,
-        borrowRate2: 0,
-        borrowRate3: 0,
-        minCollateralRatio: 0,
-        liquidationPremium: 0,
-        manageFeeCollectionThreshold: new anchor.BN(0),
-        manageFeeRate: 0,
-        loanOriginationFee: 0,
-        liquidationSlippage: 0,
-        _reserved0: 0,
-        liquidationDexTradeMax: 0,
-        _reserved1: [],
-      },
-
-      accountPubkey: reserveMeta.address,
-      vaultPubkey: reserveMeta.data.vault,
-      availableLiquidity: TokenAmount.zero(0),
-      feeNoteVaultPubkey: reserveMeta.data.feeNoteVault,
-      tokenMintPubkey: reserveMeta.data.tokenMint,
-      tokenMint: TokenAmount.zero(0),
-      faucetPubkey: null,
-      depositNoteMintPubkey: reserveMeta.data.depositNoteMint,
-      depositNoteMint: TokenAmount.zero(0),
-      loanNoteMintPubkey: reserveMeta.data.loanNoteMint,
-      loanNoteMint: TokenAmount.zero(0),
-      pythPricePubkey: reserveMeta.data.pythPrice || reserveMeta.data.pythOraclePrice,
-      pythProductPubkey: reserveMeta.data.pythProduct || reserveMeta.data.pythOracleProduct,
-    };
-    return reserve;
-  }
+  }, [user, program?.provider?.connection, assetStore, wallet])
 
   const honeyContext = useMemo(() => ({
     market,
     user,
-    nfts: nftReserves,
-    userConfigured: hasData
-  }), [market, user, nftReserves, hasData])
+    assetStore
+  }), [market, user, assetStore])
 
   return (
     <HoneyContext.Provider
       value={honeyContext}>
-      {children}
+      {props.children}
     </HoneyContext.Provider>
   )
 }

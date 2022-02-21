@@ -1,13 +1,13 @@
-import { PublicKey } from '@solana/web3.js';
+import { Connection, PublicKey } from '@solana/web3.js';
 import { useEffect, useState } from 'react';
 import { useHoney } from '../contexts/honey';
 import { ObligationAccount } from '../helpers/JetTypes';
-import { TPool } from '../helpers/types';
+import { SupportedWallet, TPool } from '../helpers/types';
 import { useMarket } from './useMarket';
 
-export const usePools = () => {
+export const usePools = (connection: Connection, wallet: SupportedWallet, jetId: string) => {
   const { market, user } = useHoney();
-  const { jetUser } = useMarket();
+  const { jetUser } = useMarket(connection, wallet, jetId);
   const [status, setStatus] = useState<{
     loading: boolean;
     data: TPool[];
@@ -38,7 +38,7 @@ export const usePools = () => {
           usdc: 0,
         },
         userBorrowStatus: {
-          numOfPositions: { numOfPositions },
+          numOfPositions,
           positionHealths: [0],
         },
         borrowRate: reserve.borrowRate,

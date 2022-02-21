@@ -12,6 +12,7 @@ import {
 } from './programUtil';
 import { TokenAmount } from './util';
 import { Asset, AssetStore, IdlMetadata, Market, Reserve, User } from './JetTypes';
+import { SolongWallet, Wallet } from './walletType';
 
 export const getReserveStructures = async (idlMetadata: IdlMetadata): Promise<Record<string, Reserve>> => {
   // Setup reserve structures
@@ -71,59 +72,31 @@ export const getReserveStructures = async (idlMetadata: IdlMetadata): Promise<Re
 };
 
 // Get user token accounts
-export const getAssetPubkeys = async (market: Market, user: User, program: Program): Promise<AssetStore | null> => {
-  if (program == null || user.wallet === null) {
+export const getAssetPubkeys = async (market: Market, user: User, program: Program, wallet: Wallet | SolongWallet | null): Promise<AssetStore | null> => {
+  if (program == null || wallet === null) {
     return null;
   }
 
-  const [obligationPubkey, obligationBump] = await findObligationAddress(
-    program,
-    market.accountPubkey,
-    user.wallet.publicKey,
-  );
+  let [obligationPubkey, obligationBump] = await findObligationAddress(program, market.accountPubkey, wallet.publicKey);
 
-  const assetStore: AssetStore = {
+  let assetStore: AssetStore = {
     sol: new TokenAmount(new BN(0), SOL_DECIMALS),
     obligationPubkey,
     obligationBump,
-    tokens: {},
+    tokens: {}
   } as AssetStore;
   for (const assetAbbrev in market.reserves) {
-    if (!assetAbbrev) continue;
-    const reserve = market.reserves[assetAbbrev];
-    const tokenMintPubkey = reserve.tokenMintPubkey;
+    let reserve = market.reserves[assetAbbrev];
+    let tokenMintPubkey = reserve.tokenMintPubkey;
 
-    const [depositNoteDestPubkey, depositNoteDestBump] = await findDepositNoteDestAddress(
-      program,
-      reserve.accountPubkey,
-      user.wallet.publicKey,
-    );
-    const [depositNotePubkey, depositNoteBump] = await findDepositNoteAddress(
-      program,
-      reserve.accountPubkey,
-      user.wallet.publicKey,
-    );
-    const [loanNotePubkey, loanNoteBump] = await findLoanNoteAddress(
-      program,
-      reserve.accountPubkey,
-      obligationPubkey,
-      user.wallet.publicKey,
-    );
-    const [collateralPubkey, collateralBump] = await findCollateralAddress(
-      program,
-      reserve.accountPubkey,
-      obligationPubkey,
-      user.wallet.publicKey,
-    );
+    let [depositNoteDestPubkey, depositNoteDestBump] = await findDepositNoteDestAddress(program, reserve.accountPubkey, wallet.publicKey);
+    let [depositNotePubkey, depositNoteBump] = await findDepositNoteAddress(program, reserve.accountPubkey, wallet.publicKey);
+    let [loanNotePubkey, loanNoteBump] = await findLoanNoteAddress(program, reserve.accountPubkey, obligationPubkey, wallet.publicKey);
+    let [collateralPubkey, collateralBump] = await findCollateralAddress(program, reserve.accountPubkey, obligationPubkey, wallet.publicKey);
 
-    const asset: Asset = {
+    let asset: Asset = {
       tokenMintPubkey,
-      walletTokenPubkey: await Token.getAssociatedTokenAddress(
-        ASSOCIATED_TOKEN_PROGRAM_ID,
-        TOKEN_PROGRAM_ID,
-        tokenMintPubkey,
-        user.wallet.publicKey,
-      ),
+      walletTokenPubkey: await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, tokenMintPubkey, wallet.publicKey),
       walletTokenExists: false,
       walletTokenBalance: TokenAmount.zero(reserve.decimals), // be careful of what were setting for this on the idl / server
       depositNotePubkey,
@@ -148,12 +121,12 @@ export const getAssetPubkeys = async (market: Market, user: User, program: Progr
       maxDepositAmount: 0,
       maxWithdrawAmount: 0,
       maxBorrowAmount: 0,
-      maxRepayAmount: 0,
+      maxRepayAmount: 0
     };
 
     // Set user assets
     assetStore.tokens[assetAbbrev] = asset;
   }
 
-  return assetStore;
+  return assetStore
 };

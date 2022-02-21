@@ -1,33 +1,38 @@
 import { Metadata } from '@metaplex-foundation/mpl-token-metadata';
-import { PublicKey } from '@solana/web3.js';
+import { Connection, PublicKey } from '@solana/web3.js';
 import { useEffect, useState } from 'react';
-import { getNFTAssociatedMetadata, JetUser } from '..';
-import { useConnection } from '../contexts/connection';
+import { getNFTAssociatedMetadata } from '..';
 import { useHoney } from '../contexts/honey';
-import { METADATA_PROGRAM_ID } from '../helpers/ids';
 import { ObligationAccount } from '../helpers/JetTypes';
-import { TBorrowPosition } from '../helpers/types';
+import { SupportedWallet, TBorrowPosition } from '../helpers/types';
 import { useMarket } from './useMarket';
 
-export const useBorrowPositions = () => {
-  const [userPositions, setUserPositions] = useState<TBorrowPosition[]>([]);
-  const { user } = useHoney();
-  const { jetUser } = useMarket();
-  const connection = useConnection();
+export const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
+
+export const useBorrowPositions = (connection: Connection, wallet: SupportedWallet, jetId: string) => {
+  const [status, setStatus] = useState<{
+    loading: boolean;
+    data?: TBorrowPosition[];
+    error?: Error;
+  }>({ loading: false });
+
+  const { assetStore } = useHoney();
+  const { jetUser } = useMarket(connection, wallet, jetId);
 
   const fetchData = async () => {
     if (!jetUser) return console.error('Could not find jet user');
+    setStatus({ loading: true });
+
     const borrowPositions: TBorrowPosition[] = [];
     const obligation = (await jetUser.getObligationData()) as ObligationAccount;
     if (!obligation.market) return;
     const collateralNftMint: PublicKey[] = obligation.collateralNftMint;
     if (!collateralNftMint || collateralNftMint.length === 0) return;
-    const metadataPubKey = new PublicKey(METADATA_PROGRAM_ID);
     const promises = collateralNftMint.map(async (key: PublicKey, index: number) => {
       if (!key.equals(PublicKey.default)) {
         const [nftMetadata, metadataBump] = await PublicKey.findProgramAddress(
-          [Buffer.from('metadata'), metadataPubKey.toBuffer(), key.toBuffer()],
-          metadataPubKey,
+          [Buffer.from('metadata'), METADATA_PROGRAM_ID.toBuffer(), key.toBuffer()],
+          METADATA_PROGRAM_ID,
         );
         const data = await getNFTAssociatedMetadata(connection, nftMetadata);
         if (!data) return;
@@ -51,18 +56,17 @@ export const useBorrowPositions = () => {
     obligation.loans.map((loan: any, index: number) => {
       borrowPositions[index]?.assetsBorrowed.push({
         name: 'sol',
-        value: Math.round(user.assets?.tokens.SOL.loanNoteBalance.amount.toNumber()! * 1000) / 1000,
+        value: Math.round(assetStore?.tokens.SOL.loanNoteBalance.amount.toNumber()! * 1000) / 1000,
       });
     });
-    console.log(borrowPositions);
-    setUserPositions(borrowPositions);
+    setStatus({ loading: false, data: borrowPositions });
   };
 
   // build borrow positions
   useEffect(() => {
-    if (!user.assets || !jetUser) return;
+    if (!assetStore || !jetUser) return;
     fetchData();
-  }, [jetUser]);
+  }, [jetUser, assetStore]);
 
-  return { userPositions };
+  return { ...status };
 };
