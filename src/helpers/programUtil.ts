@@ -147,7 +147,7 @@ export const findProgramAddress = async (
 ): Promise<[PublicKey, number]> => {
   const SEEDBYTES = seeds.map((s) => {
     if (typeof s === 'string') {
-      return new TextEncoder().encode(s);
+      // return new TextEncoder().encode(s);
     } else if ('publicKey' in s) {
       return s.publicKey.toBytes();
     } else if ('toBytes' in s) {
@@ -362,7 +362,7 @@ export const sendTransaction = async (
   return [res, [txid]];
 };
 
-export const inDevelopment: boolean = window.location.hostname.indexOf('devnet') !== -1;
+export const inDevelopment: boolean = true;
 
 export const explorerUrl = (txid: string) => {
   const clusterParam = inDevelopment ? `?cluster=devnet` : '';
@@ -421,6 +421,75 @@ export interface InstructionAndSigner {
   signers?: Signer[];
 }
 
+export const simulateAllTransactions = async (
+  provider: anchor.Provider,
+  transactions: InstructionAndSigner[],
+  skipConfirmation?: boolean,
+): Promise<[res: TxnResponse, txids: string[]]> => {
+  if (!provider.wallet?.publicKey) {
+    throw new Error('Wallet is not connected');
+  }
+
+  // Building and partial sign phase
+  const recentBlockhash = await provider.connection.getRecentBlockhash();
+  const txs: Transaction[] = [];
+  for (const tx of transactions) {
+    if (tx.ix.length == 0) {
+      continue;
+    }
+    let transaction = new Transaction();
+    transaction.instructions = tx.ix;
+    transaction.recentBlockhash = recentBlockhash.blockhash;
+    transaction.feePayer = provider.wallet.publicKey;
+    if (tx.signers && tx.signers.length > 0) {
+      transaction.partialSign(...tx.signers);
+    }
+    txs.push(transaction);
+  }
+
+  // Signing phase
+  let signedTransactions: Transaction[] = [];
+  try {
+    if (!provider.wallet.signAllTransactions) {
+      for (let i = 0; i < txs.length; i++) {
+        const signedTxn = await provider.wallet.signTransaction(txs[i]);
+        signedTransactions.push(signedTxn);
+      }
+    } else {
+      signedTransactions = await provider.wallet.signAllTransactions(txs);
+    }
+  } catch (err) {
+    console.log('Signing All Transactions Failed', err);
+    // wallet refused to sign
+    return [TxnResponse.Cancelled, []];
+  }
+  // }
+
+  // Sending phase
+  console.log('Transactions', txs);
+  let res = TxnResponse.Success;
+  const txids: string[] = [];
+  for (let i = 0; i < signedTransactions.length; i++) {
+    const transaction = signedTransactions[i];
+
+    // Transactions can be simulated against an old slot that
+    // does not include previously sent transactions. In most
+    // conditions only the first transaction can be simulated
+    // safely
+    const skipPreflightSimulation = i !== 0;
+    const opts: ConfirmOptions = {
+      ...provider.opts,
+      skipPreflight: skipPreflightSimulation,
+    };
+
+    const { value } = await provider.connection.simulateTransaction(transaction);
+    if (value.err) {
+      res = TxnResponse.Failed;
+    }
+  }
+  return [res, txids];
+};
+
 export const sendAllTransactions = async (
   provider: anchor.Provider,
   transactions: InstructionAndSigner[],
@@ -449,26 +518,7 @@ export const sendAllTransactions = async (
 
   // Signing phase
   let signedTransactions: Transaction[] = [];
-  //Slope wallet funcs only take bs58 strings
-  // if (user.wallet?.name === 'Slope') {
-  //   try {
-  //     const { msg, data } = await provider.wallet.signAllTransactions(txs.map((txn) => bs58.encode(txn.serializeMessage())) as any) as unknown as SlopeTxn;
-  //     const txnsLen = txs.length;
-  //     if(!data.publicKey || data.signatures?.length !== txnsLen) {
-  //       throw new Error("Transactions Signing Failed");
-  //     }
-  //     for (let i = 0; i < txnsLen; i++) {
-  //       txs[i].addSignature(new PublicKey(data.publicKey), bs58.decode(data.signatures[i]));
-  //       signedTransactions.push(txs[i])
-  //     }
-  //   } catch (err) {
-  //     console.log('Signing All Transactions Failed', err);
-  //   // wallet refused to sign
-  //     return [TxnResponse.Cancelled, []];
-  //   }
-  // } else {
   try {
-    //solong does not have a signAllTransactions Func so we sign one by one
     if (!provider.wallet.signAllTransactions) {
       for (let i = 0; i < txs.length; i++) {
         const signedTxn = await provider.wallet.signTransaction(txs[i]);

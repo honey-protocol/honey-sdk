@@ -17,14 +17,14 @@ export const useBorrowPositions = (connection: Connection, wallet: SupportedWall
   }>({ loading: false });
 
   const { assetStore } = useHoney();
-  const { HoneyUser } = useMarket(connection, wallet, jetId);
+  const { honeyUser } = useMarket(connection, wallet, jetId);
 
   const fetchData = async () => {
-    if (!HoneyUser) return console.error('Could not find jet user');
+    if (!honeyUser) return console.error('Could not find jet user');
     setStatus({ loading: true });
 
     const borrowPositions: TBorrowPosition[] = [];
-    const obligation = (await HoneyUser.getObligationData()) as ObligationAccount;
+    const obligation = (await honeyUser.getObligationData()) as ObligationAccount;
     if (!obligation.market) return;
     const collateralNftMint: PublicKey[] = obligation.collateralNftMint;
     if (!collateralNftMint || collateralNftMint.length === 0) return;
@@ -64,9 +64,9 @@ export const useBorrowPositions = (connection: Connection, wallet: SupportedWall
 
   // build borrow positions
   useEffect(() => {
-    if (!assetStore || !HoneyUser) return;
+    if (!assetStore || !honeyUser) return;
     fetchData();
-  }, [HoneyUser, assetStore]);
+  }, [honeyUser, assetStore]);
 
   return { ...status };
 };

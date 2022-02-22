@@ -9,10 +9,10 @@ import { SupportedWallet } from '../helpers/types';
 export const useMarket = (connection: Connection, wallet: SupportedWallet, jetId: string) => {
   const { idlMetadata, isConfigured } = useAnchor();
 
-  const [HoneyClient, setHoneyClient] = useState<HoneyClient>();
-  const [HoneyMarket, setHoneyMarket] = useState<HoneyMarket>();
-  const [HoneyUser, setHoneyUser] = useState<HoneyUser>();
-  const [HoneyReserves, setHoneyReserves] = useState<HoneyReserve[]>();
+  const [honeyClient, setHoneyClient] = useState<HoneyClient>();
+  const [honeyMarket, setHoneyMarket] = useState<HoneyMarket>();
+  const [honeyUser, setHoneyUser] = useState<HoneyUser>();
+  const [honeyReserves, setHoneyReserves] = useState<HoneyReserve[]>();
 
   useEffect(() => {
     const provider = new anchor.Provider(connection, wallet as unknown as Wallet, anchor.Provider.defaultOptions());
@@ -41,13 +41,13 @@ export const useMarket = (connection: Connection, wallet: SupportedWallet, jetId
   }, [isConfigured, connection, idlMetadata, wallet]);
 
   return {
-    HoneyClient,
+    honeyClient,
     setHoneyClient,
-    HoneyMarket,
+    honeyMarket,
     setHoneyMarket,
-    HoneyUser,
+    honeyUser,
     setHoneyUser,
-    HoneyReserves,
+    honeyReserves,
     setHoneyReserves,
   };
 };
