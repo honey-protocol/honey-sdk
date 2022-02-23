@@ -4,10 +4,21 @@
     "instructions": [{
             "name": "initMarket",
             "accounts": [{
-                "name": "market",
-                "isMut": true,
-                "isSigner": false
-            }],
+                    "name": "market",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "oraclePrice",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "oracleProduct",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
             "args": [{
                     "name": "owner",
                     "type": "publicKey"
@@ -50,11 +61,6 @@
                 },
                 {
                     "name": "feeNoteVault",
-                    "isMut": true,
-                    "isSigner": false
-                },
-                {
-                    "name": "feeReceiverAccount",
                     "isMut": true,
                     "isSigner": false
                 },
@@ -177,6 +183,64 @@
                 },
                 {
                     "name": "depositAccount",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "tokenProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "rent",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": [{
+                "name": "bump",
+                "type": "u8"
+            }]
+        },
+        {
+            "name": "initCollateralAccount",
+            "accounts": [{
+                    "name": "market",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "marketAuthority",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "obligation",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "reserve",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "depositNoteMint",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "owner",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "collateralAccount",
                     "isMut": true,
                     "isSigner": false
                 },
@@ -794,6 +858,63 @@
             }]
         },
         {
+            "name": "depositCollateral",
+            "accounts": [{
+                    "name": "market",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "marketAuthority",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "reserve",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "obligation",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "owner",
+                    "isMut": false,
+                    "isSigner": true
+                },
+                {
+                    "name": "depositAccount",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "collateralAccount",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "tokenProgram",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": [{
+                    "name": "bump",
+                    "type": {
+                        "defined": "DepositCollateralBumpSeeds"
+                    }
+                },
+                {
+                    "name": "amount",
+                    "type": {
+                        "defined": "Amount"
+                    }
+                }
+            ]
+        },
+        {
             "name": "depositNft",
             "accounts": [{
                     "name": "market",
@@ -855,6 +976,63 @@
                 {
                     "name": "metadataBump",
                     "type": "u8"
+                }
+            ]
+        },
+        {
+            "name": "withdrawCollateral",
+            "accounts": [{
+                    "name": "market",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "marketAuthority",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "reserve",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "obligation",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "owner",
+                    "isMut": false,
+                    "isSigner": true
+                },
+                {
+                    "name": "depositAccount",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "collateralAccount",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "tokenProgram",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": [{
+                    "name": "bump",
+                    "type": {
+                        "defined": "WithdrawCollateralBumpSeeds"
+                    }
+                },
+                {
+                    "name": "amount",
+                    "type": {
+                        "defined": "Amount"
+                    }
                 }
             ]
         },
@@ -971,16 +1149,6 @@
                     "isSigner": false
                 },
                 {
-                    "name": "tokenMint",
-                    "isMut": false,
-                    "isSigner": false
-                },
-                {
-                    "name": "feeReceiverAccount",
-                    "isMut": true,
-                    "isSigner": false
-                },
-                {
                     "name": "tokenProgram",
                     "isMut": false,
                     "isSigner": false
@@ -988,9 +1156,7 @@
             ],
             "args": [{
                     "name": "bump",
-                    "type": {
-                        "defined": "BorrowBumpSeeds"
-                    }
+                    "type": "u8"
                 },
                 {
                     "name": "amount",
@@ -1410,6 +1576,14 @@
                         "type": "publicKey"
                     },
                     {
+                        "name": "nftPythOraclePrice",
+                        "type": "publicKey"
+                    },
+                    {
+                        "name": "nftPythOracleProduct",
+                        "type": "publicKey"
+                    },
+                    {
                         "name": "updateAuthority",
                         "type": "publicKey"
                     },
@@ -1592,21 +1766,6 @@
         }
     ],
     "types": [{
-            "name": "BorrowBumpSeeds",
-            "type": {
-                "kind": "struct",
-                "fields": [{
-                        "name": "loanAccount",
-                        "type": "u8"
-                    },
-                    {
-                        "name": "feeReceiverAccount",
-                        "type": "u8"
-                    }
-                ]
-            }
-        },
-        {
             "name": "Amount",
             "type": {
                 "kind": "struct",
@@ -1619,6 +1778,21 @@
                     {
                         "name": "value",
                         "type": "u64"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "DepositCollateralBumpSeeds",
+            "type": {
+                "kind": "struct",
+                "fields": [{
+                        "name": "collateralAccount",
+                        "type": "u8"
+                    },
+                    {
+                        "name": "depositAccount",
+                        "type": "u8"
                     }
                 ]
             }
@@ -1651,10 +1825,6 @@
                     },
                     {
                         "name": "loanNoteMint",
-                        "type": "u8"
-                    },
-                    {
-                        "name": "feeReceiverAccount",
                         "type": "u8"
                     }
                 ]
@@ -1724,6 +1894,21 @@
                                 24
                             ]
                         }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "WithdrawCollateralBumpSeeds",
+            "type": {
+                "kind": "struct",
+                "fields": [{
+                        "name": "collateralAccount",
+                        "type": "u8"
+                    },
+                    {
+                        "name": "depositAccount",
+                        "type": "u8"
                     }
                 ]
             }
@@ -1871,6 +2056,27 @@
                     "index": false
                 },
                 {
+                    "name": "reserve",
+                    "type": "publicKey",
+                    "index": false
+                },
+                {
+                    "name": "amount",
+                    "type": {
+                        "defined": "Amount"
+                    },
+                    "index": false
+                }
+            ]
+        },
+        {
+            "name": "DepositCollateralEvent",
+            "fields": [{
+                    "name": "depositor",
+                    "type": "publicKey",
+                    "index": false
+                },
+                {
                     "name": "market",
                     "type": "publicKey",
                     "index": false
@@ -1917,6 +2123,27 @@
             "name": "RepayEvent",
             "fields": [{
                     "name": "borrower",
+                    "type": "publicKey",
+                    "index": false
+                },
+                {
+                    "name": "reserve",
+                    "type": "publicKey",
+                    "index": false
+                },
+                {
+                    "name": "amount",
+                    "type": {
+                        "defined": "Amount"
+                    },
+                    "index": false
+                }
+            ]
+        },
+        {
+            "name": "WithdrawCollateralEvent",
+            "fields": [{
+                    "name": "depositor",
                     "type": "publicKey",
                     "index": false
                 },
@@ -2091,35 +2318,6 @@
         }
     ],
     "metadata": {
-        "address": "GK53SsfAuRrPE1bEAa5isEDK6GjbK3Go7KcWZQtxQijn",
-        "cluster": "https://api.devnet.solana.com",
-        "market": {
-            "market": "9u1iip3abqoBFYehT6UBvvxt5qz6Wt2AEZf21pBSo1Zv",
-            "marketAuthority": "4Bj7kP9B9XPzcyeScSxjr3MfBx2pdGBFvfEqbt4Fj5MZ"
-        },
-        "reserves": [{
-            "accounts": {
-                "reserve": "FabMjmMvRjbTUqJfRdkm3CFrcchAdW7HFEkHicZBLufK",
-                "vault": "DBgNAPC9toYffARaJ6wK7FhrpkGy4yeuatFTv1693Zxk",
-                "feeNoteVault": "GoLcQhwEAn5fxKqrEsrzzJs935kSknkhCkeTMpxRhD9J",
-                "tokenMint": "So11111111111111111111111111111111111111112",
-                "feeReceiverAccount": "8WCa2KJkP1Y1AQtMn45t3DpxQXtTUnDGySxtWKw5xgYP",
-                "pythPrice": "38qWU6wpX8Pd1pgAAG1XtxLdTA9FECCEsewv1t67jWEx",
-                "pythProduct": "5HZLYUddksAejAeQJJfx7fbAePcKhxxrPYsKS6oYzefj",
-                "depositNoteMint": "9nLbPhcb5cr4h6XTCwRqQb9i8TmqmhSfeM7bt8Q4nye9",
-                "loanNoteMint": "5WaoeHn1in99TeQhACBq1rRqiGeynscwX5YjdrCTpNW8"
-            },
-            "bump": {
-                "vault": 255,
-                "feeNoteVault": 255,
-                "depositNoteMint": 254,
-                "loanNoteMint": 252,
-                "feeReceiverAccount": 255
-            },
-            "name": "Wrapped SOL",
-            "abbrev": "SOL",
-            "decimals": 9,
-            "reserveIndex": 0
-        }]
+        "address": "9wV7xKWUezowtmvssXAQiUgdgV5i2FbEmZgixgkGzL7p"
     }
 }

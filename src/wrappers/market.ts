@@ -138,25 +138,16 @@ export class HoneyMarket implements HoneyMarketData {
         market: this.address,
         marketAuthority: this.marketAuthority,
         owner: this.owner,
-
         oracleProduct: params.pythOracleProduct,
         oraclePrice: params.pythOraclePrice,
-
         reserve: account.publicKey,
         vault: derivedAccounts.vault.address,
         feeNoteVault: derivedAccounts.feeNoteVault.address,
-        dexSwapTokens: derivedAccounts.dexSwapTokens.address,
-        dexOpenOrders: derivedAccounts.dexOpenOrders.address,
         loanNoteMint: derivedAccounts.loanNoteMint.address,
         depositNoteMint: derivedAccounts.depositNoteMint.address,
-
-        dexMarket: params.dexMarket,
         quoteTokenMint: this.quoteTokenMint,
         tokenMint: params.tokenMint,
-
         tokenProgram: TOKEN_PROGRAM_ID,
-        // dexProgram: this.client.devnet ? DEX_ID_DEVNET : DEX_ID, removed?
-        clock: anchor.web3.SYSVAR_CLOCK_PUBKEY,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
         systemProgram: anchor.web3.SystemProgram.programId,
       },
