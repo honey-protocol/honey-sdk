@@ -1,5 +1,5 @@
-import { PublicKey, Keypair } from '@solana/web3.js';
-import { TOKEN_PROGRAM_ID, u64 } from '@solana/spl-token';
+import { PublicKey, Keypair, Transaction } from '@solana/web3.js';
+import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID, u64 } from '@solana/spl-token';
 import * as anchor from '@project-serum/anchor';
 import * as BL from '@solana/buffer-layout';
 
@@ -22,7 +22,7 @@ const ReserveInfoStruct = BL.struct([
 ]);
 
 const MarketReserveInfoList = BL.seq(ReserveInfoStruct, MAX_RESERVES);
-
+export const DEX_PID = new PublicKey("DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY"); // devnet
 export interface HoneyMarketReserveInfo {
   address: PublicKey;
   price: anchor.BN;
@@ -54,7 +54,7 @@ export class HoneyMarket implements HoneyMarketData {
     public pythOraclePrice: PublicKey,
     public pythOracleProduct: PublicKey,
     public updateAuthority: PublicKey,
-  ) {}
+  ) { }
 
   public static async fetchData(client: HoneyClient, address: PublicKey): Promise<[any, HoneyMarketReserveInfo[]]> {
     const data: any = await client.program.account.market.fetch(address);
@@ -120,16 +120,25 @@ export class HoneyMarket implements HoneyMarketData {
     }
 
     const derivedAccounts = await HoneyReserve.deriveAccounts(this.client, account.publicKey, params.tokenMint);
-
     const bumpSeeds = {
       vault: derivedAccounts.vault.bumpSeed,
       feeNoteVault: derivedAccounts.feeNoteVault.bumpSeed,
-      dexOpenOrders: derivedAccounts.dexOpenOrders.bumpSeed,
+      protocolFeeNoteVault: derivedAccounts.protocolFeeNoteVault.bumpSeed,
+      dexOpenOrdersA: derivedAccounts.dexOpenOrdersA.bumpSeed,
+      dexOpenOrdersB: derivedAccounts.dexOpenOrdersB.bumpSeed,
       dexSwapTokens: derivedAccounts.dexSwapTokens.bumpSeed,
-
       loanNoteMint: derivedAccounts.loanNoteMint.bumpSeed,
       depositNoteMint: derivedAccounts.depositNoteMint.bumpSeed,
     };
+
+
+    const nftDropletAccount = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      params.nftDropletMint,
+      this.marketAuthority,
+      true
+    );
 
     const createReserveAccount = await this.client.program.account.reserve.createInstruction(account);
 
@@ -137,24 +146,36 @@ export class HoneyMarket implements HoneyMarketData {
       accounts: {
         market: this.address,
         marketAuthority: this.marketAuthority,
-        owner: this.owner,
-        oracleProduct: params.pythOracleProduct,
-        oraclePrice: params.pythOraclePrice,
         reserve: account.publicKey,
         vault: derivedAccounts.vault.address,
+        nftDropletMint: params.nftDropletMint,
+        nftDropletVault: nftDropletAccount,
+
         feeNoteVault: derivedAccounts.feeNoteVault.address,
+        protocolFeeNoteVault: derivedAccounts.protocolFeeNoteVault.address,
+
+        dexSwapTokens: derivedAccounts.dexSwapTokens.address,
+        dexOpenOrdersA: derivedAccounts.dexOpenOrdersA.address,
+        dexOpenOrdersB: derivedAccounts.dexOpenOrdersB.address,
+        dexMarketA: params.dexMarketA,
+        dexMarketB: params.dexMarketB,
+        dexProgram: DEX_PID,
         loanNoteMint: derivedAccounts.loanNoteMint.address,
         depositNoteMint: derivedAccounts.depositNoteMint.address,
+
+        oracleProduct: params.pythOracleProduct,
+        oraclePrice: params.pythOraclePrice,
         quoteTokenMint: this.quoteTokenMint,
         tokenMint: params.tokenMint,
         tokenProgram: TOKEN_PROGRAM_ID,
-        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+        owner: this.owner,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: anchor.web3.SystemProgram.programId,
+        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
       },
       instructions: [createReserveAccount],
       signers: [account],
     });
-
     return HoneyReserve.load(this.client, account.publicKey, this);
   }
 }
@@ -178,21 +199,18 @@ export interface CreateMarketParams {
    */
   quoteCurrencyName: string;
 
+
+  /**
+   *  creator public key of the NFT held in the associated metadata
+   */
+  nftCollectionCreator: PublicKey;
+
   /**
    * The account to use for the market data.
    *
    * If not provided an account will be generated.
    */
   account?: Keypair;
-
-  /**
-   *  Update authority of the NFT held in the associated metadata
-   */
-  updateAuthority: PublicKey;
-
-  oraclePrice: PublicKey;
-
-  oracleProduct: PublicKey;
 }
 
 export enum MarketFlags {

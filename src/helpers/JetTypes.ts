@@ -220,16 +220,18 @@ export interface ReserveMetadata {
     faucet?: PublicKey;
     depositNoteMint: PublicKey;
     loanNoteMint: PublicKey;
-
     pythPrice: PublicKey;
     pythProduct: PublicKey;
-
     pythOraclePrice: PublicKey;
     pythOracleProduct: PublicKey;
-
     dexMarket: PublicKey;
     dexSwapTokens: PublicKey;
     dexOpenOrders: PublicKey;
+    protocolFeeNoteVault: PublicKey;
+    dexOpenOrdersA: PublicKey;
+    dexOpenOrdersB: PublicKey;
+    dexMarketA: PublicKey;
+    dexMarketB: PublicKey;
   };
   bump: {
     vault: number;

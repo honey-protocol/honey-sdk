@@ -25,7 +25,6 @@ import {
   InstructionAndSigner,
   parseObligationAccount,
   sendAllTransactions,
-  transactionErrorToString,
 } from '../helpers/programUtil';
 import * as util from './util';
 import * as BL from '@solana/buffer-layout';
@@ -74,6 +73,8 @@ export const PositionStruct = BL.struct([
   BL.blob(66),
 ]);
 
+export const SOLVENT_PROGRAM = new PublicKey('GwRvoU6vTXQAbS75KaMbm7o2iTYVtdEnF4mFUbZr9Cmb');
+export const SOLVENT_FEE_ACCOUNT_DEVNET = new PublicKey('HkjFiwUW7qnREVm2PxBg8LUrCvjExrJjyYY51wsZTUK8');
 export class HoneyUser implements User {
   private _deposits: TokenAmount[] = [];
   private _collateral: TokenAmount[] = [];
@@ -110,6 +111,42 @@ export class HoneyUser implements User {
     return parsed;
   }
 
+  // async liquidateSolvent() {
+  //   const tx = await this.makeLiquidateSolventIx()
+  // }
+
+  // // move to a better place
+  // async makeLiquidateSolventIx(reserve: HoneyReserve) {
+  //   const solventAuthorityBump = "figure out later";
+
+  //   this.client.program.instruction.liquidateSolvent(solventAuthorityBump, {
+  //     accounts: {
+  //       market: this.market.address,
+  //       marketAuthority: this.market.marketAuthority,
+  //       reserve: reserve.address,
+  //       vault, 
+  //       obligation,
+  //       loanNoteMint,
+  //       loanAccount,
+  //       solventAuthority,
+  //       bucketStateV2,
+  //       nftDropletMint,
+  //       nftMint,
+  //       metadata,
+  //       collateralAccount,
+  //       solventTokenAc,
+  //       solventMintFeeAc,
+  //       nftDropletVault,
+  //       dexSwapTokens,
+  //       tokenProgram: TOKEN_PROGRAM_ID,
+  //       solventProgram: SOLVENT_PROGRAM,
+
+  //     }
+  //   }
+
+  //   )
+  // }
+
   async liquidate(
     loanReserve: HoneyReserve,
     collateralReserve: HoneyReserve,
@@ -136,7 +173,7 @@ export class HoneyUser implements User {
     try {
       return await sendAllTransactions(this.client.program.provider, ixs);
     } catch (err) {
-      console.error(`Repay error: ${transactionErrorToString(err)}`);
+      console.error(`Repay error: ${err}`);
       return [TxnResponse.Failed, []];
     }
   }
@@ -226,14 +263,13 @@ export class HoneyUser implements User {
     tokenAccount: PublicKey,
     tokenMint: PublicKey,
     updateAuthority: PublicKey,
-    reserves: HoneyReserve[],
   ): Promise<TxResponse> {
-    const tx = await this.makeNFTWithdrawTx(tokenAccount, tokenMint, updateAuthority, reserves);
+    const tx = await this.makeNFTWithdrawTx(tokenAccount, tokenMint, updateAuthority);
     try {
       const txid = await this.client.program.provider.send(tx);
       return [TxnResponse.Success, [txid]];
     } catch (err) {
-      console.error(`Withdraw NFT error: ${transactionErrorToString(err)}`);
+      console.error(`Withdraw NFT error: ${err}`);
       return [TxnResponse.Failed, []];
     }
   }
@@ -242,7 +278,6 @@ export class HoneyUser implements User {
     tokenAccount: PublicKey,
     tokenMint: PublicKey,
     updateAuthority: PublicKey,
-    reserves: HoneyReserve[],
   ): Promise<Transaction> {
     const tx = new Transaction();
 
@@ -265,7 +300,7 @@ export class HoneyUser implements User {
       collateralAccount: collateralBump,
     };
 
-    reserves.forEach((reserve) => tx.add(reserve.makeRefreshIx()));
+    this.reserves.forEach((reserve) => tx.add(reserve.makeRefreshIx()));
 
     tx.add(
       await this.client.program.instruction.withdrawNft(withdrawNFTBumpSeeds, metadataBump, {
@@ -321,13 +356,18 @@ export class HoneyUser implements User {
         });
         txids.push(txid);
       } catch (err) {
-        console.error(`Obligation account error: ${transactionErrorToString(err)}`);
+        console.error(`Obligation account: ${err}`);
         return [TxnResponse.Failed, []];
       }
     }
 
     const [collateralAddress, collateralBump] = await PublicKey.findProgramAddress(
-      [Buffer.from('nft'), this.market.address.toBuffer(), tokenMint.toBuffer(), this.address.toBuffer()],
+      [
+        Buffer.from('nft'),
+        this.market.address.toBuffer(),
+        tokenMint.toBuffer(),
+        this.address.toBuffer()
+      ],
       this.client.program.programId,
     );
 
@@ -341,7 +381,7 @@ export class HoneyUser implements User {
     const collateralData = await this.conn.getAccountInfo(collateralAddress);
     if (!collateralData) {
       const collateralTx = new Transaction();
-      const ix = await this.client.program.instruction.initNftAccount(collateralBump, metadataBump, {
+      const ix = await this.client.program.instruction.initNftAccount(metadataBump, {
         accounts: {
           market: this.market.address,
           marketAuthority: this.market.marketAuthority,
@@ -353,6 +393,7 @@ export class HoneyUser implements User {
           owner: this.address,
           collateralAccount: collateralAddress,
           tokenProgram: TOKEN_PROGRAM_ID,
+          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
 
           rent: anchor.web3.SYSVAR_RENT_PUBKEY,
           systemProgram: anchor.web3.SystemProgram.programId,
@@ -360,10 +401,10 @@ export class HoneyUser implements User {
       });
       collateralTx.add(ix);
       try {
-        const txid = await this.client.program.provider.send(collateralTx);
+        const txid = await this.client.program.provider.send(collateralTx, [], { skipPreflight: true });
         txids.push(txid);
       } catch (err) {
-        console.error(`Collateral account error: ${transactionErrorToString(err)}`);
+        console.error(`Collateral account: ${err}`);
         return [TxnResponse.Failed, txids];
       }
     }
@@ -400,7 +441,7 @@ export class HoneyUser implements User {
       txids.push(txid);
       return [TxnResponse.Success, txids];
     } catch (err) {
-      console.error(`Deposit NFT error: ${transactionErrorToString(err)}`);
+      console.error(`Deposit NFT error: ${err}`);
       return [TxnResponse.Failed, txids];
     }
   }
@@ -512,7 +553,7 @@ export class HoneyUser implements User {
         const txid = await this.client.program.provider.send(supplementalTx, signer);
         txids.push(txid);
       } catch (err) {
-        console.error(`Ata or wSOL account creation error: ${transactionErrorToString(err)}`);
+        console.error(`Ata or wSOL account creation error: ${err}`);
         return [TxnResponse.Failed, txids];
       }
     }
@@ -550,7 +591,7 @@ export class HoneyUser implements User {
       txids.push(txid);
       return [TxnResponse.Success, txids];
     } catch (err) {
-      console.error(`Withdraw collateral error: ${transactionErrorToString(err)}`);
+      console.error(`Withdraw collateral error: ${err}`);
       return [TxnResponse.Failed, txids];
     }
   }
@@ -561,7 +602,7 @@ export class HoneyUser implements User {
       const txid = await this.client.program.provider.send(transaction, signers);
       return [TxnResponse.Success, [txid]];
     } catch (err) {
-      console.error(`Deposit error: ${transactionErrorToString(err)}`);
+      console.error(`Deposit error: ${err}`);
       return [TxnResponse.Failed, []];
     }
   }
@@ -667,9 +708,6 @@ export class HoneyUser implements User {
     if (obligationAccountInfo == null) {
       tx.add(this.makeInitObligationAccountIx());
     }
-    if (collateralAccountInfo == null) {
-      tx.add(this.makeInitCollateralAccountIx(reserve, accounts.collateral));
-    }
 
     const bumpSeeds = {
       depositAccount: accounts.deposits.bumpSeed,
@@ -764,13 +802,27 @@ export class HoneyUser implements User {
     this.reserves.forEach((r) => {
       refreshReserveIxs.push(r.makeRefreshIx());
     });
+
     const [feeReceiverAccount, feeReceiverAccountBump] = await PublicKey.findProgramAddress(
-      [Buffer.from('honey-protocol-fee'), new PublicKey('So11111111111111111111111111111111111111112').toBuffer()],
+      [
+        Buffer.from('honey-protocol-fee'),
+        reserve.data.tokenMint.toBuffer(),
+      ],
       this.client.program.programId,
     );
 
+    const [loanAccount, loanAccountBump] = await PublicKey.findProgramAddress(
+      [
+        Buffer.from('loan'),
+        reserve.address.toBuffer(),
+        this.obligation.address.toBuffer(),
+        this.address.toBuffer(),
+      ],
+      this.client.program.programId
+    )
+
     const borrowSeeds = {
-      loanAccount: accounts.loan.bumpSeed,
+      loanAccount: loanAccountBump,
       feeReceiverAccount: feeReceiverAccountBump,
     };
     const borrowIx = this.client.program.instruction.borrow(borrowSeeds, amount, {
@@ -783,8 +835,8 @@ export class HoneyUser implements User {
         vault: reserve.data.vault,
         loanNoteMint: reserve.data.loanNoteMint,
         borrower: this.address,
-        loanAccount: accounts.loan.address,
-        tokenMint: new PublicKey('So11111111111111111111111111111111111111112'),
+        loanAccount: loanAccount,
+        tokenMint: reserve.data.tokenMint,
         feeReceiverAccount,
         receiverAccount,
         tokenProgram: TOKEN_PROGRAM_ID,
@@ -802,13 +854,22 @@ export class HoneyUser implements User {
     }
     const ixs = [
       {
-        ix: [createTokenAccountIx, createWsolTokenAccountIx, initWsoltokenAccountIx, initLoanAccountIx].filter(
+        ix: [
+          createTokenAccountIx,
+          createWsolTokenAccountIx,
+          initWsoltokenAccountIx,
+          initLoanAccountIx
+        ].filter(
           (ix) => ix,
         ) as TransactionInstruction[],
         signers: [wsolKeypair].filter((ix) => ix) as Signer[],
       },
       {
-        ix: [...refreshReserveIxs, borrowIx, closeTokenAccountIx].filter((ix) => ix) as TransactionInstruction[],
+        ix: [
+          ...refreshReserveIxs, 
+          borrowIx, 
+          closeTokenAccountIx
+        ].filter((ix) => ix) as TransactionInstruction[],
       },
     ];
     return ixs;

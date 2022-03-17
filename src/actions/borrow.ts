@@ -25,7 +25,7 @@ export const getNFTAssociatedMetadata = async (connection: Connection, metadataP
 
 export const depositNFT = async (
   connection: Connection,
-  HoneyUser: HoneyUser,
+  honeyUser: HoneyUser,
   metadataPubKey: PublicKey,
 ): Promise<TxResponse> => {
   const associatedMetadata = await getNFTAssociatedMetadata(connection, metadataPubKey);
@@ -35,19 +35,18 @@ export const depositNFT = async (
   }
   const tokenMetadata = new Metadata(metadataPubKey, associatedMetadata);
   const tokenMint = new PublicKey(tokenMetadata.data.mint);
-  const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(tokenMint, HoneyUser.address);
+  const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(tokenMint, honeyUser.address);
   if (!associatedTokenAccount) {
     console.error(`Could not find the associated token account: ${associatedTokenAccount}`);
     return [TxnResponse.Failed, []];
   }
-  return await HoneyUser.depositNFT(associatedTokenAccount, tokenMint, new PublicKey(tokenMetadata.data.updateAuthority));
+  return await honeyUser.depositNFT(associatedTokenAccount, tokenMint, new PublicKey(tokenMetadata.data.updateAuthority));
 };
 
 export const withdrawNFT = async (
   connection: Connection,
-  HoneyUser: HoneyUser,
+  honeyUser: HoneyUser,
   metadataPubKey: PublicKey,
-  reserves: HoneyReserve[],
 ): Promise<TxResponse> => {
   const associatedMetadata = await getNFTAssociatedMetadata(connection, metadataPubKey);
   if (!associatedMetadata) {
@@ -56,21 +55,20 @@ export const withdrawNFT = async (
   }
   const tokenMetadata = new Metadata(metadataPubKey, associatedMetadata);
   const tokenMint = new PublicKey(tokenMetadata.data.mint);
-  const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(tokenMint, HoneyUser.address);
+  const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(tokenMint, honeyUser.address);
   if (!associatedTokenAccount) {
     console.error(`Could not find the associated token account: ${associatedTokenAccount}`);
     return [TxnResponse.Failed, []];
   }
-  return await HoneyUser.withdrawNFT(
+  return await honeyUser.withdrawNFT(
     associatedTokenAccount,
     tokenMint,
     new PublicKey(tokenMetadata.data.updateAuthority),
-    reserves,
   );
 };
 
 export const borrow = async (
-  HoneyUser: HoneyUser,
+  honeyUser: HoneyUser,
   borrowAmount: number,
   borrowTokenMint: PublicKey,
   borrowReserves: HoneyReserve[],
@@ -78,7 +76,7 @@ export const borrow = async (
   const amount = Amount.tokens(borrowAmount);
   const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(
     borrowTokenMint,
-    HoneyUser.address,
+    honeyUser.address,
   );
   const borrowReserve: HoneyReserve = borrowReserves.filter((reserve: HoneyReserve) =>
     reserve.data.tokenMint.equals(borrowTokenMint),
@@ -88,12 +86,12 @@ export const borrow = async (
     console.error(`Ata could not be found`);
     return [TxnResponse.Failed, []];
   }
-  const borrowTx = await HoneyUser.borrow(borrowReserve, associatedTokenAccount, amount);
+  const borrowTx = await honeyUser.borrow(borrowReserve, associatedTokenAccount, amount);
   return borrowTx;
 };
 
 export const repay = async (
-  HoneyUser: HoneyUser,
+  honeyUser: HoneyUser,
   repayAmount: number,
   repayTokenMint: PublicKey,
   repayReserves: HoneyReserve[],
@@ -101,7 +99,7 @@ export const repay = async (
   const amount = Amount.tokens(repayAmount); // basically just pay back double the loan for now
   const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(
     repayTokenMint,
-    HoneyUser.address,
+    honeyUser.address,
   );
   const repayReserve: HoneyReserve = repayReserves.filter((reserve: HoneyReserve) =>
     reserve.data.tokenMint.equals(repayTokenMint),
@@ -110,5 +108,5 @@ export const repay = async (
     console.error(`Ata could not be found`);
     return [TxnResponse.Failed, []];
   }
-  return await HoneyUser.repay(repayReserve, associatedTokenAccount, amount);
+  return await honeyUser.repay(repayReserve, associatedTokenAccount, amount);
 };

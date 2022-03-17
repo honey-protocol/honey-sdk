@@ -30,9 +30,10 @@ export interface ReserveConfig {
 export interface ReserveAccounts {
   vault: DerivedAccount;
   feeNoteVault: DerivedAccount;
+  protocolFeeNoteVault: DerivedAccount,
   dexSwapTokens: DerivedAccount;
-  dexOpenOrders: DerivedAccount;
-
+  dexOpenOrdersA: DerivedAccount;
+  dexOpenOrdersB: DerivedAccount;
   loanNoteMint: DerivedAccount;
   depositNoteMint: DerivedAccount;
 }
@@ -63,6 +64,22 @@ export interface CreateReserveParams {
    */
   config: ReserveConfig;
 
+
+  /**
+   * token mint for the solvent droplets 
+   */
+  nftDropletMint: PublicKey,
+
+  /**
+   * Dex market A
+   */
+  dexMarketA: PublicKey,
+
+  /**
+   * dex market B
+   */
+  dexMarketB: PublicKey,
+
   /**
    * The account to use for the reserve data.
    *
@@ -83,9 +100,12 @@ export interface ReserveData {
   loanNoteMint: PublicKey;
   vault: PublicKey;
   feeNoteVault: PublicKey;
-  dexOpenOrders: PublicKey;
+  protocolFeeNoteVault: PublicKey;
   dexSwapTokens: PublicKey;
-  dexMarket: PublicKey;
+  dexOpenOrdersA: PublicKey;
+  dexOpenOrdersB: PublicKey;
+  dexMarketA: PublicKey;
+  dexMarketB: PublicKey;
 }
 
 export interface ReserveStateData {
@@ -160,7 +180,6 @@ export class HoneyReserve {
   }
 
   makeRefreshIx(): TransactionInstruction {
-    console.log('reserve being refreshed: ', this.address);
     return this.client.program.instruction.refreshReserve({
       accounts: {
         market: this.market.address,
@@ -175,50 +194,6 @@ export class HoneyReserve {
       },
     });
   }
-
-  // async loadDexMarketAccounts(): Promise<ReserveDexMarketAccounts> {
-  //   if (this.data.tokenMint.equals(this.market.quoteTokenMint)) {
-  //     // The quote token doesn't have a DEX market
-  //     const defaultAccount = this.data.dexSwapTokens;
-  //     return {
-  //       market: defaultAccount,
-  //       openOrders: defaultAccount,
-  //       requestQueue: defaultAccount,
-  //       eventQueue: defaultAccount,
-  //       bids: defaultAccount,
-  //       asks: defaultAccount,
-  //       coinVault: defaultAccount,
-  //       pcVault: defaultAccount,
-  //       vaultSigner: defaultAccount,
-  //     };
-  //   }
-
-  //   const dexMarketData = await this.conn.getAccountInfo(this.data.dexMarket);
-  //   const dexMarket = await SerumMarket.getLayout(DEX_ID).decode(
-  //     dexMarketData?.data
-  //   );
-
-  //   const dexSignerNonce = dexMarket.vaultSignerNonce;
-  //   const vaultSigner = await PublicKey.createProgramAddress(
-  //     [
-  //       dexMarket.ownAddress.toBuffer(),
-  //       dexSignerNonce.toArrayLike(Buffer, "le", 8),
-  //     ],
-  //     this.client.devnet ? DEX_ID_DEVNET : DEX_ID
-  //   );
-
-  //   return {
-  //     market: dexMarket.ownAddress,
-  //     openOrders: this.data.dexOpenOrders,
-  //     requestQueue: dexMarket.requestQueue,
-  //     eventQueue: dexMarket.eventQueue,
-  //     bids: dexMarket.bids,
-  //     asks: dexMarket.asks,
-  //     coinVault: dexMarket.baseVault,
-  //     pcVault: dexMarket.quoteVault,
-  //     vaultSigner,
-  //   };
-  // }
 
   async updateReserveConfig(params: UpdateReserveConfigParams): Promise<void> {
     await this.client.program.rpc.updateReserveConfig(params.config, {
@@ -248,9 +223,10 @@ export class HoneyReserve {
     return {
       vault: await client.findDerivedAccount(['vault', address]),
       feeNoteVault: await client.findDerivedAccount(['fee-vault', address]),
+      protocolFeeNoteVault: await client.findDerivedAccount(['protocol-fee-vault', tokenMint]),
       dexSwapTokens: await client.findDerivedAccount(['dex-swap-tokens', address]),
-      dexOpenOrders: await client.findDerivedAccount(['dex-open-orders', address]),
-
+      dexOpenOrdersA: await client.findDerivedAccount(['dex-open-orders-a', address]),
+      dexOpenOrdersB: await client.findDerivedAccount(['dex-open-orders-b', address]),
       loanNoteMint: await client.findDerivedAccount(['loans', address, tokenMint]),
       depositNoteMint: await client.findDerivedAccount(['deposits', address, tokenMint]),
     };

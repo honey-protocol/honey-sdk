@@ -63,12 +63,10 @@ export class HoneyClient {
       params.owner,
       params.quoteCurrencyName,
       params.quoteCurrencyMint,
-      params.updateAuthority,
+      params.nftCollectionCreator,
       {
         accounts: {
           market: account.publicKey,
-          oraclePrice: params.oraclePrice,
-          oracleProduct: params.oracleProduct,
         },
         signers: [account],
         instructions: [await this.program.account.market.createInstruction(account)],
