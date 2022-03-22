@@ -13,7 +13,7 @@
         "preversion": "npm run lint",
         "version": "npm run format && git add -A src",
         "postversion": "git push && git push --tags",
-        "copyfiles": "copyfiles src/idl/**/*.json lib/"
+        "copyfiles": "copyfiles idl/**/*.json lib/"
     },
     "keywords": [],
     "author": "",
@@ -25,7 +25,10 @@
         "@project-serum/serum": "^0.13.61",
         "@pythnetwork/client": "^2.5.3",
         "@solana/spl-token": "^0.1.8",
-        "@solana/web3.js": "^1.32.1"
+        "@solana/web3.js": "^1.32.1",
+        "@types/chai": "^4.3.0",
+        "@types/chai-as-promised": "^7.1.5",
+        "@types/mocha": "^9.1.0"
     },
     "peerDependencies": {
         "react": "^17.0.2",
