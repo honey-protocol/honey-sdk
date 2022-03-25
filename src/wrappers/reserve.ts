@@ -223,7 +223,7 @@ export class HoneyReserve {
     return {
       vault: await client.findDerivedAccount(['vault', address]),
       feeNoteVault: await client.findDerivedAccount(['fee-vault', address]),
-      protocolFeeNoteVault: await client.findDerivedAccount(['protocol-fee-vault', tokenMint]),
+      protocolFeeNoteVault: await client.findDerivedAccount(['protocol-fee-vault', address]),
       dexSwapTokens: await client.findDerivedAccount(['dex-swap-tokens', address]),
       dexOpenOrdersA: await client.findDerivedAccount(['dex-open-orders-a', address]),
       dexOpenOrdersB: await client.findDerivedAccount(['dex-open-orders-b', address]),
