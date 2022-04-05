@@ -124,7 +124,7 @@ export class HoneyUser implements User {
   //       market: this.market.address,
   //       marketAuthority: this.market.marketAuthority,
   //       reserve: reserve.address,
-  //       vault, 
+  //       vault,
   //       obligation,
   //       loanNoteMint,
   //       loanAccount,
@@ -341,8 +341,10 @@ export class HoneyUser implements User {
 
     const obligationAccountData = await this.conn.getAccountInfo(obligationAddress);
     if (!obligationAccountData) {
+      console.log('adding obligationAccountData', obligationAccountData);
       try {
-        const txid = await this.client.program.rpc.initObligation(obligationBump, {
+        const obligationTx = new Transaction();
+        const ix = await this.client.program.instruction.initObligation(obligationBump, {
           accounts: {
             market: this.market.address,
             marketAuthority: this.market.marketAuthority,
@@ -354,6 +356,8 @@ export class HoneyUser implements User {
             systemProgram: anchor.web3.SystemProgram.programId,
           },
         });
+        obligationTx.add(ix);
+        const txid = await this.client.program.provider.send(obligationTx, [], { skipPreflight: true });
         txids.push(txid);
       } catch (err) {
         console.error(`Obligation account: ${err}`);
@@ -380,6 +384,24 @@ export class HoneyUser implements User {
     const derivedMetadata = await this.findNftMetadata(tokenMint);
     const collateralData = await this.conn.getAccountInfo(collateralAddress);
     if (!collateralData) {
+      console.log('adding collateralData', collateralData);
+      console.log('accounts', {
+          market: this.market.address.toString(),
+          marketAuthority: this.market.marketAuthority.toString(),
+          obligation: obligationAddress.toString(),
+
+          depositNftMint: tokenMint.toString(),
+          nftCollectionCreator: updateAuthority.toString(), // should make a call to get this info or just do it on the program side
+          metadata: nftMetadata.toString(),
+          owner: this.address.toString(),
+          collateralAccount: collateralAddress.toString(),
+          tokenProgram: TOKEN_PROGRAM_ID,
+          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+
+          rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        }
+      );
       const collateralTx = new Transaction();
       const ix = await this.client.program.instruction.initNftAccount(metadataBump, {
         accounts: {
@@ -388,7 +410,7 @@ export class HoneyUser implements User {
           obligation: obligationAddress,
 
           depositNftMint: tokenMint,
-          updateAuthority, // should make a call to get this info or just do it on the program side
+          nftCollectionCreator: updateAuthority, // should make a call to get this info or just do it on the program side
           metadata: nftMetadata,
           owner: this.address,
           collateralAccount: collateralAddress,
@@ -866,8 +888,8 @@ export class HoneyUser implements User {
       },
       {
         ix: [
-          ...refreshReserveIxs, 
-          borrowIx, 
+          ...refreshReserveIxs,
+          borrowIx,
           closeTokenAccountIx
         ].filter((ix) => ix) as TransactionInstruction[],
       },
