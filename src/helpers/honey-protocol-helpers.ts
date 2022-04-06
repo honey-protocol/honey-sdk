@@ -73,7 +73,7 @@ export const getReserveStructures = async (idlMetadata: IdlMetadata): Promise<Re
 
 // Get user token accounts
 export const getAssetPubkeys = async (market: Market, user: User, program: Program, wallet: ConnectedWallet | null): Promise<AssetStore | null> => {
-  if (program == null || wallet === null) {
+  if (program == null || wallet === null || !market.accountPubkey) {
     return null;
   }
 

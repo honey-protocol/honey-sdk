@@ -147,7 +147,7 @@ export const findProgramAddress = async (
 ): Promise<[PublicKey, number]> => {
   const SEEDBYTES = seeds.map((s) => {
     if (typeof s === 'string') {
-      // return new TextEncoder().encode(s);
+      return new TextEncoder().encode(s);
     } else if ('publicKey' in s) {
       return s.publicKey.toBytes();
     } else if ('toBytes' in s) {
@@ -642,12 +642,12 @@ export const parseIdlMetadata = (idlMetadata: IdlMetadata): IdlMetadata => {
     ...idlMetadata,
     address: new PublicKey(idlMetadata.address),
     market: toPublicKeys(idlMetadata.market as any as Record<string, string>) as any,
-    reserves: idlMetadata.reserves.map((reserve) => {
+    reserves: idlMetadata.reserves ? idlMetadata.reserves.map((reserve) => {
       return {
         ...reserve,
         accounts: toPublicKeys(reserve.accounts),
       };
-    }) as any,
+    }) as any : []
   };
 };
 

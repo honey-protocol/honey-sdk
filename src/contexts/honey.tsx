@@ -198,9 +198,9 @@ export const HoneyProvider: FC<HoneyProps> = ({
       user.assets = fetchedAssetStore;
       setAssetStore(fetchedAssetStore);
     }
-    if (market && user && program?.provider?.connection && wallet)
+    if (market.accountPubkey && user && program?.provider?.connection && wallet)
       fetchAssets();
-  }, [market, user, program?.provider?.connection, wallet])
+  }, [market.accountPubkey, user, program?.provider?.connection, wallet])
 
   useEffect(() => {
     const subscribeToAssets = async () => {
@@ -224,17 +224,17 @@ export const HoneyProvider: FC<HoneyProps> = ({
       // Wallet native SOL balance
       promise = getAccountInfoAndSubscribe(program.provider.connection, wallet?.publicKey, account => {
         if (user.assets) {
-          const reserve = market.reserves.SOL;
+          // const reserve = market.reserves.SOL;
 
           // Need to be careful constructing a BN from a number.
           // If the user has more than 2^53 lamports it will throw for not having enough precision.
-          user.assets.tokens.SOL.walletTokenBalance = new TokenAmount(new anchor.BN(account?.lamports.toString() ?? 0), SOL_DECIMALS)
+          // user.assets.tokens.SOL.walletTokenBalance = new TokenAmount(new anchor.BN(account?.lamports.toString() ?? 0), SOL_DECIMALS)
 
-          user.assets.sol = user.assets.tokens.SOL.walletTokenBalance
-          user.walletBalances.SOL = user.assets.tokens.SOL.walletTokenBalance.uiAmountFloat;
+          // user.assets.sol = user.assets.tokens.SOL.walletTokenBalance
+          // user.walletBalances.SOL = user.assets.tokens.SOL.walletTokenBalance.uiAmountFloat;
 
-          const { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
-          console.log(marketUpdate, userUpdate, assetUpdate);
+          // const { marketUpdate, userUpdate, assetUpdate } = deriveValues(reserve, market, user, user.assets?.tokens[reserve.abbrev]);
+          // console.log(marketUpdate, userUpdate, assetUpdate);
         }
         return user;
       });
