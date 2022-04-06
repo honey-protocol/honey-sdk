@@ -1,15 +1,16 @@
 import { Metadata } from '@metaplex-foundation/mpl-token-metadata';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { useEffect, useState } from 'react';
+import { ConnectedWallet } from 'src/helpers/walletType';
 import { getNFTAssociatedMetadata } from '..';
 import { useHoney } from '../contexts/honey';
 import { ObligationAccount } from '../helpers/JetTypes';
-import { SupportedWallet, TBorrowPosition } from '../helpers/types';
+import { TBorrowPosition } from '../helpers/types';
 import { useMarket } from './useMarket';
 
 export const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
 
-export const useBorrowPositions = (connection: Connection, wallet: SupportedWallet, jetId: string) => {
+export const useBorrowPositions = (connection: Connection, wallet: ConnectedWallet, jetId: string) => {
   const [status, setStatus] = useState<{
     loading: boolean;
     data?: TBorrowPosition[];

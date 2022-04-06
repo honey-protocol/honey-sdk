@@ -12,7 +12,7 @@ import {
 } from './programUtil';
 import { TokenAmount } from './util';
 import { Asset, AssetStore, IdlMetadata, Market, Reserve, User } from './JetTypes';
-import { SolongWallet, Wallet } from './walletType';
+import { ConnectedWallet } from './walletType';
 
 export const getReserveStructures = async (idlMetadata: IdlMetadata): Promise<Record<string, Reserve>> => {
   // Setup reserve structures
@@ -72,7 +72,7 @@ export const getReserveStructures = async (idlMetadata: IdlMetadata): Promise<Re
 };
 
 // Get user token accounts
-export const getAssetPubkeys = async (market: Market, user: User, program: Program, wallet: Wallet | SolongWallet | null): Promise<AssetStore | null> => {
+export const getAssetPubkeys = async (market: Market, user: User, program: Program, wallet: ConnectedWallet | null): Promise<AssetStore | null> => {
   if (program == null || wallet === null) {
     return null;
   }

@@ -5,7 +5,7 @@ import { parseIdlMetadata } from '../helpers/programUtil';
 import * as anchor from "@project-serum/anchor";
 import { PROGRAM_IDLS } from '../helpers/idls';
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
-import { Wallet as ParentWallet, SolongWallet } from '../helpers/walletType';
+import { ConnectedWallet } from '../helpers/walletType';
 
 export interface AnchorContext {
   program: Program,
@@ -28,7 +28,7 @@ export interface Wallet {
 
 export interface AnchorProviderProps {
   children: ReactNode,
-  wallet: ParentWallet | SolongWallet | null,
+  wallet: ConnectedWallet | null,
   connection: Connection,
   network: string
 }

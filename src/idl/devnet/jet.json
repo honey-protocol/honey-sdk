@@ -79,17 +79,7 @@
                     "isSigner": false
                 },
                 {
-                    "name": "dexOpenOrdersB",
-                    "isMut": true,
-                    "isSigner": false
-                },
-                {
                     "name": "dexMarketA",
-                    "isMut": false,
-                    "isSigner": false
-                },
-                {
-                    "name": "dexMarketB",
                     "isMut": false,
                     "isSigner": false
                 },

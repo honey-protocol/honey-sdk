@@ -1,4 +1,4 @@
-import React, { ReactNode, useContext, useEffect, useMemo, useState } from 'react'
+import React, { FC, ReactNode, useContext, useEffect, useMemo, useState } from 'react'
 import { AssetStore, Market, Reserve, User } from '../helpers/JetTypes';
 import {
   getAccountInfoAndSubscribe,
@@ -19,7 +19,7 @@ import { parsePriceData } from '@pythnetwork/client';
 import { getEmptyUserState } from './getEmptyUser';
 import { NATIVE_MINT } from '@solana/spl-token';
 import { getAssetPubkeys, getReserveStructures } from '../helpers/honey-protocol-helpers';
-import { SolongWallet, Wallet } from '../helpers/walletType';
+import { ConnectedWallet } from '../helpers/walletType';
 
 interface HoneyContext {
   market: Market,
@@ -39,16 +39,18 @@ export const useHoney = () => {
 
 export interface HoneyProps {
   children: ReactNode,
-  wallet: Wallet | SolongWallet | null;
+  wallet: ConnectedWallet | null;
 }
 
-export function HoneyProvider(props: HoneyProps) {
+export const HoneyProvider: FC<HoneyProps> = ({
+  children,
+  wallet
+}) => {
   const { program, idlMetadata, coder, isConfigured } = useAnchor();
 
   const [market, setMarket] = useState<Market>(getEmptyMarketState());
   const [user, setUser] = useState<User>(getEmptyUserState());
   const [assetStore, setAssetStore] = useState<AssetStore | null>(null);
-  const wallet = props.wallet;
 
   useEffect(() => {
 
@@ -324,7 +326,7 @@ export function HoneyProvider(props: HoneyProps) {
   return (
     <HoneyContext.Provider
       value={honeyContext}>
-      {props.children}
+      {children}
     </HoneyContext.Provider>
   )
 }

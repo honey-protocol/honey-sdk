@@ -156,9 +156,9 @@ export class HoneyMarket implements HoneyMarketData {
 
         dexSwapTokens: derivedAccounts.dexSwapTokens.address,
         dexOpenOrdersA: derivedAccounts.dexOpenOrdersA.address,
-        dexOpenOrdersB: derivedAccounts.dexOpenOrdersB.address,
+        // dexOpenOrdersB: derivedAccounts.dexOpenOrdersB.address,
         dexMarketA: params.dexMarketA,
-        dexMarketB: params.dexMarketB,
+        // dexMarketB: params.dexMarketB,
         dexProgram: DEX_PID,
         loanNoteMint: derivedAccounts.loanNoteMint.address,
         depositNoteMint: derivedAccounts.depositNoteMint.address,
