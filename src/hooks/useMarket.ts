@@ -20,23 +20,25 @@ export const useMarket = (connection: Connection, wallet: ConnectedWallet, jetId
       const client: HoneyClient = await HoneyClient.connect(provider, jetId, true);
       setHoneyClient(client);
       const markets = idlMetadata.market.market;
-      const HoneyMarketPubKey: PublicKey = new PublicKey(markets);
-      const market: HoneyMarket = await HoneyMarket.load(client, HoneyMarketPubKey);
+      const honeyMarketPubKey: PublicKey = new PublicKey(markets);
+      const market: HoneyMarket = await HoneyMarket.load(client, honeyMarketPubKey);
       setHoneyMarket(market);
 
       // USDC
-      const reserveAddress = idlMetadata.reserves[0].accounts.reserve;
-      const reserveAccounts = idlMetadata.reserves[0].accounts;
-      reserveAccounts.market = idlMetadata.market.market;
-      const reserve: HoneyReserve = new HoneyReserve(client, market, reserveAddress, reserveAccounts);
-
-      const reserves: HoneyReserve[] = [reserve];
+      let reserves: HoneyReserve[] = [];
+      if (idlMetadata && idlMetadata.reserves && idlMetadata.reserves.length > 0) {
+        const reserveAddress = idlMetadata.reserves[0].accounts.reserve;
+        const reserveAccounts = idlMetadata.reserves[0].accounts;
+        reserveAccounts.market = idlMetadata.market.market;
+        const reserve: HoneyReserve = new HoneyReserve(client, market, reserveAddress, reserveAccounts);  
+        reserves = [reserve];
+      }
       const HoneyUserWrapper: HoneyUser = await HoneyUser.load(client, market, new PublicKey(wallet.publicKey), reserves);
       setHoneyUser(HoneyUserWrapper);
       setHoneyReserves(reserves);
     };
     // load jet
-    if (isConfigured && wallet) fetchHoneyClient();
+    if (isConfigured && wallet && connection) fetchHoneyClient();
   }, [isConfigured, connection, idlMetadata, wallet]);
 
   return {

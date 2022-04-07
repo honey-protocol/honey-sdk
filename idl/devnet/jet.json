@@ -2186,6 +2186,12 @@
         }
     ],
     "metadata": {
-        "address": "FBm6vYErTiQQbWSqLfJU2CnAGkySBiVL6nQJb5xeCpDL"
+        "address": "GU7mDmGtLXNMo6YsF1FBsrXj2DqnrL82P4eMDKsDPnZZ",
+        "cluster": "https://api.devnet.solana.com",
+        "market": {
+            "market": "8nY25haXJyLv9DLXH6XtTMctPu4cubWhnLdtAzVvzdqP",
+            "marketAuthority": "Dwdjz9tVsCnwmo19vWmVffyzNmJGQqwwbnzcHqacSXXb"
+        },
+        "reserves": []
     }
 }

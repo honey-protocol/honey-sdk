@@ -57,6 +57,7 @@ export class HoneyMarket implements HoneyMarketData {
   ) { }
 
   public static async fetchData(client: HoneyClient, address: PublicKey): Promise<[any, HoneyMarketReserveInfo[]]> {
+    console.log(address.toString());
     const data: any = await client.program.account.market.fetch(address);
     const reserveInfoData = new Uint8Array(data.reserves);
     const reserveInfoList = MarketReserveInfoList.decode(reserveInfoData) as HoneyMarketReserveInfo[];
