@@ -31,6 +31,7 @@ import * as BL from '@solana/buffer-layout';
 import { TxResponse } from '../actions/types';
 import { ObligationAccount, TxnResponse } from '../helpers/JetTypes';
 import { TokenAmount } from './token-amount';
+import { deriveAssociatedTokenAccount } from '../actions';
 
 export const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
 export interface User {
@@ -359,27 +360,36 @@ export class HoneyUser implements User {
         obligationTx.add(ix);
         const txid = await this.client.program.provider.send(obligationTx, [], { skipPreflight: true });
         txids.push(txid);
+        console.log('added obligation account', txid);
       } catch (err) {
         console.error(`Obligation account: ${err}`);
         return [TxnResponse.Failed, []];
       }
     }
+    // const collateralAddress = await deriveAssociatedTokenAccount(tokenMint, this.market.marketAuthority);
 
-    const [collateralAddress, collateralBump] = await PublicKey.findProgramAddress(
-      [
-        Buffer.from('nft'),
-        this.market.address.toBuffer(),
-        tokenMint.toBuffer(),
-        this.address.toBuffer()
-      ],
-      this.client.program.programId,
+    const collateralAddress = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      tokenMint,
+      this.market.marketAuthority,
+      true
     );
+    // const [collateralAddress, collateralBump] = await PublicKey.findProgramAddress(
+    //   [
+    //     Buffer.from('nft'),
+    //     this.market.address.toBuffer(),
+    //     tokenMint.toBuffer(),
+    //     this.address.toBuffer()
+    //   ],
+    //   this.client.program.programId,
+    // );
 
     const metadataPubKey = new PublicKey(METADATA_PROGRAM_ID);
-    const [nftMetadata, metadataBump] = await PublicKey.findProgramAddress(
-      [Buffer.from('metadata'), metadataPubKey.toBuffer(), tokenMint.toBuffer()],
-      metadataPubKey,
-    );
+    // const [nftMetadata, metadataBump] = await PublicKey.findProgramAddress(
+    //   [Buffer.from('metadata'), metadataPubKey.toBuffer(), tokenMint.toBuffer()],
+    //   metadataPubKey,
+    // );
 
     const derivedMetadata = await this.findNftMetadata(tokenMint);
     const collateralData = await this.conn.getAccountInfo(collateralAddress);
@@ -392,18 +402,13 @@ export class HoneyUser implements User {
 
           depositNftMint: tokenMint.toString(),
           nftCollectionCreator: updateAuthority.toString(), // should make a call to get this info or just do it on the program side
-          metadata: nftMetadata.toString(),
+          metadata: derivedMetadata.address.toString(),
           owner: this.address.toString(),
-          collateralAccount: collateralAddress.toString(),
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-
-          rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-          systemProgram: anchor.web3.SystemProgram.programId,
+          collateralAccount: collateralAddress.toString()
         }
       );
       const collateralTx = new Transaction();
-      const ix = await this.client.program.instruction.initNftAccount(metadataBump, {
+      const ix = await this.client.program.instruction.initNftAccount(derivedMetadata.bumpSeed, {
         accounts: {
           market: this.market.address,
           marketAuthority: this.market.marketAuthority,
@@ -411,7 +416,7 @@ export class HoneyUser implements User {
 
           depositNftMint: tokenMint,
           nftCollectionCreator: updateAuthority, // should make a call to get this info or just do it on the program side
-          metadata: nftMetadata,
+          metadata: derivedMetadata.address,
           owner: this.address,
           collateralAccount: collateralAddress,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -432,28 +437,27 @@ export class HoneyUser implements User {
     }
 
     const tx = new Transaction();
-    const DepositNFTBumpSeeds = {
-      collateralAccount: collateralBump,
-    };
+    // const DepositNFTBumpSeeds = {
+    //   collateralAccount: collateralBump,
+    // };
     const depositNFTIx = await this.client.program.instruction.depositNft(
-      DepositNFTBumpSeeds,
-      derivedMetadata.bumpSeed,
+      derivedMetadata.bumpSeed, // DepositNFTBumpSeeds,
+      // derivedMetadata.bumpSeed,
       {
         accounts: {
           market: this.market.address,
           marketAuthority: this.market.marketAuthority,
           obligation: obligationAddress,
-
+          depositSource: tokenAccount,
           depositNftMint: tokenMint,
-          updateAuthority,
+          nftCollectionCreator: updateAuthority,
           metadata: derivedMetadata.address,
           owner: this.address,
           collateralAccount: collateralAddress,
-          tokenProgram: TOKEN_PROGRAM_ID,
 
-          depositSource: tokenAccount,
-          rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-          systemProgram: anchor.web3.SystemProgram.programId,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          // rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+          // systemProgram: anchor.web3.SystemProgram.programId,
         },
       },
     );

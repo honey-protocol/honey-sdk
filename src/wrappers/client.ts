@@ -55,6 +55,8 @@ export class HoneyClient {
   async createMarket(params: CreateMarketParams): Promise<HoneyMarket> {
     let account = params.account;
 
+    console.log('programID when creating market', this.program.programId.toString())
+
     if (account === undefined) {
       account = Keypair.generate();
     }

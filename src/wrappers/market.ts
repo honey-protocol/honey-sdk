@@ -22,7 +22,7 @@ const ReserveInfoStruct = BL.struct([
 ]);
 
 const MarketReserveInfoList = BL.seq(ReserveInfoStruct, MAX_RESERVES);
-export const DEX_PID = new PublicKey("DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY"); // devnet
+export const DEX_PID = new PublicKey("DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY"); // localnet
 export interface HoneyMarketReserveInfo {
   address: PublicKey;
   price: anchor.BN;
@@ -148,8 +148,8 @@ export class HoneyMarket implements HoneyMarketData {
     let transaction = new Transaction();
     transaction.add(createReserveAccount);
     const init_tx = await sendAndConfirmTransaction(
-      this.client.program.provider.connection, 
-      transaction, 
+      this.client.program.provider.connection,
+      transaction,
       [(this.client.program.provider.wallet as any).payer, account]);
 
     // const init_tx = await this.client.program.provider.send(transaction, [], { skipPreflight: true });
@@ -181,7 +181,8 @@ export class HoneyMarket implements HoneyMarketData {
       tokenMint: params.tokenMint.toBase58(),
       owner: this.owner.toBase58(),
     });
-    
+
+    console.log('this.client.program.programID in initing reserve', this.client.program.programId.toString());
     const tx = await this.client.program.rpc.initReserve(bumpSeeds, params.config, {
       accounts: {
         market: this.address,
