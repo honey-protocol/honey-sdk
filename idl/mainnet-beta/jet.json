@@ -1948,6 +1948,10 @@
         }
     ],
     "metadata": {
-        "address": "6ujVJiHnyqaTBHzwwfySzTDX5EPFgmXqnibuMp3Hun1w"
+        "address": "6ujVJiHnyqaTBHzwwfySzTDX5EPFgmXqnibuMp3Hun1w",
+        "metadata": {
+            "market": "5pu2QjhDLg2CUSZ52Tt9ZBSc9eEJj57CfrGYJimCk7Gu",
+            "marketAuthority": "EcJTLncrfmZSPtguoYdK8ecpQP622CT9YyPwewT8bQJM"
+        }
     }
 }
