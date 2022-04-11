@@ -32,6 +32,7 @@ import type {
   User,
   SlopeTxn,
   CustomProgramError,
+  MarketMetadata,
 } from './JetTypes';
 import { TxnResponse } from './JetTypes';
 import { MarketReserveInfoList, PositionInfoList, ReserveStateLayout } from './layout';
@@ -641,7 +642,10 @@ export const parseIdlMetadata = (idlMetadata: IdlMetadata): IdlMetadata => {
   return {
     ...idlMetadata,
     address: new PublicKey(idlMetadata.address),
-    market: toPublicKeys(idlMetadata.market as any as Record<string, string>) as any,
+    market: {
+      market: new PublicKey(idlMetadata.market.market),
+      marketAuthority: new PublicKey(idlMetadata.market.marketAuthority)
+    } as MarketMetadata,
     reserves: idlMetadata.reserves ? idlMetadata.reserves.map((reserve) => {
       return {
         ...reserve,
