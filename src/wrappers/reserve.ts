@@ -66,7 +66,7 @@ export interface CreateReserveParams {
 
 
   /**
-   * token mint for the solvent droplets 
+   * token mint for the solvent droplets
    */
   nftDropletMint: PublicKey,
 
@@ -188,7 +188,7 @@ export class HoneyReserve {
         reserve: this.address,
         feeNoteVault: this.data.feeNoteVault,
         depositNoteMint: this.data.depositNoteMint,
-
+        protocolFeeNoteVault: this.data.protocolFeeNoteVault,
         pythOraclePrice: this.data.pythOraclePrice || this.data.pythPrice,
         tokenProgram: TOKEN_PROGRAM_ID,
       },

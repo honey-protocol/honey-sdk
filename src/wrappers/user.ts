@@ -297,27 +297,27 @@ export class HoneyUser implements User {
       [Buffer.from('metadata'), metadataPubKey.toBuffer(), tokenMint.toBuffer()],
       metadataPubKey,
     );
-    const withdrawNFTBumpSeeds = {
-      collateralAccount: collateralBump,
-    };
+    // const withdrawNFTBumpSeeds = {
+    //   collateralAccount: collateralBump,
+    // };
 
     this.reserves.forEach((reserve) => tx.add(reserve.makeRefreshIx()));
 
     tx.add(
-      await this.client.program.instruction.withdrawNft(withdrawNFTBumpSeeds, metadataBump, {
+      await this.client.program.instruction.withdrawNft(
+        // withdrawNFTBumpSeeds,
+        metadataBump, {
         accounts: {
           market: this.market.address,
           marketAuthority: this.market.marketAuthority,
           obligation: obligationAddress,
-
-          depositNftMint: tokenMint,
-          updateAuthority,
-          metadata: nftMetadata,
           owner: this.address,
-          collateralAccount: collateralAddress,
-          tokenProgram: TOKEN_PROGRAM_ID,
-
           depositTo: tokenAccount,
+          nftCollectionCreator: updateAuthority,
+          metadata: nftMetadata,
+          depositNftMint: tokenMint,
+          collateralAccount: collateralAddress,
+          tokenProgram: TOKEN_PROGRAM_ID
         },
       }),
     );
