@@ -39,7 +39,7 @@ export const depositCollateral = async (
 };
 
 export const withdraw = async (
-  HoneyUser: HoneyUser,
+  honeyUser: HoneyUser,
   tokenAmount: number,
   withdrawTokenMint: PublicKey,
   withdrawReserves: HoneyReserve[],
@@ -49,14 +49,14 @@ export const withdraw = async (
   )[0];
   const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(
     withdrawTokenMint,
-    HoneyUser.address,
+    honeyUser.address,
   );
   const amount = Amount.tokens(tokenAmount);
   if (!associatedTokenAccount) {
     console.error(`Could not find the associated token account: ${associatedTokenAccount}`);
     return [TxnResponse.Failed, []];
   }
-  return await HoneyUser.withdraw(withdrawReserve, associatedTokenAccount, amount);
+  return await honeyUser.withdraw(withdrawReserve, associatedTokenAccount, amount);
 };
 
 export const withdrawCollateral = async (
