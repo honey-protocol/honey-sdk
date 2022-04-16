@@ -829,7 +829,7 @@ export class HoneyUser implements User {
       this.client.program.programId,
     );
 
-    const [loanAccount, loanAccountBump] = await PublicKey.findProgramAddress(
+    const [loanAccountPK, loanAccountBump] = await PublicKey.findProgramAddress(
       [Buffer.from('loan'), reserve.address.toBuffer(), this.obligation.address.toBuffer(), this.address.toBuffer()],
       this.client.program.programId,
     );
@@ -848,7 +848,7 @@ export class HoneyUser implements User {
         vault: reserve.data.vault,
         loanNoteMint: reserve.data.loanNoteMint,
         borrower: this.address,
-        loanAccount: loanAccount,
+        loanAccount: loanAccountPK,
         tokenMint: reserve.data.tokenMint,
         feeReceiverAccount,
         receiverAccount,
