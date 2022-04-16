@@ -1,4 +1,10 @@
-import { PublicKey, Keypair, Transaction, sendAndConfirmRawTransaction, sendAndConfirmTransaction } from '@solana/web3.js';
+import {
+  PublicKey,
+  Keypair,
+  Transaction,
+  sendAndConfirmRawTransaction,
+  sendAndConfirmTransaction,
+} from '@solana/web3.js';
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID, u64 } from '@solana/spl-token';
 import * as anchor from '@project-serum/anchor';
 import * as BL from '@solana/buffer-layout';
@@ -22,7 +28,7 @@ const ReserveInfoStruct = BL.struct([
 ]);
 
 const MarketReserveInfoList = BL.seq(ReserveInfoStruct, MAX_RESERVES);
-export const DEX_PID = new PublicKey("DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY"); // localnet
+export const DEX_PID = new PublicKey('DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY'); // localnet
 export interface HoneyMarketReserveInfo {
   address: PublicKey;
   price: anchor.BN;
@@ -54,7 +60,7 @@ export class HoneyMarket implements HoneyMarketData {
     public pythOraclePrice: PublicKey,
     public pythOracleProduct: PublicKey,
     public updateAuthority: PublicKey,
-  ) { }
+  ) {}
 
   public static async fetchData(client: HoneyClient, address: PublicKey): Promise<[any, HoneyMarketReserveInfo[]]> {
     const data: any = await client.program.account.market.fetch(address);
@@ -121,7 +127,6 @@ export class HoneyMarket implements HoneyMarketData {
 
     const derivedAccounts = await HoneyReserve.deriveAccounts(this.client, account.publicKey, params.tokenMint);
 
-
     console.log('account.pubkey', account.publicKey.toString());
 
     const bumpSeeds = {
@@ -135,25 +140,24 @@ export class HoneyMarket implements HoneyMarketData {
       depositNoteMint: derivedAccounts.depositNoteMint.bumpSeed,
     };
 
-
     const nftDropletAccount = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
       params.nftDropletMint,
       this.marketAuthority,
-      true
+      true,
     );
 
     const createReserveAccount = await this.client.program.account.reserve.createInstruction(account);
-    let transaction = new Transaction();
+    const transaction = new Transaction();
     transaction.add(createReserveAccount);
-    const init_tx = await sendAndConfirmTransaction(
-      this.client.program.provider.connection,
-      transaction,
-      [(this.client.program.provider.wallet as any).payer, account]);
+    const initTx = await sendAndConfirmTransaction(this.client.program.provider.connection, transaction, [
+      (this.client.program.provider.wallet as any).payer,
+      account,
+    ]);
 
     // const init_tx = await this.client.program.provider.send(transaction, [], { skipPreflight: true });
-    console.log('init_tx', init_tx);
+    console.log('init_tx', initTx);
 
     console.log('accounts', {
       market: this.address.toBase58(),
@@ -241,7 +245,6 @@ export interface CreateMarketParams {
    * name specified in any Pyth/oracle accounts.
    */
   quoteCurrencyName: string;
-
 
   /**
    *  creator public key of the NFT held in the associated metadata

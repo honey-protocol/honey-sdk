@@ -32,7 +32,12 @@ export const useMarket = (connection: Connection, wallet: SupportedWallet, jetId
       const reserve: HoneyReserve = new HoneyReserve(client, market, reserveAddress, reserveAccounts);
 
       const reserves: HoneyReserve[] = [reserve];
-      const HoneyUserWrapper: HoneyUser = await HoneyUser.load(client, market, new PublicKey(wallet.publicKey), reserves);
+      const HoneyUserWrapper: HoneyUser = await HoneyUser.load(
+        client,
+        market,
+        new PublicKey(wallet.publicKey),
+        reserves,
+      );
       setHoneyUser(HoneyUserWrapper);
       setHoneyReserves(reserves);
     };
