@@ -30,7 +30,7 @@ export interface ReserveConfig {
 export interface ReserveAccounts {
   vault: DerivedAccount;
   feeNoteVault: DerivedAccount;
-  protocolFeeNoteVault: DerivedAccount,
+  protocolFeeNoteVault: DerivedAccount;
   dexSwapTokens: DerivedAccount;
   dexOpenOrdersA: DerivedAccount;
   dexOpenOrdersB: DerivedAccount;
@@ -64,21 +64,20 @@ export interface CreateReserveParams {
    */
   config: ReserveConfig;
 
-
   /**
-   * token mint for the solvent droplets 
+   * token mint for the solvent droplets
    */
-  nftDropletMint: PublicKey,
+  nftDropletMint: PublicKey;
 
   /**
    * Dex market A
    */
-  dexMarketA: PublicKey,
+  dexMarketA: PublicKey;
 
   /**
    * dex market B
    */
-  dexMarketB: PublicKey,
+  dexMarketB: PublicKey;
 
   /**
    * The account to use for the reserve data.

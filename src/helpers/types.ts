@@ -1,4 +1,5 @@
 import { PublicKey } from '@solana/web3.js';
+import { SolongWallet, Wallet } from './JetTypes';
 
 export type TAsset = {
   name: String;
@@ -39,3 +40,5 @@ export type TPool = {
   interestRate: number;
   collateralEvaluation: number;
 };
+
+export type SupportedWallet = Wallet | SolongWallet | null;

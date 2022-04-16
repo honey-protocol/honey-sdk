@@ -35,12 +35,19 @@ export const depositNFT = async (
   }
   const tokenMetadata = new Metadata(metadataPubKey, associatedMetadata);
   const tokenMint = new PublicKey(tokenMetadata.data.mint);
-  const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(tokenMint, honeyUser.address);
+  const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(
+    tokenMint,
+    honeyUser.address,
+  );
   if (!associatedTokenAccount) {
     console.error(`Could not find the associated token account: ${associatedTokenAccount}`);
     return [TxnResponse.Failed, []];
   }
-  return await honeyUser.depositNFT(associatedTokenAccount, tokenMint, new PublicKey(tokenMetadata.data.updateAuthority));
+  return await honeyUser.depositNFT(
+    associatedTokenAccount,
+    tokenMint,
+    new PublicKey(tokenMetadata.data.updateAuthority),
+  );
 };
 
 export const withdrawNFT = async (
@@ -55,7 +62,10 @@ export const withdrawNFT = async (
   }
   const tokenMetadata = new Metadata(metadataPubKey, associatedMetadata);
   const tokenMint = new PublicKey(tokenMetadata.data.mint);
-  const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(tokenMint, honeyUser.address);
+  const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(
+    tokenMint,
+    honeyUser.address,
+  );
   if (!associatedTokenAccount) {
     console.error(`Could not find the associated token account: ${associatedTokenAccount}`);
     return [TxnResponse.Failed, []];
