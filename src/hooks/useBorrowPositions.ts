@@ -5,12 +5,12 @@ import { ConnectedWallet } from 'src/helpers/walletType';
 import { getNFTAssociatedMetadata } from '..';
 import { useHoney } from '../contexts/honey';
 import { ObligationAccount } from '../helpers/JetTypes';
-import { TBorrowPosition } from '../helpers/types';
+import { SupportedWallet, TBorrowPosition } from '../helpers/types';
 import { useMarket } from './useMarket';
 
 export const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
 
-export const useBorrowPositions = (connection: Connection, wallet: ConnectedWallet, jetId: string) => {
+export const useBorrowPositions = (connection: Connection, wallet: SupportedWallet, honeyId: string) => {
   const [status, setStatus] = useState<{
     loading: boolean;
     data?: TBorrowPosition[];
@@ -18,17 +18,22 @@ export const useBorrowPositions = (connection: Connection, wallet: ConnectedWall
   }>({ loading: false });
 
   const { assetStore } = useHoney();
-  const { honeyUser } = useMarket(connection, wallet, jetId);
+  const { honeyUser } = useMarket(connection, wallet, honeyId);
 
   const fetchData = async () => {
-    if (!honeyUser) return console.error('Could not find jet user');
     setStatus({ loading: true });
 
     const borrowPositions: TBorrowPosition[] = [];
     const obligation = (await honeyUser.getObligationData()) as ObligationAccount;
-    if (!obligation.market) return;
+    if (!obligation.market) {
+      setStatus({ loading: false, error: new Error("Obligation does not have a valid market")});
+      return;
+    };
     const collateralNftMint: PublicKey[] = obligation.collateralNftMint;
-    if (!collateralNftMint || collateralNftMint.length === 0) return;
+    if (!collateralNftMint || collateralNftMint.length === 0) {
+      setStatus({ loading: false, error: new Error("Obligation does not have a valid collateral nft mint")});
+      return;
+    };
     const promises = collateralNftMint.map(async (key: PublicKey, index: number) => {
       if (!key.equals(PublicKey.default)) {
         const [nftMetadata, metadataBump] = await PublicKey.findProgramAddress(
@@ -65,7 +70,10 @@ export const useBorrowPositions = (connection: Connection, wallet: ConnectedWall
 
   // build borrow positions
   useEffect(() => {
-    if (!assetStore || !honeyUser) return;
+    if (!assetStore || !honeyUser) {
+      setStatus({loading: false, error: new Error('AssetStore or HoneyUser is undefined')});
+      return;
+    }
     fetchData();
   }, [honeyUser, assetStore]);
 

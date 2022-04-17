@@ -69,7 +69,7 @@ export class HoneyMarket implements HoneyMarketData {
    * Load the market account data from the network.
    * @param client The program client
    * @param address The address of the market.
-   * @returns An object for interacting with the Jet market.
+   * @returns An object for interacting with the Honey market.
    */
   static async load(client: HoneyClient, address: PublicKey): Promise<HoneyMarket> {
     const [data, reserveInfoList] = await HoneyMarket.fetchData(client, address);

@@ -11,17 +11,24 @@ export const usePools = (connection: Connection, wallet: ConnectedWallet, jetId:
   const { honeyUser } = useMarket(connection, wallet, jetId);
   const [status, setStatus] = useState<{
     loading: boolean;
-    data: TPool[];
+    data?: TPool[];
     error?: Error;
   }>({ loading: false, data: [] });
 
   useEffect(() => {
     const fetchPools = async () => {
-      if (!market.reserves.SOL || !honeyUser || !user.assets) return;
-      setStatus({ loading: true, data: [] });
+      if (!market.reserves.SOL || !honeyUser || !user.assets) {
+        setStatus({ loading: false, error: new Error("Setup data needed is missing")});
+        return
+      };
+
+      setStatus({ loading: true });
       const reserve = market.reserves.SOL;
       const obligation = (await honeyUser.getObligationData()) as ObligationAccount;
-      if (!obligation.collateralNftMint) return;
+      if (!obligation.collateralNftMint) {
+        setStatus({ loading: false, error: new Error("Obligation does not have a valid collateral nft mint")});
+        return
+      };
       const collateralNftMint: PublicKey[] = obligation.collateralNftMint;
       const numOfPositions =
         !collateralNftMint || collateralNftMint.length === 0
