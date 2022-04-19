@@ -49,6 +49,16 @@
                     "isSigner": false
                 },
                 {
+                    "name": "nftDropletMint",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "nftDropletVault",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
                     "name": "depositNoteMint",
                     "isMut": true,
                     "isSigner": false
@@ -56,6 +66,36 @@
                 {
                     "name": "feeNoteVault",
                     "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "protocolFeeNoteVault",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "dexSwapTokens",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "dexOpenOrdersA",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "dexOpenOrdersB",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "dexMarketA",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "dexMarketB",
+                    "isMut": false,
                     "isSigner": false
                 },
                 {
@@ -1946,11 +1986,5 @@
             "name": "AccountNotEmptyError",
             "msg": "the collateral/loan account is not empty"
         }
-    ],
-    "metadata": {
-        "address": "6ujVJiHnyqaTBHzwwfySzTDX5EPFgmXqnibuMp3Hun1w",
-        "market": "5pu2QjhDLg2CUSZ52Tt9ZBSc9eEJj57CfrGYJimCk7Gu",
-        "marketAuthority": "EcJTLncrfmZSPtguoYdK8ecpQP622CT9YyPwewT8bQJM",
-        "reserves": []
-    }
+    ]
 }
