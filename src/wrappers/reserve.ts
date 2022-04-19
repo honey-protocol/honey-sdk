@@ -146,7 +146,7 @@ export class HoneyReserve {
     private client: HoneyClient,
     private market: HoneyMarket,
     public address: PublicKey,
-    public data: ReserveData,
+    public data?: ReserveData,
     public state?: ReserveStateData,
   ) {
     this.conn = this.client.program.provider.connection;
@@ -157,8 +157,8 @@ export class HoneyReserve {
 
     const data: any = await this.client.program.account.reserve.fetch(this.address);
     const stateData = new Uint8Array(data.state);
-    this.state = ReserveStateStruct.decode(stateData) as ReserveStateData;
     this.data = data as ReserveData;
+    this.state = ReserveStateStruct.decode(stateData) as ReserveStateData;
   }
 
   async sendRefreshTx(): Promise<string> {
@@ -206,7 +206,7 @@ export class HoneyReserve {
   }
 
   static async load(client: HoneyClient, address: PublicKey, maybeMarket?: HoneyMarket): Promise<HoneyReserve> {
-    const data = (await client.program.account.reserve.fetch(address)) as ReserveData;
+    const data = await client.program.account.reserve.fetch(address) as ReserveData;
     const market = maybeMarket || (await HoneyMarket.load(client, data.market));
 
     return new HoneyReserve(client, market, address, data);

@@ -9,6 +9,7 @@
     "outDir": "./lib",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
     "skipLibCheck": true,
     "jsx": "react",
     "baseUrl": "./",

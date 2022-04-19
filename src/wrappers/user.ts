@@ -25,7 +25,7 @@ import { InstructionAndSigner, parseObligationAccount, sendAllTransactions } fro
 import * as util from './util';
 import * as BL from '@solana/buffer-layout';
 import { TxResponse } from '../actions/types';
-import { ObligationAccount, TxnResponse } from '../helpers/JetTypes';
+import { ObligationAccount, TxnResponse } from '../helpers/honeyTypes';
 import { TokenAmount } from './token-amount';
 import { deriveAssociatedTokenAccount } from '../actions';
 

@@ -18,6 +18,7 @@ export interface IdlMetadata {
   market: MarketMetadata;
   reserves: ReserveMetadata[];
 }
+
 // Idl errors
 export interface CustomProgramError {
   code: number;
@@ -40,6 +41,7 @@ export interface Market {
   nativeValues: boolean;
   rerender: boolean;
 }
+
 export interface MarketAccount {
   version: number;
   /** The exponent used for quote prices */

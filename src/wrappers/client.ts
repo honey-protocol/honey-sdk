@@ -1,8 +1,9 @@
 import { PublicKey, Keypair } from '@solana/web3.js';
 import * as anchor from '@project-serum/anchor';
 import { CreateMarketParams, HoneyMarket } from './market';
-import { PROGRAM_IDLS } from '../helpers/idls';
 import { DerivedAccount } from './derived-account';
+import devnetIdl from '../idl/devnet/honey.json';
+import mainnetBetaIdl from "../idl/mainnet-beta/honey.json";
 
 interface ToBytes {
   toBytes(): Uint8Array;
@@ -23,10 +24,9 @@ export class HoneyClient {
    * @returns The client
    */
   static async connect(provider: anchor.Provider, honeyPubKey: string, devnet?: boolean): Promise<HoneyClient> {
-    const network = devnet ? 'devnet' : 'mainnet-beta';
-    const idl = PROGRAM_IDLS.filter((value) => value.name === network)[0];
-    const JET_ID = new PublicKey(honeyPubKey);
-    const program = new anchor.Program(idl.jet, JET_ID, provider);
+    const idl = devnet ? devnetIdl : mainnetBetaIdl;
+    const HONEY_PROGRAM_ID = new PublicKey(honeyPubKey);
+    const program = new anchor.Program(idl as any, HONEY_PROGRAM_ID, provider);
 
     return new HoneyClient(program, devnet);
   }

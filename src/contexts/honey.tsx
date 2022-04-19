@@ -1,5 +1,5 @@
 import React, { FC, ReactNode, useContext, useEffect, useMemo, useState } from 'react'
-import { AssetStore, Market, Reserve, User } from '../helpers/JetTypes';
+import { AssetStore, Market, Reserve, User } from '../helpers/honeyTypes';
 import {
   getAccountInfoAndSubscribe,
   getMintInfoAndSubscribe,
@@ -18,8 +18,10 @@ import { MarketReserveInfoList } from '../helpers/layout';
 import { parsePriceData } from '@pythnetwork/client';
 import { getEmptyUserState } from './getEmptyUser';
 import { NATIVE_MINT } from '@solana/spl-token';
-import { getAssetPubkeys, getReserveStructures } from '../helpers/honey-protocol-helpers';
+import { getAssetPubkeys, getReserveStructures } from '../helpers/honeyProtocolHelpers';
 import { ConnectedWallet } from '../helpers/walletType';
+import { useMarket } from '../hooks';
+import { Connection } from '@solana/web3.js';
 
 interface HoneyContext {
   market: Market,
@@ -40,13 +42,20 @@ export const useHoney = () => {
 export interface HoneyProps {
   children: ReactNode,
   wallet: ConnectedWallet | null;
+  connection: Connection,
+  honeyProgramId: string;
+  honeyMarketId: string;
 }
 
 export const HoneyProvider: FC<HoneyProps> = ({
   children,
-  wallet
+  wallet,
+  connection,
+  honeyProgramId,
+  honeyMarketId
 }) => {
-  const { program, idlMetadata, coder, isConfigured } = useAnchor();
+  const { program, coder, isConfigured } = useAnchor();
+  const { honeyMarket, honeyReserves } = useMarket(connection, wallet, honeyProgramId, honeyMarketId)
 
   const [market, setMarket] = useState<Market>(getEmptyMarketState());
   const [user, setUser] = useState<User>(getEmptyUserState());
@@ -55,24 +64,26 @@ export const HoneyProvider: FC<HoneyProps> = ({
   useEffect(() => {
 
     const fetchReserves = async () => {
-      const reserveStructures: Record<string, Reserve> = await getReserveStructures(idlMetadata);
-      console.log({ idlMetadata })
+
+      const reserveStructures: Record<string, Reserve> = await getReserveStructures(honeyReserves);
       setMarket(current => ({
         ...current,
-        accountPubkey: idlMetadata.market.market,
-        authorityPubkey: idlMetadata.market.marketAuthority,
+        accountPubkey: honeyMarket.address,
+        authorityPubkey: honeyMarket.marketAuthority,
         reserves: reserveStructures,
         currentReserve: reserveStructures.SOL,
       }));
     }
 
-    if (isConfigured)
+    if (isConfigured && honeyReserves) {
       fetchReserves();
-  }, [idlMetadata]);
+    }
+  }, [honeyReserves, isConfigured]);
 
   useEffect(() => {
     if (!program?.provider?.connection ||
-      !idlMetadata || !user || !coder ||
+      !user ||
+      !coder ||
       Object.keys(market.reserves).length === 0 ||
       !user.assets?.tokens)
       return
@@ -81,7 +92,7 @@ export const HoneyProvider: FC<HoneyProps> = ({
       let promise: Promise<number>;
       const promises: Promise<number>[] = [];
 
-      promise = getAccountInfoAndSubscribe(program.provider.connection, idlMetadata?.market.market, account => {
+      promise = getAccountInfoAndSubscribe(program.provider.connection, honeyMarket.address, account => {
         if (account != null) {
           console.assert(MarketReserveInfoList.span === 12288);
           const decoded = parseMarketAccount(account.data, coder);
@@ -102,9 +113,10 @@ export const HoneyProvider: FC<HoneyProps> = ({
         }
       });
 
-      for (const reserveMeta of idlMetadata.reserves) {
+      for (const key in market.reserves) {
+        const reserveMeta =  market.reserves[key];
         // Reserve
-        promise = getAccountInfoAndSubscribe(program.provider.connection, reserveMeta.accounts.reserve, account => {
+        promise = getAccountInfoAndSubscribe(program.provider.connection, reserveMeta.accountPubkey, account => {
           if (account != null) {
             const decoded = parseReserveAccount(account.data, coder);
 
@@ -126,7 +138,7 @@ export const HoneyProvider: FC<HoneyProps> = ({
         promises.push(promise);
 
         // Deposit Note Mint
-        promise = getMintInfoAndSubscribe(program.provider.connection, reserveMeta.accounts.depositNoteMint, amount => {
+        promise = getMintInfoAndSubscribe(program.provider.connection, reserveMeta.depositNoteMintPubkey, amount => {
           if (amount != null) {
             const reserve = market.reserves[reserveMeta.abbrev];
             reserve.depositNoteMint = amount;
@@ -138,7 +150,7 @@ export const HoneyProvider: FC<HoneyProps> = ({
         promises.push(promise);
 
         // Loan Note Mint
-        promise = getMintInfoAndSubscribe(program.provider.connection, reserveMeta.accounts.loanNoteMint, amount => {
+        promise = getMintInfoAndSubscribe(program.provider.connection, reserveMeta.loanNoteMintPubkey, amount => {
           if (amount != null) {
             const reserve = market.reserves[reserveMeta.abbrev];
             reserve.loanNoteMint = amount;
@@ -150,7 +162,7 @@ export const HoneyProvider: FC<HoneyProps> = ({
         promises.push(promise);
 
         // Reserve Vault
-        promise = getTokenAccountAndSubscribe(program.provider.connection, reserveMeta.accounts.vault, reserveMeta.decimals, amount => {
+        promise = getTokenAccountAndSubscribe(program.provider.connection, reserveMeta.vaultPubkey, reserveMeta.decimals, amount => {
           if (amount != null) {
             const reserve = market.reserves[reserveMeta.abbrev];
             reserve.availableLiquidity = amount;
@@ -162,7 +174,7 @@ export const HoneyProvider: FC<HoneyProps> = ({
         promises.push(promise);
 
         // Reserve Token Mint
-        promise = getMintInfoAndSubscribe(program.provider.connection, reserveMeta.accounts.tokenMint, amount => {
+        promise = getMintInfoAndSubscribe(program.provider.connection, reserveMeta.tokenMintPubkey, amount => {
           if (amount != null) {
             const reserve = market.reserves[reserveMeta.abbrev];
             reserve.tokenMint = amount;
@@ -174,7 +186,7 @@ export const HoneyProvider: FC<HoneyProps> = ({
         promises.push(promise);
 
         // Pyth Price
-        promise = getAccountInfoAndSubscribe(program.provider.connection, reserveMeta.accounts.pythPrice, account => {
+        promise = getAccountInfoAndSubscribe(program.provider.connection, reserveMeta.pythPricePubkey, account => {
           if (account != null) {
             const reserve = market.reserves[reserveMeta.abbrev];
             reserve.price = parsePriceData(account.data).price || 90; // default to 90 for now
@@ -187,10 +199,10 @@ export const HoneyProvider: FC<HoneyProps> = ({
       }
       await Promise.all(promises);
     }
-    if (idlMetadata?.market?.market && program?.provider?.connection && market.reserves && user)
+    if (market.reserves && program?.provider?.connection && market.reserves && user)
       subscribeToMarket();
 
-  }, [idlMetadata?.market?.market, program?.provider?.connection, market.reserves, user]);
+  }, [market.reserves, program?.provider?.connection, market.reserves, user]);
 
   useEffect(() => {
     const fetchAssets = async () => {

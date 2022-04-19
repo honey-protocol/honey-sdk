@@ -11,26 +11,27 @@ import {
   SOL_DECIMALS,
 } from './programUtil';
 import { TokenAmount } from './util';
-import { Asset, AssetStore, IdlMetadata, Market, Reserve, SolongWallet, User, Wallet } from './JetTypes';
+import { Asset, AssetStore, IdlMetadata, Market, Reserve, SolongWallet, User, Wallet } from './honeyTypes';
 import { ConnectedWallet } from './walletType';
+import { HoneyReserve } from 'src/wrappers';
 
-export const getReserveStructures = async (idlMetadata: IdlMetadata): Promise<Record<string, Reserve>> => {
+export const getReserveStructures = async (honeyReserves: HoneyReserve[]): Promise<Record<string, Reserve>> => {
   // Setup reserve structures
   const reserves: Record<string, Reserve> = {};
-  for (const reserveMeta of idlMetadata.reserves) {
-    if (!reserveMeta) continue;
+  for (const reserveMeta of honeyReserves) {
+    if (!reserveMeta || !reserveMeta.data || !reserveMeta.state) continue;
     const reserve: Reserve = {
-      name: reserveMeta.name,
-      abbrev: reserveMeta.abbrev,
-      marketSize: TokenAmount.zero(reserveMeta.decimals),
-      outstandingDebt: TokenAmount.zero(reserveMeta.decimals),
+      name: reserveMeta.address.toString(),
+      abbrev: reserveMeta.address.toString(),
+      marketSize: TokenAmount.zero(0), //reserveMeta.state.totalDeposits ?? 
+      outstandingDebt: TokenAmount.zero(0), //reserveMeta.state.outstandingDebt ?? 
       utilizationRate: 0,
       depositRate: 0,
       borrowRate: 0,
       maximumLTV: 0,
       liquidationPremium: 0,
       price: 0,
-      decimals: reserveMeta.decimals,
+      decimals: 0,
       depositNoteExchangeRate: new BN(0),
       loanNoteExchangeRate: new BN(0),
       accruedUntil: new BN(0),
@@ -52,21 +53,21 @@ export const getReserveStructures = async (idlMetadata: IdlMetadata): Promise<Re
         _reserved1: [],
       },
 
-      accountPubkey: reserveMeta.accounts.reserve,
-      vaultPubkey: reserveMeta.accounts.vault,
-      availableLiquidity: TokenAmount.zero(reserveMeta.decimals),
-      feeNoteVaultPubkey: reserveMeta.accounts.feeNoteVault,
-      tokenMintPubkey: reserveMeta.accounts.tokenMint,
-      tokenMint: TokenAmount.zero(reserveMeta.decimals),
-      faucetPubkey: reserveMeta.accounts.faucet ?? null,
-      depositNoteMintPubkey: reserveMeta.accounts.depositNoteMint,
-      depositNoteMint: TokenAmount.zero(reserveMeta.decimals),
-      loanNoteMintPubkey: reserveMeta.accounts.loanNoteMint,
-      loanNoteMint: TokenAmount.zero(reserveMeta.decimals),
-      pythPricePubkey: reserveMeta.accounts.pythPrice,
-      pythProductPubkey: reserveMeta.accounts.pythProduct,
+      accountPubkey: reserveMeta.address,
+      vaultPubkey: reserveMeta.data.vault,
+      availableLiquidity: TokenAmount.zero(0),
+      feeNoteVaultPubkey: reserveMeta.data.feeNoteVault,
+      tokenMintPubkey: reserveMeta.data.tokenMint,
+      tokenMint: TokenAmount.zero(0),
+      faucetPubkey: null,
+      depositNoteMintPubkey: reserveMeta.data.depositNoteMint,
+      depositNoteMint: TokenAmount.zero(0),
+      loanNoteMintPubkey: reserveMeta.data.loanNoteMint,
+      loanNoteMint: TokenAmount.zero(0),
+      pythPricePubkey: reserveMeta.data.pythPrice,
+      pythProductPubkey: reserveMeta.data.pythProduct,
     };
-    reserves[reserveMeta.abbrev] = reserve;
+    reserves[reserveMeta.address.toString()] = reserve;
   }
   return reserves;
 };
@@ -76,7 +77,7 @@ export const getAssetPubkeys = async (
   market: Market,
   user: User,
   program: Program,
-  wallet: Wallet | SolongWallet | null,
+  wallet: ConnectedWallet| null,
 ): Promise<AssetStore | null> => {
   if (program == null || wallet === null) {
     return null;

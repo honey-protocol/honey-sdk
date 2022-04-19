@@ -1,4 +1,4 @@
-import { TxnResponse } from '../helpers/JetTypes';
+import { TxnResponse } from '../helpers/honeyTypes';
 
 // Onchain Error Handling
 export type TxResponse = [res: TxnResponse, txid: string[]];

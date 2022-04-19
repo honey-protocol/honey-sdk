@@ -1,5 +1,5 @@
 import { HoneyReserve } from '..';
-import { Reserve } from '../helpers/JetTypes';
+import { Reserve } from '../helpers/honeyTypes';
 import * as anchor from '@project-serum/anchor';
 import { TokenAmount } from '../helpers/util';
 

@@ -33,8 +33,8 @@ import type {
   SlopeTxn,
   CustomProgramError,
   MarketMetadata,
-} from './JetTypes';
-import { TxnResponse } from './JetTypes';
+} from './honeyTypes';
+import { TxnResponse } from './honeyTypes';
 import { MarketReserveInfoList, PositionInfoList, ReserveStateLayout } from './layout';
 import { TokenAmount } from './util';
 import bs58 from 'bs58';
