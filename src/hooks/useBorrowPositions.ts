@@ -65,8 +65,8 @@ export const useBorrowPositions = (connection: Connection, wallet: ConnectedWall
 
     obligation.loans.map((loan: any, index: number) => {
       borrowPositions[index]?.assetsBorrowed.push({
-        name: 'sol',
-        value: Math.round(assetStore?.tokens.SOL.loanNoteBalance.amount.toNumber()! * 1000) / 1000,
+        name: 'SOL',
+        value: Math.round(assetStore?.sol.uiAmountFloat) //.SOL.loanNoteBalance.amount.toNumber()! * 1000) / 1000,
       });
     });
     setStatus({ loading: false, data: borrowPositions });

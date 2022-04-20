@@ -293,10 +293,13 @@ export class HoneyUser implements User {
       collateralAccount: collateralBump,
     };
 
-    this.reserves.forEach((reserve) => tx.add(reserve.makeRefreshIx()));
+    this.reserves.forEach((reserve) => {
+      if (!reserve.address.equals(PublicKey.default))
+        tx.add(reserve.makeRefreshIx())
+    });
 
     tx.add(
-      await this.client.program.instruction.withdrawNft(withdrawNFTBumpSeeds, metadataBump, {
+      await this.client.program.instruction.withdrawNft(metadataBump, {
         accounts: {
           market: this.market.address,
           marketAuthority: this.market.marketAuthority,

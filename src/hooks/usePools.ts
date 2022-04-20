@@ -24,7 +24,7 @@ export const usePools = (connection: Connection, wallet: ConnectedWallet, honeyP
 
       setStatus({ loading: true });
       const reserve = market.reserves.SOL;
-      const obligation = (await honeyUser.getObligationData()) as ObligationAccount;
+      const obligation = await honeyUser.getObligationData() as ObligationAccount;
       if (!obligation.collateralNftMint) {
         setStatus({ loading: false, error: new Error("Obligation does not have a valid collateral nft mint")});
         return
