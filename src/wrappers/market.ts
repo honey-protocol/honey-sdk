@@ -193,27 +193,29 @@ export class HoneyMarket implements HoneyMarketData {
         market: this.address,
         marketAuthority: this.marketAuthority,
         reserve: account.publicKey,
+
         vault: derivedAccounts.vault.address,
-        nftDropletMint: params.nftDropletMint,
-        nftDropletVault: nftDropletAccount,
-
-        feeNoteVault: derivedAccounts.feeNoteVault.address,
-        // protocolFeeNoteVault: derivedAccounts.protocolFeeNoteVault.address, // issues
-
-        dexSwapTokens: derivedAccounts.dexSwapTokens.address,
-        dexOpenOrdersA: derivedAccounts.dexOpenOrdersA.address,
-        dexOpenOrdersB: derivedAccounts.dexOpenOrdersB.address,
-        dexMarketA: params.dexMarketA,
-        dexMarketB: params.dexMarketB,
-        dexProgram: DEX_PID,
-        loanNoteMint: derivedAccounts.loanNoteMint.address,
         depositNoteMint: derivedAccounts.depositNoteMint.address,
-
-        oracleProduct: params.pythOracleProduct,
-        oraclePrice: params.pythOraclePrice,
-        quoteTokenMint: this.quoteTokenMint,
+        feeNoteVault: derivedAccounts.feeNoteVault.address,
         tokenMint: params.tokenMint,
         tokenProgram: TOKEN_PROGRAM_ID,
+        dexProgram: DEX_PID,
+        oracleProduct: params.pythOracleProduct,
+        oraclePrice: params.pythOraclePrice,
+        loanNoteMint: derivedAccounts.loanNoteMint.address,
+
+        // nftDropletMint: params.nftDropletMint,
+        // nftDropletVault: nftDropletAccount,
+
+        // protocolFeeNoteVault: derivedAccounts.protocolFeeNoteVault.address, // issues
+
+        // dexSwapTokens: derivedAccounts.dexSwapTokens.address,
+        // dexOpenOrdersA: derivedAccounts.dexOpenOrdersA.address,
+        // dexOpenOrdersB: derivedAccounts.dexOpenOrdersB.address,
+        // dexMarketA: params.dexMarketA,
+        // dexMarketB: params.dexMarketB,
+
+        quoteTokenMint: this.quoteTokenMint,
         owner: this.owner,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: anchor.web3.SystemProgram.programId,
