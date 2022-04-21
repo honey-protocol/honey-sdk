@@ -279,9 +279,16 @@ export class HoneyUser implements User {
       this.client.program.programId,
     );
 
-    const [collateralAddress, collateralBump] = await PublicKey.findProgramAddress(
-      [Buffer.from('nft'), this.market.address.toBuffer(), tokenMint.toBuffer(), this.address.toBuffer()],
-      this.client.program.programId,
+    // const [collateralAddress, collateralBump] = await PublicKey.findProgramAddress(
+    //   [Buffer.from('nft'), this.market.address.toBuffer(), tokenMint.toBuffer(), this.address.toBuffer()],
+    //   this.client.program.programId,
+    // );
+    const collateralAddress = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      tokenMint,
+      this.market.marketAuthority,
+      true,
     );
 
     const [nftMetadata, metadataBump] = await PublicKey.findProgramAddress(
@@ -358,22 +365,21 @@ export class HoneyUser implements User {
     }
     // const collateralAddress = await deriveAssociatedTokenAccount(tokenMint, this.market.marketAuthority);
 
-    // const collateralAddress = await Token.getAssociatedTokenAddress(
-    //   ASSOCIATED_TOKEN_PROGRAM_ID,
-    //   TOKEN_PROGRAM_ID,
-    //   tokenMint,
-    //   this.market.marketAuthority,
-    //   true,
-    // );
-    const [collateralAddress, collateralBump] = await PublicKey.findProgramAddress(
-      [Buffer.from('nft'), this.market.address.toBuffer(), tokenMint.toBuffer(), this.address.toBuffer()],
-      this.client.program.programId,
+    const collateralAddress = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      tokenMint,
+      this.market.marketAuthority,
+      true,
     );
-
-    const metadataPubKey = new PublicKey(METADATA_PROGRAM_ID);
-    // const [nftMetadata, metadataBump] = await PublicKey.findProgramAddress(
-    //   [Buffer.from('metadata'), metadataPubKey.toBuffer(), tokenMint.toBuffer()],
-    //   metadataPubKey,
+    // const [collateralAddress, collateralBump] = await PublicKey.findProgramAddress(
+    //   [
+    //     Buffer.from('nft'),
+    //     this.market.address.toBuffer(),
+    //     tokenMint.toBuffer(),
+    //     this.address.toBuffer()
+    //   ],
+    //   this.client.program.programId,
     // );
 
     const derivedMetadata = await this.findNftMetadata(tokenMint);
@@ -397,15 +403,15 @@ export class HoneyUser implements User {
           market: this.market.address,
           marketAuthority: this.market.marketAuthority,
           obligation: obligationAddress,
-
           depositNftMint: tokenMint,
+
           nftCollectionCreator: updateAuthority, // should make a call to get this info or just do it on the program side
           metadata: derivedMetadata.address,
           owner: this.address,
           collateralAccount: collateralAddress,
+
           tokenProgram: TOKEN_PROGRAM_ID,
           associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-
           rent: anchor.web3.SYSVAR_RENT_PUBKEY,
           systemProgram: anchor.web3.SystemProgram.programId,
         },
