@@ -296,9 +296,11 @@ export class HoneyUser implements User {
       METADATA_PROGRAM_ID,
     );
 
-    this.reserves.forEach(async (reserve) => {
-      if (!reserve.address.equals(PublicKey.default)) tx.add(await reserve.makeRefreshIx());
-    });
+    Promise.all(
+      this.reserves.map(async (reserve) => {
+        if (!reserve.address.equals(PublicKey.default)) tx.add(await reserve.makeRefreshIx());
+      }),
+    );
 
     tx.add(
       await this.client.program.instruction.withdrawNft(metadataBump, {
@@ -476,7 +478,7 @@ export class HoneyUser implements User {
 
     const refreshReserveIxs: TransactionInstruction[] = [];
     // need to refresh all reserves in market to withdraw
-    this.reserves.forEach(async (honeyReserve) => refreshReserveIxs.push(await honeyReserve.makeRefreshIx()));
+    Promise.all(this.reserves.map(async (honeyReserve) => refreshReserveIxs.push(await honeyReserve.makeRefreshIx())));
     const withdrawCollateralIx = this.client.program.instruction.withdrawCollateral(bumpSeeds, amount, {
       accounts: {
         market: this.market.address,
@@ -819,9 +821,11 @@ export class HoneyUser implements User {
 
     const refreshReserveIxs: TransactionInstruction[] = [];
 
-    this.reserves.forEach(async (r) => {
-      refreshReserveIxs.push(await r.makeRefreshIx());
-    });
+    await Promise.all(
+      this.reserves.map(async (r) => {
+        refreshReserveIxs.push(await r.makeRefreshIx());
+      }),
+    );
 
     const [feeReceiverAccount, feeReceiverAccountBump] = await PublicKey.findProgramAddress(
       [Buffer.from('honey-protocol-fee'), reserve.data.tokenMint.toBuffer()],
