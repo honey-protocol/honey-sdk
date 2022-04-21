@@ -296,7 +296,7 @@ export class HoneyUser implements User {
       METADATA_PROGRAM_ID,
     );
 
-    Promise.all(
+    await Promise.all(
       this.reserves.map(async (reserve) => {
         if (!reserve.address.equals(PublicKey.default)) tx.add(await reserve.makeRefreshIx());
       }),
@@ -478,7 +478,9 @@ export class HoneyUser implements User {
 
     const refreshReserveIxs: TransactionInstruction[] = [];
     // need to refresh all reserves in market to withdraw
-    Promise.all(this.reserves.map(async (honeyReserve) => refreshReserveIxs.push(await honeyReserve.makeRefreshIx())));
+    await Promise.all(
+      this.reserves.map(async (honeyReserve) => refreshReserveIxs.push(await honeyReserve.makeRefreshIx())),
+    );
     const withdrawCollateralIx = this.client.program.instruction.withdrawCollateral(bumpSeeds, amount, {
       accounts: {
         market: this.market.address,
