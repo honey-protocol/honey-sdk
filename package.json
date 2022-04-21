@@ -1,9 +1,9 @@
 {
     "name": "@honey-finance/sdk",
-    "version": "1.0.17",
-    "description": "",
-    "main": "dist/index.js",
-    "types": "lib/index.d.ts",
+    "version": "1.0.18",
+    "description": "This repository holds the wrappers, contexts and other utilities to interact with the Honey program library.",
+    "main": "index.js",
+    "types": "index.d.ts",
     "scripts": {
         "build": "rollup -c",
         "format": "prettier --write \"src/**/*.ts\"",
