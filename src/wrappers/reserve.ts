@@ -185,7 +185,7 @@ export class HoneyReserve {
         market: this.market.address,
         marketAuthority: this.market.marketAuthority,
         reserve: this.address,
-        feeNoteVault: PublicKey.default, // derivedAccounts.feeNoteVault.address,
+        // feeNoteVault: PublicKey.default, // derivedAccounts.feeNoteVault.address,
         // protocolFeeNoteVault: this.data.protocolFeeNoteVault,
         depositNoteMint: this.data.depositNoteMint,
         pythOraclePrice: this.data.pythOraclePrice || this.data.pythPrice,

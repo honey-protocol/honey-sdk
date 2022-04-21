@@ -192,7 +192,7 @@ export class HoneyMarket implements HoneyMarketData {
         reserve: account.publicKey,
         vault: derivedAccounts.vault.address,
         depositNoteMint: derivedAccounts.depositNoteMint.address,
-        feeNoteVault: derivedAccounts.feeNoteVault.address,
+        // feeNoteVault: derivedAccounts.feeNoteVault.address,
         tokenMint: params.tokenMint,
         tokenProgram: TOKEN_PROGRAM_ID,
         dexProgram: DEX_PID,
