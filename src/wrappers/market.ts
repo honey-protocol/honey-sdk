@@ -157,9 +157,6 @@ export class HoneyMarket implements HoneyMarketData {
       account,
     ]);
 
-    // const init_tx = await this.client.program.provider.send(transaction, [], { skipPreflight: true });
-    console.log('init_tx', initTx);
-
     console.log('accounts', {
       market: this.address.toBase58(),
       marketAuthority: this.marketAuthority.toBase58(),
@@ -188,7 +185,7 @@ export class HoneyMarket implements HoneyMarketData {
     });
 
     console.log('this.client.program.programID in initing reserve', this.client.program.programId.toString());
-    const tx = await this.client.program.rpc.initReserve(bumpSeeds, params.config, {
+    const tx = await this.client.program.instruction.initReserve(bumpSeeds, params.config, {
       accounts: {
         market: this.address,
         marketAuthority: this.marketAuthority,
@@ -220,7 +217,9 @@ export class HoneyMarket implements HoneyMarketData {
       },
       signers: [],
     });
-    console.log('initReserve tx', tx);
+    transaction.add(tx);
+    const txid = await this.client.program.provider.send(transaction, [], { skipPreflight: true });
+    console.log('initReserve tx', txid);
     return HoneyReserve.load(this.client, account.publicKey, this);
   }
 }
