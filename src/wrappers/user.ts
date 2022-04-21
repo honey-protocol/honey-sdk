@@ -290,9 +290,9 @@ export class HoneyUser implements User {
       metadataPubKey,
     );
 
-    this.reserves.forEach((reserve) => {
-      if (!reserve.address.equals(PublicKey.default)) tx.add(reserve.makeRefreshIx());
-    });
+    // this.reserves.forEach((reserve) => {
+    //   if (!reserve.address.equals(PublicKey.default)) tx.add(reserve.makeRefreshIx());
+    // });
 
     tx.add(
       await this.client.program.instruction.withdrawNft(metadataBump, {
