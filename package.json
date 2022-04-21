@@ -1,12 +1,12 @@
 {
     "name": "@honey-finance/sdk",
-    "version": "1.0.14",
+    "version": "1.0.15",
     "description": "",
-    "main": "lib/index.js",
-    "module": "lib/index.js",
-    "types": "lib/index.d.ts",
+    "main": "dist/index.js",
+    "module": "dist/index.js",
+    "types": "dist/index.d.ts",
     "scripts": {
-        "build": "tsc && copyfiles src/idl/**/*.json lib/",
+        "build": "tsc && rm -rf dist && NODE_ENV=production babel src --out-dir dist --copy-files && copyfiles src/idl/**/*.json lib/",
         "format": "prettier --write \"src/**/*.ts\"",
         "lint": "tslint -p tsconfig.json",
         "prepare": "npm run build",
@@ -21,6 +21,7 @@
     "license": "ISC",
     "private": false,
     "dependencies": {
+        "@babel/polyfill": "^7.12.1",
         "@metaplex-foundation/mpl-token-metadata": "^1.2.0",
         "@project-serum/anchor": "^0.20.1",
         "@project-serum/serum": "^0.13.61",
@@ -33,6 +34,9 @@
         "@types/mocha": "^9.1.0"
     },
     "devDependencies": {
+        "@babel/cli": "^7.17.6",
+        "@babel/core": "^7.17.9",
+        "@babel/preset-env": "^7.16.11",
         "@types/bs58": "^4.0.1",
         "@types/expect": "^24.3.0",
         "@types/react": "^17.0.39",
