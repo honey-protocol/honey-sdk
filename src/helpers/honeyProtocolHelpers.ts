@@ -13,7 +13,7 @@ import {
 import { TokenAmount } from './util';
 import { Asset, AssetStore, IdlMetadata, Market, Reserve, SolongWallet, User, Wallet } from './honeyTypes';
 import { ConnectedWallet } from './walletType';
-import { HoneyReserve } from 'src/wrappers';
+import { HoneyReserve } from '../wrappers';
 
 export const getReserveStructures = async (honeyReserves: HoneyReserve[]): Promise<Record<string, Reserve>> => {
   // Setup reserve structures

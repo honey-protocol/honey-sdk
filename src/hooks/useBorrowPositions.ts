@@ -1,11 +1,11 @@
 import { Metadata } from '@metaplex-foundation/mpl-token-metadata';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { useEffect, useState } from 'react';
-import { ConnectedWallet } from 'src/helpers/walletType';
 import { getNFTAssociatedMetadata } from '..';
 import { useHoney } from '../contexts/honey';
 import { ObligationAccount } from '../helpers/honeyTypes';
 import { SupportedWallet, TBorrowPosition } from '../helpers/types';
+import { ConnectedWallet } from '../helpers/walletType';
 import { useMarket } from './useMarket';
 
 export const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');

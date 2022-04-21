@@ -1,9 +1,9 @@
 import * as anchor from '@project-serum/anchor';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { useEffect, useState } from 'react';
-import { ConnectedWallet } from 'src/helpers/walletType';
 import { HoneyClient, HoneyMarket, HoneyUser, HoneyReserve } from '..';
 import { useAnchor, Wallet } from '../contexts/anchor';
+import { ConnectedWallet } from '../helpers/walletType';
 
 export const useMarket = (
   connection: Connection,
