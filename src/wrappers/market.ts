@@ -193,7 +193,6 @@ export class HoneyMarket implements HoneyMarketData {
         market: this.address,
         marketAuthority: this.marketAuthority,
         reserve: account.publicKey,
-
         vault: derivedAccounts.vault.address,
         depositNoteMint: derivedAccounts.depositNoteMint.address,
         feeNoteVault: derivedAccounts.feeNoteVault.address,
@@ -203,25 +202,22 @@ export class HoneyMarket implements HoneyMarketData {
         oracleProduct: params.pythOracleProduct,
         oraclePrice: params.pythOraclePrice,
         loanNoteMint: derivedAccounts.loanNoteMint.address,
-
-        // nftDropletMint: params.nftDropletMint,
-        // nftDropletVault: nftDropletAccount,
-
-        // protocolFeeNoteVault: derivedAccounts.protocolFeeNoteVault.address, // issues
-
-        // dexSwapTokens: derivedAccounts.dexSwapTokens.address,
-        // dexOpenOrdersA: derivedAccounts.dexOpenOrdersA.address,
-        // dexOpenOrdersB: derivedAccounts.dexOpenOrdersB.address,
-        // dexMarketA: params.dexMarketA,
-        // dexMarketB: params.dexMarketB,
-
         quoteTokenMint: this.quoteTokenMint,
         owner: this.owner,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: anchor.web3.SystemProgram.programId,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+
+        // additions
+        nftDropletMint: params.nftDropletMint,
+        nftDropletVault: nftDropletAccount,
+        protocolFeeNoteVault: derivedAccounts.protocolFeeNoteVault.address,
+        dexSwapTokens: derivedAccounts.dexSwapTokens.address,
+        dexOpenOrdersA: derivedAccounts.dexOpenOrdersA.address,
+        dexOpenOrdersB: derivedAccounts.dexOpenOrdersB.address,
+        dexMarketA: params.dexMarketA,
+        dexMarketB: params.dexMarketB,
       },
-      // instructions: [createReserveAccount],
       signers: [],
     });
     console.log('initReserve tx', tx);
