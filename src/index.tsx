@@ -8,3 +8,6 @@ export * as contexts from './contexts';
 export * from './wrappers';
 export * as hooks from './hooks';
 export * from './hooks';
+
+export {useBorrowPositions, useMarket, usePools} from './hooks';
+export {useHoney, useAnchor, HoneyProvider, AnchorProvider} from './contexts';
