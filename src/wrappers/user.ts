@@ -296,9 +296,9 @@ export class HoneyUser implements User {
       METADATA_PROGRAM_ID,
     );
 
-    // this.reserves.forEach((reserve) => { // fix the protocolFeeReserve Key as being default issue
-    //   if (!reserve.address.equals(PublicKey.default)) tx.add(reserve.makeRefreshIx());
-    // });
+    this.reserves.forEach((reserve) => {
+      if (!reserve.address.equals(PublicKey.default)) tx.add(reserve.makeRefreshIx());
+    });
 
     tx.add(
       await this.client.program.instruction.withdrawNft(metadataBump, {
