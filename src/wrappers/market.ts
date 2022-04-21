@@ -215,11 +215,15 @@ export class HoneyMarket implements HoneyMarketData {
         // dexMarketA: params.dexMarketA,
         // dexMarketB: params.dexMarketB,
       },
-      signers: [],
+      signers: [account],
     });
     transaction.add(tx);
-    const txid = await this.client.program.provider.send(transaction, [], { skipPreflight: true });
-    console.log('initReserve tx', txid);
+    try {
+      const txid = await this.client.program.provider.send(transaction, [], { skipPreflight: true });
+      console.log('initReserve tx', txid);
+    } catch (e) {
+      console.log(e);
+    }
     return HoneyReserve.load(this.client, account.publicKey, this);
   }
 }
