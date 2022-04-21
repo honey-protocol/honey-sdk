@@ -209,14 +209,14 @@ export class HoneyMarket implements HoneyMarketData {
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
 
         // additions
-        nftDropletMint: params.nftDropletMint,
-        nftDropletVault: nftDropletAccount,
-        protocolFeeNoteVault: derivedAccounts.protocolFeeNoteVault.address,
-        dexSwapTokens: derivedAccounts.dexSwapTokens.address,
-        dexOpenOrdersA: derivedAccounts.dexOpenOrdersA.address,
-        dexOpenOrdersB: derivedAccounts.dexOpenOrdersB.address,
-        dexMarketA: params.dexMarketA,
-        dexMarketB: params.dexMarketB,
+        // nftDropletMint: params.nftDropletMint,
+        // nftDropletVault: nftDropletAccount,
+        // protocolFeeNoteVault: derivedAccounts.protocolFeeNoteVault.address,
+        // dexSwapTokens: derivedAccounts.dexSwapTokens.address,
+        // dexOpenOrdersA: derivedAccounts.dexOpenOrdersA.address,
+        // dexOpenOrdersB: derivedAccounts.dexOpenOrdersB.address,
+        // dexMarketA: params.dexMarketA,
+        // dexMarketB: params.dexMarketB,
       },
       signers: [],
     });
