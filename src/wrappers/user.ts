@@ -259,7 +259,7 @@ export class HoneyUser implements User {
   async withdrawNFT(tokenAccount: PublicKey, tokenMint: PublicKey, updateAuthority: PublicKey): Promise<TxResponse> {
     const tx = await this.makeNFTWithdrawTx(tokenAccount, tokenMint, updateAuthority);
     try {
-      const txid = await this.client.program.provider.send(tx);
+      const txid = await this.client.program.provider.send(tx, [], { skipPreflight: true });
       return [TxnResponse.Success, [txid]];
     } catch (err) {
       console.error(`Withdraw NFT error: ${err}`);
@@ -270,7 +270,7 @@ export class HoneyUser implements User {
   async makeNFTWithdrawTx(
     tokenAccount: PublicKey,
     tokenMint: PublicKey,
-    updateAuthority: PublicKey,
+    nftCollectionCreator: PublicKey,
   ): Promise<Transaction> {
     const tx = new Transaction();
 
@@ -289,13 +289,9 @@ export class HoneyUser implements User {
       [Buffer.from('metadata'), metadataPubKey.toBuffer(), tokenMint.toBuffer()],
       metadataPubKey,
     );
-    const withdrawNFTBumpSeeds = {
-      collateralAccount: collateralBump,
-    };
 
     this.reserves.forEach((reserve) => {
-      if (!reserve.address.equals(PublicKey.default))
-        tx.add(reserve.makeRefreshIx())
+      if (!reserve.address.equals(PublicKey.default)) tx.add(reserve.makeRefreshIx());
     });
 
     tx.add(
@@ -306,8 +302,8 @@ export class HoneyUser implements User {
           obligation: obligationAddress,
 
           depositNftMint: tokenMint,
-          updateAuthority,
           metadata: nftMetadata,
+          nftCollectionCreator,
           owner: this.address,
           collateralAccount: collateralAddress,
           tokenProgram: TOKEN_PROGRAM_ID,

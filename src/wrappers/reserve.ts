@@ -179,6 +179,7 @@ export class HoneyReserve {
   }
 
   makeRefreshIx(): TransactionInstruction {
+    // const derivedAccounts = HoneyReserve.deriveAccounts(this.client, this.address, this.data.depositNoteMint);
     return this.client.program.instruction.refreshReserve({
       accounts: {
         market: this.market.address,
@@ -205,7 +206,7 @@ export class HoneyReserve {
   }
 
   static async load(client: HoneyClient, address: PublicKey, maybeMarket?: HoneyMarket): Promise<HoneyReserve> {
-    const data = await client.program.account.reserve.fetch(address) as ReserveData;
+    const data = (await client.program.account.reserve.fetch(address)) as ReserveData;
     const market = maybeMarket || (await HoneyMarket.load(client, data.market));
 
     return new HoneyReserve(client, market, address, data);

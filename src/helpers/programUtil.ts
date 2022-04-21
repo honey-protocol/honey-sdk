@@ -644,14 +644,16 @@ export const parseIdlMetadata = (idlMetadata: IdlMetadata): IdlMetadata => {
     address: new PublicKey(idlMetadata.address),
     market: {
       market: new PublicKey(idlMetadata.market.market),
-      marketAuthority: new PublicKey(idlMetadata.market.marketAuthority)
+      marketAuthority: new PublicKey(idlMetadata.market.marketAuthority),
     } as MarketMetadata,
-    reserves: idlMetadata.reserves ? idlMetadata.reserves.map((reserve) => {
-      return {
-        ...reserve,
-        accounts: toPublicKeys(reserve.accounts),
-      };
-    }) as any : []
+    reserves: idlMetadata.reserves
+      ? (idlMetadata.reserves.map((reserve) => {
+          return {
+            ...reserve,
+            accounts: toPublicKeys(reserve.accounts),
+          };
+        }) as any)
+      : [],
   };
 };
 

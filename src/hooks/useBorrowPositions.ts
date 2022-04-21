@@ -10,7 +10,12 @@ import { useMarket } from './useMarket';
 
 export const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
 
-export const useBorrowPositions = (connection: Connection, wallet: ConnectedWallet, honeyId: string, honeyMarketId: string) => {
+export const useBorrowPositions = (
+  connection: Connection,
+  wallet: ConnectedWallet,
+  honeyId: string,
+  honeyMarketId: string,
+) => {
   const [status, setStatus] = useState<{
     loading: boolean;
     data?: TBorrowPosition[];
@@ -24,24 +29,20 @@ export const useBorrowPositions = (connection: Connection, wallet: ConnectedWall
     setStatus({ loading: true });
 
     const borrowPositions: TBorrowPosition[] = [];
-    const obligation = await honeyUser.getObligationData() as ObligationAccount;
+    const obligation = (await honeyUser.getObligationData()) as ObligationAccount;
     if (!obligation.market) {
-      setStatus({ loading: false, error: new Error("Obligation does not have a valid market") });
+      setStatus({ loading: false, error: new Error('Obligation does not have a valid market') });
       return;
-    };
+    }
     const collateralNftMint: PublicKey[] = obligation.collateralNftMint;
     if (!collateralNftMint || collateralNftMint.length === 0) {
-      setStatus({ loading: false, error: new Error("Obligation does not have a valid collateral nft mint") });
+      setStatus({ loading: false, error: new Error('Obligation does not have a valid collateral nft mint') });
       return;
-    };
+    }
     const promises = collateralNftMint.map(async (key: PublicKey, index: number) => {
       if (!key.equals(PublicKey.default)) {
         const [nftMetadata, metadataBump] = await PublicKey.findProgramAddress(
-          [
-            Buffer.from('metadata'), 
-            METADATA_PROGRAM_ID.toBuffer(), 
-            key.toBuffer()
-          ],
+          [Buffer.from('metadata'), METADATA_PROGRAM_ID.toBuffer(), key.toBuffer()],
           METADATA_PROGRAM_ID,
         );
         const data = await getNFTAssociatedMetadata(connection, nftMetadata);
@@ -66,7 +67,7 @@ export const useBorrowPositions = (connection: Connection, wallet: ConnectedWall
     obligation.loans.map((loan: any, index: number) => {
       borrowPositions[index]?.assetsBorrowed.push({
         name: 'SOL',
-        value: Math.round(assetStore?.sol.uiAmountFloat) //.SOL.loanNoteBalance.amount.toNumber()! * 1000) / 1000,
+        value: Math.round(assetStore?.sol.uiAmountFloat), // .SOL.loanNoteBalance.amount.toNumber()! * 1000) / 1000,
       });
     });
     setStatus({ loading: false, data: borrowPositions });

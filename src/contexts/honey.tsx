@@ -112,8 +112,8 @@ export const HoneyProvider: FC<HoneyProps> = ({
           }
         }
       });
-
-      for (const key in market.reserves) {
+      // @ts-ignore
+      for (const key of Object.keys(market.reserves)) {
         const reserveMeta =  market.reserves[key];
         // Reserve
         promise = getAccountInfoAndSubscribe(program.provider.connection, reserveMeta.accountPubkey, account => {

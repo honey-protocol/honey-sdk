@@ -5,7 +5,12 @@ import { ConnectedWallet } from 'src/helpers/walletType';
 import { HoneyClient, HoneyMarket, HoneyUser, HoneyReserve } from '..';
 import { useAnchor, Wallet } from '../contexts/anchor';
 
-export const useMarket = (connection: Connection, wallet: ConnectedWallet, honeyProgramId: string, honeyMarketId: string) => {
+export const useMarket = (
+  connection: Connection,
+  wallet: ConnectedWallet,
+  honeyProgramId: string,
+  honeyMarketId: string,
+) => {
   const { isConfigured } = useAnchor();
 
   const [honeyClient, setHoneyClient] = useState<HoneyClient>();
@@ -26,13 +31,16 @@ export const useMarket = (connection: Connection, wallet: ConnectedWallet, honey
       setHoneyMarket(market);
 
       // pull latest reserve data
-      market.refresh()
+      market.refresh();
 
-      const reserves: HoneyReserve[] = market.reserves.map(reserve => new HoneyReserve(client, market, reserve.address));
-      Promise.all(reserves.map(async (reserve) => {
-        if (reserve.address && reserve.address.toBase58() !== PublicKey.default.toBase58())
-          await reserve.refresh()
-      }));
+      const reserves: HoneyReserve[] = market.reserves.map(
+        (reserve) => new HoneyReserve(client, market, reserve.address),
+      );
+      Promise.all(
+        reserves.map(async (reserve) => {
+          if (reserve.address && reserve.address.toBase58() !== PublicKey.default.toBase58()) await reserve.refresh();
+        }),
+      );
       setHoneyReserves(reserves);
 
       const user: HoneyUser = await HoneyUser.load(client, market, new PublicKey(wallet.publicKey), reserves);

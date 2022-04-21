@@ -198,13 +198,13 @@ export class HoneyMarket implements HoneyMarketData {
         // nftDropletVault: nftDropletAccount,
 
         feeNoteVault: derivedAccounts.feeNoteVault.address,
-        // protocolFeeNoteVault: derivedAccounts.protocolFeeNoteVault.address, // issues
+        protocolFeeNoteVault: derivedAccounts.protocolFeeNoteVault.address, // issues
 
-        // dexSwapTokens: derivedAccounts.dexSwapTokens.address,
-        // dexOpenOrdersA: derivedAccounts.dexOpenOrdersA.address,
-        // dexOpenOrdersB: derivedAccounts.dexOpenOrdersB.address,
-        // dexMarketA: params.dexMarketA,
-        // dexMarketB: params.dexMarketB,
+        dexSwapTokens: derivedAccounts.dexSwapTokens.address,
+        dexOpenOrdersA: derivedAccounts.dexOpenOrdersA.address,
+        dexOpenOrdersB: derivedAccounts.dexOpenOrdersB.address,
+        dexMarketA: params.dexMarketA,
+        dexMarketB: params.dexMarketB,
         dexProgram: DEX_PID,
         loanNoteMint: derivedAccounts.loanNoteMint.address,
         depositNoteMint: derivedAccounts.depositNoteMint.address,

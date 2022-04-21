@@ -10,7 +10,7 @@ export interface WalletAdapter<Connected extends boolean = boolean> {
   signAllTransactions: (transaction: Transaction[]) => Promise<Transaction[]>;
   connect: (args?: unknown) => Promise<void>;
   disconnect: () => void | Promise<void>;
-  on(event: "connect" | "disconnect", fn: () => void): void;
+  on(event: 'connect' | 'disconnect', fn: () => void): void;
 }
 export interface WalletProvider {
   name: string;

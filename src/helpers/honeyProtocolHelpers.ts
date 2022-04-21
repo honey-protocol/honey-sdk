@@ -23,8 +23,8 @@ export const getReserveStructures = async (honeyReserves: HoneyReserve[]): Promi
     const reserve: Reserve = {
       name: reserveMeta.address.toString(),
       abbrev: reserveMeta.address.toString(),
-      marketSize: TokenAmount.zero(0), //reserveMeta.state.totalDeposits ?? 
-      outstandingDebt: TokenAmount.zero(0), //reserveMeta.state.outstandingDebt ?? 
+      marketSize: TokenAmount.zero(0), //reserveMeta.state.totalDeposits ??
+      outstandingDebt: TokenAmount.zero(0), //reserveMeta.state.outstandingDebt ??
       utilizationRate: 0,
       depositRate: 0,
       borrowRate: 0,
@@ -77,7 +77,7 @@ export const getAssetPubkeys = async (
   market: Market,
   user: User,
   program: Program,
-  wallet: ConnectedWallet| null,
+  wallet: ConnectedWallet | null,
 ): Promise<AssetStore | null> => {
   if (program == null || wallet === null) {
     return null;

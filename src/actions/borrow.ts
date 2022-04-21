@@ -46,7 +46,7 @@ export const depositNFT = async (
   return await honeyUser.depositNFT(
     associatedTokenAccount,
     tokenMint,
-    new PublicKey(tokenMetadata.data.updateAuthority),
+    new PublicKey(tokenMetadata.data.data.creators[0].address),
   );
 };
 
@@ -66,6 +66,7 @@ export const withdrawNFT = async (
     tokenMint,
     honeyUser.address,
   );
+
   if (!associatedTokenAccount) {
     console.error(`Could not find the associated token account: ${associatedTokenAccount}`);
     return [TxnResponse.Failed, []];
@@ -73,7 +74,7 @@ export const withdrawNFT = async (
   return await honeyUser.withdrawNFT(
     associatedTokenAccount,
     tokenMint,
-    new PublicKey(tokenMetadata.data.updateAuthority),
+    new PublicKey(tokenMetadata.data.data.creators[0].address),
   );
 };
 

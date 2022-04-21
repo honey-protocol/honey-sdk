@@ -3,7 +3,7 @@ import * as anchor from '@project-serum/anchor';
 import { CreateMarketParams, HoneyMarket } from './market';
 import { DerivedAccount } from './derived-account';
 import devnetIdl from '../idl/devnet/honey.json';
-import mainnetBetaIdl from "../idl/mainnet-beta/honey.json";
+import mainnetBetaIdl from '../idl/mainnet-beta/honey.json';
 
 interface ToBytes {
   toBytes(): Uint8Array;
