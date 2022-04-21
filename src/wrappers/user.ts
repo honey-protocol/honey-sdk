@@ -284,13 +284,12 @@ export class HoneyUser implements User {
       this.client.program.programId,
     );
 
-    const metadataPubKey = new PublicKey(METADATA_PROGRAM_ID);
     const [nftMetadata, metadataBump] = await PublicKey.findProgramAddress(
-      [Buffer.from('metadata'), metadataPubKey.toBuffer(), tokenMint.toBuffer()],
-      metadataPubKey,
+      [Buffer.from('metadata'), METADATA_PROGRAM_ID.toBuffer(), tokenMint.toBuffer()],
+      METADATA_PROGRAM_ID,
     );
 
-    // this.reserves.forEach((reserve) => {
+    // this.reserves.forEach((reserve) => { // fix the protocolFeeReserve Key as being default issue
     //   if (!reserve.address.equals(PublicKey.default)) tx.add(reserve.makeRefreshIx());
     // });
 
@@ -359,22 +358,17 @@ export class HoneyUser implements User {
     }
     // const collateralAddress = await deriveAssociatedTokenAccount(tokenMint, this.market.marketAuthority);
 
-    const collateralAddress = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      tokenMint,
-      this.market.marketAuthority,
-      true,
-    );
-    // const [collateralAddress, collateralBump] = await PublicKey.findProgramAddress(
-    //   [
-    //     Buffer.from('nft'),
-    //     this.market.address.toBuffer(),
-    //     tokenMint.toBuffer(),
-    //     this.address.toBuffer()
-    //   ],
-    //   this.client.program.programId,
+    // const collateralAddress = await Token.getAssociatedTokenAddress(
+    //   ASSOCIATED_TOKEN_PROGRAM_ID,
+    //   TOKEN_PROGRAM_ID,
+    //   tokenMint,
+    //   this.market.marketAuthority,
+    //   true,
     // );
+    const [collateralAddress, collateralBump] = await PublicKey.findProgramAddress(
+      [Buffer.from('nft'), this.market.address.toBuffer(), tokenMint.toBuffer(), this.address.toBuffer()],
+      this.client.program.programId,
+    );
 
     const metadataPubKey = new PublicKey(METADATA_PROGRAM_ID);
     // const [nftMetadata, metadataBump] = await PublicKey.findProgramAddress(
