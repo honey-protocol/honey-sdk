@@ -1,6 +1,6 @@
 {
     "name": "@honey-finance/sdk",
-    "version": "1.0.21",
+    "version": "1.0.22",
     "description": "This repository holds the wrappers, contexts and other utilities to interact with the Honey program library.",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
@@ -41,6 +41,7 @@
         "react": "^17.0.2",
         "react-dom": "^17.0.2",
         "rollup": "^2.70.2",
+        "rollup-plugin-copy": "^3.4.0",
         "rollup-plugin-sass": "^1.2.12",
         "rollup-plugin-typescript2": "^0.31.2",
         "tslint": "^6.1.3",
