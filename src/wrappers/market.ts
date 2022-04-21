@@ -194,8 +194,8 @@ export class HoneyMarket implements HoneyMarketData {
         marketAuthority: this.marketAuthority,
         reserve: account.publicKey,
         vault: derivedAccounts.vault.address,
-        // nftDropletMint: params.nftDropletMint,
-        // nftDropletVault: nftDropletAccount,
+        nftDropletMint: params.nftDropletMint,
+        nftDropletVault: nftDropletAccount,
 
         feeNoteVault: derivedAccounts.feeNoteVault.address,
         // protocolFeeNoteVault: derivedAccounts.protocolFeeNoteVault.address, // issues
