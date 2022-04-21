@@ -225,7 +225,7 @@ export class HoneyUser implements User {
       );
     }
 
-    const refreshReserveIx = reserve.makeRefreshIx();
+    const refreshReserveIx = await reserve.makeRefreshIx();
     const repayIx = this.client.program.instruction.repay(amount, {
       accounts: {
         market: this.market.address,
@@ -296,8 +296,8 @@ export class HoneyUser implements User {
       METADATA_PROGRAM_ID,
     );
 
-    this.reserves.forEach((reserve) => {
-      if (!reserve.address.equals(PublicKey.default)) tx.add(reserve.makeRefreshIx());
+    this.reserves.forEach(async (reserve) => {
+      if (!reserve.address.equals(PublicKey.default)) tx.add(await reserve.makeRefreshIx());
     });
 
     tx.add(
@@ -476,7 +476,7 @@ export class HoneyUser implements User {
 
     const refreshReserveIxs: TransactionInstruction[] = [];
     // need to refresh all reserves in market to withdraw
-    this.reserves.forEach((honeyReserve) => refreshReserveIxs.push(honeyReserve.makeRefreshIx()));
+    this.reserves.forEach(async (honeyReserve) => refreshReserveIxs.push(await honeyReserve.makeRefreshIx()));
     const withdrawCollateralIx = this.client.program.instruction.withdrawCollateral(bumpSeeds, amount, {
       accounts: {
         market: this.market.address,
@@ -573,7 +573,7 @@ export class HoneyUser implements User {
         return [TxnResponse.Failed, txids];
       }
     }
-    tx.add(reserve.makeRefreshIx());
+    tx.add(await reserve.makeRefreshIx());
     tx.add(
       this.client.program.instruction.withdraw(accounts.deposits.bumpSeed, amount, {
         accounts: {
@@ -682,7 +682,7 @@ export class HoneyUser implements User {
       tx.add(this.makeInitDepositAccountIx(reserve, accounts.deposits));
     }
 
-    tx.add(reserve.makeRefreshIx());
+    tx.add(await reserve.makeRefreshIx());
     tx.add(
       this.client.program.instruction.deposit(accounts.deposits.bumpSeed, amount, {
         accounts: {
@@ -734,7 +734,7 @@ export class HoneyUser implements User {
       collateralAccount: accounts.collateral.bumpSeed,
     };
 
-    tx.add(reserve.makeRefreshIx());
+    tx.add(await reserve.makeRefreshIx());
     tx.add(
       this.client.program.instruction.depositCollateral(bumpSeeds, amount, {
         accounts: {
@@ -819,8 +819,8 @@ export class HoneyUser implements User {
 
     const refreshReserveIxs: TransactionInstruction[] = [];
 
-    this.reserves.forEach((r) => {
-      refreshReserveIxs.push(r.makeRefreshIx());
+    this.reserves.forEach(async (r) => {
+      refreshReserveIxs.push(await r.makeRefreshIx());
     });
 
     const [feeReceiverAccount, feeReceiverAccountBump] = await PublicKey.findProgramAddress(

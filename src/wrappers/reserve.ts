@@ -162,7 +162,7 @@ export class HoneyReserve {
   }
 
   async sendRefreshTx(): Promise<string> {
-    const tx = new Transaction().add(this.makeRefreshIx());
+    const tx = new Transaction().add(await this.makeRefreshIx());
     return await this.client.program.provider.send(tx);
   }
 
@@ -178,14 +178,14 @@ export class HoneyReserve {
     }
   }
 
-  makeRefreshIx(): TransactionInstruction {
-    // const derivedAccounts = HoneyReserve.deriveAccounts(this.client, this.address, this.data.depositNoteMint);
+  async makeRefreshIx(): Promise<TransactionInstruction> {
+    const derivedAccounts = await HoneyReserve.deriveAccounts(this.client, this.address, this.data.depositNoteMint);
     return this.client.program.instruction.refreshReserve({
       accounts: {
         market: this.market.address,
         marketAuthority: this.market.marketAuthority,
         reserve: this.address,
-        feeNoteVault: this.data.feeNoteVault,
+        feeNoteVault: derivedAccounts.feeNoteVault.address,
         // protocolFeeNoteVault: this.data.protocolFeeNoteVault,
         depositNoteMint: this.data.depositNoteMint,
         pythOraclePrice: this.data.pythOraclePrice || this.data.pythPrice,
