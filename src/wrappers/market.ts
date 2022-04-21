@@ -150,12 +150,12 @@ export class HoneyMarket implements HoneyMarketData {
     );
 
     const createReserveAccount = await this.client.program.account.reserve.createInstruction(account);
-    const transaction = new Transaction();
-    transaction.add(createReserveAccount);
-    const initTx = await sendAndConfirmTransaction(this.client.program.provider.connection, transaction, [
-      (this.client.program.provider.wallet as any).payer,
-      account,
-    ]);
+    // const transaction = new Transaction();
+    // transaction.add(createReserveAccount);
+    // const initTx = await sendAndConfirmTransaction(this.client.program.provider.connection, transaction, [
+    //   (this.client.program.provider.wallet as any).payer,
+    //   account,
+    // ]);
 
     console.log('accounts', {
       market: this.address.toBase58(),
@@ -185,7 +185,7 @@ export class HoneyMarket implements HoneyMarketData {
     });
 
     console.log('this.client.program.programID in initing reserve', this.client.program.programId.toString());
-    const tx = await this.client.program.instruction.initReserve(bumpSeeds, params.config, {
+    const txid = await this.client.program.rpc.initReserve(bumpSeeds, params.config, {
       accounts: {
         market: this.address,
         marketAuthority: this.marketAuthority,
@@ -216,14 +216,9 @@ export class HoneyMarket implements HoneyMarketData {
         // dexMarketB: params.dexMarketB,
       },
       signers: [account],
+      instructions: [createReserveAccount],
     });
-    transaction.add(tx);
-    try {
-      const txid = await this.client.program.provider.send(transaction, [], { skipPreflight: true });
-      console.log('initReserve tx', txid);
-    } catch (e) {
-      console.log(e);
-    }
+    console.log('initReserve tx', txid);
     return HoneyReserve.load(this.client, account.publicKey, this);
   }
 }
