@@ -1159,11 +1159,6 @@
                     "isSigner": false
                 },
                 {
-                    "name": "feeNoteVault",
-                    "isMut": true,
-                    "isSigner": false
-                },
-                {
                     "name": "depositNoteMint",
                     "isMut": true,
                     "isSigner": false
