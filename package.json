@@ -1,9 +1,10 @@
 {
     "name": "@honey-finance/sdk",
-    "version": "1.0.13",
+    "version": "1.0.14",
     "description": "",
-    "main": "index.ts",
-    "types": "index.d.ts",
+    "main": "lib/index.js",
+    "module": "lib/index.js",
+    "types": "lib/index.d.ts",
     "scripts": {
         "build": "tsc && copyfiles src/idl/**/*.json lib/",
         "format": "prettier --write \"src/**/*.ts\"",
