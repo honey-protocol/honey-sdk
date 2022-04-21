@@ -30,14 +30,16 @@ export interface AnchorProviderProps {
   children: ReactNode,
   wallet: ConnectedWallet | null,
   connection: Connection,
-  network: string
+  network: string,
+  honeyProgram: string
 }
 
 export const AnchorProvider: FC<AnchorProviderProps> = ({
   children,
   wallet,
   connection,
-  network
+  network,
+  honeyProgram
 }) => {
   const [program, setProgram] = useState<Program>({} as Program);
   const [coder, setAnchorCoder] = useState<anchor.Coder>({} as anchor.Coder);
@@ -49,7 +51,7 @@ export const AnchorProvider: FC<AnchorProviderProps> = ({
       const idl: any = network === 'devnet' ? devnetIdl : mainnetBetaIdl;
       setAnchorCoder(new anchor.Coder(idl));
       // init program
-      const HONEY_PROGRAM_ID = new PublicKey(idl.metadata.address)
+      const HONEY_PROGRAM_ID = new PublicKey(honeyProgram);
       const provider = new anchor.Provider(connection, wallet, anchor.Provider.defaultOptions());
       const anchorProgram: Program = new anchor.Program(idl as any, HONEY_PROGRAM_ID, provider);
       setProgram(anchorProgram);
