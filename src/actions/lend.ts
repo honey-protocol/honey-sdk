@@ -11,7 +11,7 @@ export const deposit = async (
   depositReserves: HoneyReserve[],
 ): Promise<TxResponse> => {
   const depositReserve = depositReserves.filter((reserve: HoneyReserve) =>
-    reserve.data.tokenMint.equals(depositTokenMint),
+    reserve?.data?.tokenMint?.equals(depositTokenMint),
   )[0];
   const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(
     depositTokenMint,
@@ -33,7 +33,7 @@ export const depositCollateral = async (
   depositReserves: HoneyReserve[],
 ): Promise<TxResponse> => {
   const depositReserve = depositReserves.filter((reserve: HoneyReserve) =>
-    reserve.data.tokenMint.equals(depositTokenMint),
+    reserve?.data?.tokenMint.equals(depositTokenMint),
   )[0];
   return await honeyUser.depositCollateral(depositReserve, Amount.tokens(tokenAmount));
 };
@@ -45,7 +45,7 @@ export const withdraw = async (
   withdrawReserves: HoneyReserve[],
 ): Promise<TxResponse> => {
   const withdrawReserve = withdrawReserves.filter((reserve: HoneyReserve) =>
-    reserve.data.tokenMint.equals(withdrawTokenMint),
+    reserve?.data?.tokenMint.equals(withdrawTokenMint),
   )[0];
   const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(
     withdrawTokenMint,
@@ -66,8 +66,8 @@ export const withdrawCollateral = async (
   withdrawReserves: HoneyReserve[],
 ): Promise<TxResponse> => {
   const withdrawReserve = withdrawReserves.find((reserve: HoneyReserve) =>
-    reserve.data.tokenMint.equals(withdrawTokenMint),
-  );
+    reserve?.data?.tokenMint.equals(withdrawTokenMint),
+  )[0];
   if (!withdrawReserve) {
     console.error(`Reserve with token mint ${withdrawTokenMint} does not exist`);
     return [TxnResponse.Failed, []];
