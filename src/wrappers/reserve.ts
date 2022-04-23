@@ -179,6 +179,7 @@ export class HoneyReserve {
   }
 
   async makeRefreshIx(): Promise<TransactionInstruction> {
+    if (!this.data) return; 
     const derivedAccounts = await HoneyReserve.deriveAccounts(this.client, this.address, this.data.depositNoteMint);
     return this.client.program.instruction.refreshReserve({
       accounts: {
