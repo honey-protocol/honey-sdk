@@ -11,12 +11,12 @@ import { useMarket } from './useMarket';
 export const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
 
 export interface CollateralNFTPosition {
-mint: PublicKey;
-updateAuthority: PublicKey;
-name: string;
-symbol: string;
-uri: string;
-image: string;
+  mint: PublicKey;
+  updateAuthority: PublicKey;
+  name: string;
+  symbol: string;
+  uri: string;
+  image: string;
 }
 
 export interface LoanPosition {
@@ -33,7 +33,7 @@ export const useBorrowPositions = (
   const [status, setStatus] = useState<{
     loading: boolean;
     collateralNFTPositions?: CollateralNFTPosition[];
-    loanPositions?: LoanPosition[]
+    loanPositions?: LoanPosition[];
     error?: Error;
   }>({ loading: false });
 
@@ -44,7 +44,7 @@ export const useBorrowPositions = (
     setStatus({ loading: true });
 
     const collateralNFTPositions: CollateralNFTPosition[] = [];
-    const obligation = await honeyUser.getObligationData() as ObligationAccount;
+    const obligation = (await honeyUser.getObligationData()) as ObligationAccount;
     if (!obligation.market) {
       setStatus({ loading: false, error: new Error('Obligation does not have a valid market') });
       return;
@@ -70,7 +70,7 @@ export const useBorrowPositions = (
           name: tokenMetadata?.data?.data?.name,
           symbol: tokenMetadata?.data?.data.symbol,
           uri: tokenMetadata?.data?.data.uri,
-          image: arweaveData?.image
+          image: arweaveData?.image,
         });
       }
     });
@@ -78,14 +78,14 @@ export const useBorrowPositions = (
     await Promise.all(promises);
 
     // build outstanding loans in market
-    const loanPositions: LoanPosition[] = []
+    const loanPositions: LoanPosition[] = [];
 
     obligation.loans.map((loan: any) => {
       if (loan.account.equals(PublicKey.default)) return;
       loanPositions.push({
         amount: loan.amount.toNumber() / LAMPORTS_PER_SOL,
-        tokenAccount: loan.account
-      })
+        tokenAccount: loan.account,
+      });
     });
 
     setStatus({ loading: false, collateralNFTPositions, loanPositions });

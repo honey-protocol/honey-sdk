@@ -89,7 +89,9 @@ export const borrow = async (
     borrowTokenMint,
     honeyUser.address,
   );
-  const borrowReserve: HoneyReserve = borrowReserves.filter((reserve: HoneyReserve) => reserve?.data?.tokenMint.equals(borrowTokenMint))[0];
+  const borrowReserve: HoneyReserve = borrowReserves.filter((reserve: HoneyReserve) =>
+    reserve?.data?.tokenMint.equals(borrowTokenMint),
+  )[0];
 
   if (!associatedTokenAccount) {
     console.error(`Ata could not be found`);

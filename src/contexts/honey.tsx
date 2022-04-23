@@ -150,8 +150,8 @@ export const HoneyProvider: FC<HoneyProps> = ({
       setMarket(marketValue as Market);
 
       // reserve info
-      let reserveInfoData = new Uint8Array(marketValue.reserves as any as number[]);
-      let reserveInfoList = MarketReserveInfoList.decode(reserveInfoData) as HoneyMarketReserveInfo[];
+      const reserveInfoData = new Uint8Array(marketValue.reserves as any as number[]);
+      const reserveInfoList = MarketReserveInfoList.decode(reserveInfoData) as HoneyMarketReserveInfo[];
       setMarketReserveInfo(reserveInfoList);
 
       const reservesList = [] as Reserve[];
