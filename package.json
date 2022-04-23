@@ -6,6 +6,7 @@
     "types": "dist/index.d.ts",
     "scripts": {
         "build": "rollup -c",
+        "start": "rollup -c -w",
         "format": "prettier --write \"src/**/*.ts\"",
         "lint": "tslint -p tsconfig.json",
         "prepare": "npm run build",

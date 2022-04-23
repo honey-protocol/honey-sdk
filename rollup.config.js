@@ -23,6 +23,7 @@ export default {
                 { src: 'src/idl/devnet/*.json', dest: 'dist/idl/devnet' },
                 { src: 'src/idl/localnet/*.json', dest: 'dist/idl/localnet' },
                 { src: 'src/idl/mainnet-beta/*.json', dest: 'dist/idl/mainnet-beta' },
+                { src: 'package.json', dest: 'dist/' }
             ]
         })
     ],
