@@ -112,9 +112,7 @@ export const repay = async (
     repayTokenMint,
     honeyUser.address,
   );
-  const repayReserve: HoneyReserve = repayReserves.filter((reserve: HoneyReserve) =>
-    reserve.data.tokenMint.equals(repayTokenMint),
-  )[0];
+  const repayReserve: HoneyReserve = repayReserves.filter((reserve: HoneyReserve) => reserve?.data?.tokenMint.equals(repayTokenMint))[0];
   if (!associatedTokenAccount) {
     console.error(`Ata could not be found`);
     return [TxnResponse.Failed, []];
