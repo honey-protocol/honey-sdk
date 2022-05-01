@@ -6,7 +6,7 @@ export { HoneyClient } from './client';
 export { HoneyMarket, MarketFlags, CreateMarketParams } from './market';
 export { HoneyReserve, CreateReserveParams } from './reserve';
 export type { ReserveConfig } from './reserve';
-export { HoneyUser } from './user';
+export { HoneyUser, SOLVENT_FEE_ACCOUNT_DEVNET, SOLVENT_PROGRAM } from './user';
 export * from './derived-account';
 
 export const PLACEHOLDER_ACCOUNT = PublicKey.default;
