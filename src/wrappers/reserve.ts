@@ -1,5 +1,4 @@
 import * as anchor from '@project-serum/anchor';
-import { Market as SerumMarket } from '@project-serum/serum';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { Connection, Keypair, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
 import * as BL from '@solana/buffer-layout';

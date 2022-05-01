@@ -1,7 +1,5 @@
 import { Program } from '@project-serum/anchor';
 import React, { FC, ReactNode, useContext, useEffect, useState } from 'react'
-import { IdlMetadata } from '../helpers/honeyTypes';
-import { parseIdlMetadata } from '../helpers/programUtil';
 import * as anchor from "@project-serum/anchor";
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { ConnectedWallet } from '../helpers/walletType';
@@ -20,7 +18,7 @@ export const useAnchor = () => {
   return context;
 };
 
-export interface Wallet {
+export interface WebWallet {
   signTransaction(tx: Transaction): Promise<Transaction>;
   signAllTransactions(txs: Transaction[]): Promise<Transaction[]>;
   publicKey: PublicKey;

@@ -1,7 +1,7 @@
-import { HoneyReserve } from '..';
-import { Reserve } from '../helpers/honeyTypes';
+import { HoneyReserve, Reserve } from '..';
 import * as anchor from '@project-serum/anchor';
 import { TokenAmount } from '../helpers/util';
+import { PublicKey } from '@solana/web3.js';
 
 const getEmptyReserve = (reserveMeta: HoneyReserve) => {
   const reserve: Reserve = {
@@ -42,14 +42,14 @@ const getEmptyReserve = (reserveMeta: HoneyReserve) => {
     availableLiquidity: TokenAmount.zero(0),
     feeNoteVaultPubkey: reserveMeta.data.feeNoteVault,
     tokenMintPubkey: reserveMeta.data.tokenMint,
-    tokenMint: TokenAmount.zero(0),
+    tokenMint: PublicKey.default,
     faucetPubkey: null,
     depositNoteMintPubkey: reserveMeta.data.depositNoteMint,
-    depositNoteMint: TokenAmount.zero(0),
+    depositNoteMint: PublicKey.default,
     loanNoteMintPubkey: reserveMeta.data.loanNoteMint,
-    loanNoteMint: TokenAmount.zero(0),
+    loanNoteMint: PublicKey.default,
     pythPricePubkey: reserveMeta.data.pythPrice || reserveMeta.data.pythOraclePrice,
     pythProductPubkey: reserveMeta.data.pythProduct || reserveMeta.data.pythOracleProduct,
-  };
+  } as unknown as Reserve;
   return reserve;
 };

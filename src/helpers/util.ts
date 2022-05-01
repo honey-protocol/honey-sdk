@@ -261,21 +261,3 @@ export class TokenAmount {
     return new TokenAmount(amount, this.decimals);
   }
 }
-
-export type AmountUnits = { tokens?: {}; depositNotes?: {}; loanNotes?: {} };
-
-export class Amount {
-  private constructor(public units: AmountUnits, public value: BN) {}
-
-  static tokens(amount: number | u64): Amount {
-    return new Amount({ tokens: {} }, new BN(amount));
-  }
-
-  static depositNotes(amount: number | u64): Amount {
-    return new Amount({ depositNotes: {} }, new BN(amount));
-  }
-
-  static loanNotes(amount: number | u64): Amount {
-    return new Amount({ loanNotes: {} }, new BN(amount));
-  }
-}

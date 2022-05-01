@@ -27,7 +27,6 @@ import * as BL from '@solana/buffer-layout';
 import { TxResponse } from '../actions/types';
 import { ObligationAccount, TxnResponse } from '../helpers/honeyTypes';
 import { TokenAmount } from './token-amount';
-import { deriveAssociatedTokenAccount } from '../actions';
 
 export const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
 export interface User {
@@ -107,42 +106,6 @@ export class HoneyUser implements User {
     const parsed = parseObligationAccount(data.data, this.client.program.coder);
     return parsed;
   }
-
-  // async liquidateSolvent() {
-  //   const tx = await this.makeLiquidateSolventIx()
-  // }
-
-  // // move to a better place
-  // async makeLiquidateSolventIx(reserve: HoneyReserve) {
-  //   const solventAuthorityBump = "figure out later";
-
-  //   this.client.program.instruction.liquidateSolvent(solventAuthorityBump, {
-  //     accounts: {
-  //       market: this.market.address,
-  //       marketAuthority: this.market.marketAuthority,
-  //       reserve: reserve.address,
-  //       vault,
-  //       obligation,
-  //       loanNoteMint,
-  //       loanAccount,
-  //       solventAuthority,
-  //       bucketStateV2,
-  //       nftDropletMint,
-  //       nftMint,
-  //       metadata,
-  //       collateralAccount,
-  //       solventTokenAc,
-  //       solventMintFeeAc,
-  //       nftDropletVault,
-  //       dexSwapTokens,
-  //       tokenProgram: TOKEN_PROGRAM_ID,
-  //       solventProgram: SOLVENT_PROGRAM,
-
-  //     }
-  //   }
-
-  //   )
-  // }
 
   async liquidate(
     loanReserve: HoneyReserve,
