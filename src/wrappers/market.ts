@@ -242,6 +242,16 @@ export interface CreateMarketParams {
   nftCollectionCreator: PublicKey;
 
   /**
+   *  price oracles modeled after pyth
+   */
+  nftOraclePrice: PublicKey;
+
+  /**
+   *  product for partnered price oracle
+   */
+  nftOracleProduct: PublicKey;
+
+  /**
    * The account to use for the market data.
    *
    * If not provided an account will be generated.
