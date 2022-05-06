@@ -24,6 +24,11 @@ export interface LoanPosition {
   tokenAccount: PublicKey;
 }
 
+export interface FungibleCollateralPosition {
+  amount: number;
+  tokenAccount: PublicKey;
+}
+
 export const useBorrowPositions = (
   connection: Connection,
   wallet: ConnectedWallet,
@@ -34,6 +39,7 @@ export const useBorrowPositions = (
     loading: boolean;
     collateralNFTPositions?: CollateralNFTPosition[];
     loanPositions?: LoanPosition[];
+    fungibleCollateralPosition?: FungibleCollateralPosition[];
     error?: Error;
   }>({ loading: false });
 
@@ -88,7 +94,16 @@ export const useBorrowPositions = (
       });
     });
 
-    setStatus({ loading: false, collateralNFTPositions, loanPositions });
+    const fungibleCollateralPosition: FungibleCollateralPosition[] = [];
+    obligation.collateral.map((collateral: any) => {
+      if (collateral.account.equals(PublicKey.default)) return;
+      fungibleCollateralPosition.push({
+        amount: collateral.amount.toNumber() / LAMPORTS_PER_SOL,
+        tokenAccount: collateral.account
+      })
+    });
+
+    setStatus({ loading: false, collateralNFTPositions, loanPositions, fungibleCollateralPosition });
   };
 
   // build borrow positions
