@@ -99,8 +99,8 @@ export const useBorrowPositions = (
       if (collateral.account.equals(PublicKey.default)) return;
       fungibleCollateralPosition.push({
         amount: collateral.amount.toNumber() / LAMPORTS_PER_SOL,
-        tokenAccount: collateral.account
-      })
+        tokenAccount: collateral.account,
+      });
     });
 
     setStatus({ loading: false, collateralNFTPositions, loanPositions, fungibleCollateralPosition });
