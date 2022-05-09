@@ -188,6 +188,7 @@ export class HoneyReserve {
         // feeNoteVault: PublicKey.default, // derivedAccounts.feeNoteVault.address,
         // protocolFeeNoteVault: this.data.protocolFeeNoteVault,
         depositNoteMint: this.data.depositNoteMint,
+        protocolFeeNoteVault: this.data.protocolFeeNoteVault,
         pythOraclePrice: this.data.pythOraclePrice || this.data.pythPrice,
         tokenProgram: TOKEN_PROGRAM_ID,
       },
