@@ -1,4 +1,4 @@
-import { PublicKey, Keypair } from '@solana/web3.js';
+import { PublicKey, Keypair, Transaction, sendAndConfirmTransaction } from '@solana/web3.js';
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID, u64 } from '@solana/spl-token';
 import * as anchor from '@project-serum/anchor';
 import * as BL from '@solana/buffer-layout';
@@ -144,12 +144,15 @@ export class HoneyMarket implements HoneyMarketData {
     );
 
     const createReserveAccount = await this.client.program.account.reserve.createInstruction(account);
-    // const transaction = new Transaction();
-    // transaction.add(createReserveAccount);
-    // const initTx = await sendAndConfirmTransaction(this.client.program.provider.connection, transaction, [
-    //   (this.client.program.provider.wallet as any).payer,
-    //   account,
-    // ]);
+    let transaction = new Transaction();
+    transaction.add(createReserveAccount);
+    const init_tx = await sendAndConfirmTransaction(
+      this.client.program.provider.connection,
+      transaction,
+      [(this.client.program.provider.wallet as any).payer, account]);
+
+    // const init_tx = await this.client.program.provider.send(transaction, [], { skipPreflight: true });
+    console.log('init_tx', init_tx);
 
     console.log('accounts', {
       market: this.address.toBase58(),
@@ -184,33 +187,36 @@ export class HoneyMarket implements HoneyMarketData {
         market: this.address,
         marketAuthority: this.marketAuthority,
         reserve: account.publicKey,
+
         vault: derivedAccounts.vault.address,
-        depositNoteMint: derivedAccounts.depositNoteMint.address,
-        // feeNoteVault: derivedAccounts.feeNoteVault.address,
-        tokenMint: params.tokenMint,
-        tokenProgram: TOKEN_PROGRAM_ID,
+        nftDropletMint: params.nftDropletMint,
+        nftDropletVault: nftDropletAccount,
+
+        feeNoteVault: derivedAccounts.feeNoteVault.address,
+        protocolFeeNoteVault: derivedAccounts.protocolFeeNoteVault.address,
+
+        dexSwapTokens: derivedAccounts.dexSwapTokens.address,
+
+        dexOpenOrdersA: derivedAccounts.dexOpenOrdersA.address,
+        dexOpenOrdersB: derivedAccounts.dexOpenOrdersB.address,
+        dexMarketA: params.dexMarketA,
+        dexMarketB: params.dexMarketB,
         dexProgram: DEX_PID,
+        loanNoteMint: derivedAccounts.loanNoteMint.address,
+        depositNoteMint: derivedAccounts.depositNoteMint.address,
+
         oracleProduct: params.pythOracleProduct,
         oraclePrice: params.pythOraclePrice,
-        loanNoteMint: derivedAccounts.loanNoteMint.address,
         quoteTokenMint: this.quoteTokenMint,
+        tokenMint: params.tokenMint,
+        tokenProgram: TOKEN_PROGRAM_ID,
         owner: this.owner,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: anchor.web3.SystemProgram.programId,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-
-        // additions
-        // nftDropletMint: params.nftDropletMint,
-        // nftDropletVault: nftDropletAccount,
-        // protocolFeeNoteVault: derivedAccounts.protocolFeeNoteVault.address,
-        // dexSwapTokens: derivedAccounts.dexSwapTokens.address,
-        // dexOpenOrdersA: derivedAccounts.dexOpenOrdersA.address,
-        // dexOpenOrdersB: derivedAccounts.dexOpenOrdersB.address,
-        // dexMarketA: params.dexMarketA,
-        // dexMarketB: params.dexMarketB,
       },
-      signers: [account],
-      instructions: [createReserveAccount],
+      signers: [],
+      // instructions: [createReserveAccount],
     });
     console.log('initReserve tx', txid);
     return HoneyReserve.load(this.client, account.publicKey, this);
