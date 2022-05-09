@@ -20,6 +20,7 @@ export declare function numberField(property?: string): NumberField;
 export declare function u64Field(property?: string): NumberField;
 export declare function i64Field(property?: string): SignedNumberField;
 export declare function pubkeyField(property?: string): PubkeyField;
+
 export declare const MarketReserveInfoList: BL.Sequence<unknown>;
 export declare const ReserveStateLayout: BL.Structure<unknown>;
 export declare const PositionInfo: BL.Structure<unknown>;
