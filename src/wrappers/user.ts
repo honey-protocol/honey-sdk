@@ -274,7 +274,7 @@ export class HoneyUser implements User {
           obligation: obligationAddress,
           owner: this.address,
           depositTo: tokenAccount,
-          nftCollectionCreator: updateAuthority,
+          nftCollectionCreator: nftCollectionCreator,
           metadata: nftMetadata,
           depositNftMint: tokenMint,
           collateralAccount: collateralAddress,
