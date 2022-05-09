@@ -24,8 +24,10 @@ export interface HasPublicKey {
 export interface ToBytes {
     toBytes(): Uint8Array;
 }
-export declare const ObligationStateStruct: BL.Structure;
-export declare const PositionStruct: BL.Structure;
+
+export declare const ObligationStateStruct: BL.Structure<unknown>;
+export declare const PositionStruct: BL.Structure<unknown>;
+
 export declare const SOLVENT_PROGRAM: PublicKey;
 export declare const SOLVENT_FEE_ACCOUNT_DEVNET: PublicKey;
 export declare class HoneyUser implements User {

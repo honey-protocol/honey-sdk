@@ -94,6 +94,16 @@
             "isSigner": false
           },
           {
+            "name": "dexMarketA",
+            "isMut": false,
+            "isSigner": false
+          },
+          {
+            "name": "dexMarketB",
+            "isMut": false,
+            "isSigner": false
+          },
+          {
             "name": "tokenMint",
             "isMut": false,
             "isSigner": false
@@ -105,6 +115,16 @@
           },
           {
             "name": "dexProgram",
+            "isMut": false,
+            "isSigner": false
+          },
+          {
+            "name": "oraclePrice",
+            "isMut": false,
+            "isSigner": false
+          },
+          {
+            "name": "oracleProduct",
             "isMut": false,
             "isSigner": false
           },
