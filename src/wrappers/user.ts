@@ -267,19 +267,18 @@ export class HoneyUser implements User {
 
     tx.add(
       await this.client.program.instruction.withdrawNft(metadataBump, {
+
         accounts: {
           market: this.market.address,
           marketAuthority: this.market.marketAuthority,
           obligation: obligationAddress,
-
-          depositNftMint: tokenMint,
-          metadata: nftMetadata,
-          nftCollectionCreator,
           owner: this.address,
-          collateralAccount: collateralAddress,
-          tokenProgram: TOKEN_PROGRAM_ID,
-
           depositTo: tokenAccount,
+          nftCollectionCreator: updateAuthority,
+          metadata: nftMetadata,
+          depositNftMint: tokenMint,
+          collateralAccount: collateralAddress,
+          tokenProgram: TOKEN_PROGRAM_ID
         },
       }),
     );
@@ -554,6 +553,7 @@ export class HoneyUser implements User {
           vault: reserve.data.vault,
           depositNoteMint: reserve.data.depositNoteMint,
 
+          honeyProgram: this.client.program.programId,
           tokenProgram: TOKEN_PROGRAM_ID,
         },
       }),
