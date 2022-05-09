@@ -1,15 +1,13 @@
 import { Program } from '@project-serum/anchor';
 import React, { FC, ReactNode, useContext, useEffect, useState } from 'react'
-import { IdlMetadata } from '../helpers/JetTypes';
-import { parseIdlMetadata } from '../helpers/programUtil';
 import * as anchor from "@project-serum/anchor";
-import { PROGRAM_IDLS } from '../helpers/idls';
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
-import { Wallet as ParentWallet, SolongWallet } from '../helpers/walletType';
+import { ConnectedWallet } from '../helpers/walletType';
+import devnetIdl from '../idl/devnet/honey.json';
+import mainnetBetaIdl from "../idl/mainnet-beta/honey.json";
 
 export interface AnchorContext {
   program: Program,
-  idlMetadata: IdlMetadata,
   coder: anchor.Coder,
   isConfigured: boolean
 }
@@ -20,7 +18,7 @@ export const useAnchor = () => {
   return context;
 };
 
-export interface Wallet {
+export interface WebWallet {
   signTransaction(tx: Transaction): Promise<Transaction>;
   signAllTransactions(txs: Transaction[]): Promise<Transaction[]>;
   publicKey: PublicKey;
@@ -28,34 +26,36 @@ export interface Wallet {
 
 export interface AnchorProviderProps {
   children: ReactNode,
-  wallet: ParentWallet | SolongWallet | null,
+  wallet: ConnectedWallet | null,
   connection: Connection,
-  network: string
+  network: string,
+  honeyProgram: string
 }
 
 export const AnchorProvider: FC<AnchorProviderProps> = ({
   children,
   wallet,
   connection,
-  network
+  network,
+  honeyProgram
 }) => {
   const [program, setProgram] = useState<Program>({} as Program);
-  const [idlMetadata, setIdlMetadata] = useState<IdlMetadata>({} as IdlMetadata);
   const [coder, setAnchorCoder] = useState<anchor.Coder>({} as anchor.Coder);
   const [isConfigured, setIsConfigured] = useState<boolean>(false);
 
   useEffect(() => {      
     // setup coder for anchor operations
     const setup = async () => {
-      const idl = PROGRAM_IDLS.filter((value) => value.name === network)[0];
-      const parsedIdlMetadata = parseIdlMetadata(idl.jet.metadata as IdlMetadata);
-      setAnchorCoder(new anchor.Coder(idl.jet));
-      setIdlMetadata(parsedIdlMetadata);
-      const provider = new anchor.Provider(connection, wallet as unknown as Wallet, anchor.Provider.defaultOptions());
-      const anchorProgram: Program = new anchor.Program(idl.jet, (new anchor.web3.PublicKey(idl.jet.metadata.address)), provider);
+      const idl: any = network === 'devnet' ? devnetIdl : mainnetBetaIdl;
+      setAnchorCoder(new anchor.Coder(idl));
+      // init program
+      const HONEY_PROGRAM_ID = new PublicKey(honeyProgram);
+      const provider = new anchor.Provider(connection, wallet, anchor.Provider.defaultOptions());
+      const anchorProgram: Program = new anchor.Program(idl as any, HONEY_PROGRAM_ID, provider);
       setProgram(anchorProgram);
       setIsConfigured(true);
     };
+    
     if (connection && wallet)
       setup();
   }, [connection, wallet])
@@ -64,7 +64,6 @@ export const AnchorProvider: FC<AnchorProviderProps> = ({
     <AnchorContext.Provider
       value={{
         program,
-        idlMetadata,
         coder,
         isConfigured
       }}> 

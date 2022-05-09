@@ -1,5 +1,4 @@
 import * as anchor from '@project-serum/anchor';
-import { Market as SerumMarket } from '@project-serum/serum';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { Connection, Keypair, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
 import * as BL from '@solana/buffer-layout';
@@ -30,7 +29,7 @@ export interface ReserveConfig {
 export interface ReserveAccounts {
   vault: DerivedAccount;
   feeNoteVault: DerivedAccount;
-  protocolFeeNoteVault: DerivedAccount,
+  protocolFeeNoteVault: DerivedAccount;
   dexSwapTokens: DerivedAccount;
   dexOpenOrdersA: DerivedAccount;
   dexOpenOrdersB: DerivedAccount;
@@ -64,21 +63,20 @@ export interface CreateReserveParams {
    */
   config: ReserveConfig;
 
-
   /**
    * token mint for the solvent droplets
    */
-  nftDropletMint: PublicKey,
+  nftDropletMint: PublicKey;
 
   /**
    * Dex market A
    */
-  dexMarketA: PublicKey,
+  dexMarketA: PublicKey;
 
   /**
    * dex market B
    */
-  dexMarketB: PublicKey,
+  dexMarketB: PublicKey;
 
   /**
    * The account to use for the reserve data.
@@ -147,7 +145,7 @@ export class HoneyReserve {
     private client: HoneyClient,
     private market: HoneyMarket,
     public address: PublicKey,
-    public data: ReserveData,
+    public data?: ReserveData,
     public state?: ReserveStateData,
   ) {
     this.conn = this.client.program.provider.connection;
@@ -158,12 +156,12 @@ export class HoneyReserve {
 
     const data: any = await this.client.program.account.reserve.fetch(this.address);
     const stateData = new Uint8Array(data.state);
-    this.state = ReserveStateStruct.decode(stateData) as ReserveStateData;
     this.data = data as ReserveData;
+    this.state = ReserveStateStruct.decode(stateData) as ReserveStateData;
   }
 
   async sendRefreshTx(): Promise<string> {
-    const tx = new Transaction().add(this.makeRefreshIx());
+    const tx = new Transaction().add(await this.makeRefreshIx());
     return await this.client.program.provider.send(tx);
   }
 
@@ -179,14 +177,16 @@ export class HoneyReserve {
     }
   }
 
-  makeRefreshIx(): TransactionInstruction {
+  async makeRefreshIx(): Promise<TransactionInstruction> {
+    if (!this.data) return;
+    const derivedAccounts = await HoneyReserve.deriveAccounts(this.client, this.address, this.data.depositNoteMint);
     return this.client.program.instruction.refreshReserve({
       accounts: {
         market: this.market.address,
         marketAuthority: this.market.marketAuthority,
-
         reserve: this.address,
-        feeNoteVault: this.data.feeNoteVault,
+        // feeNoteVault: PublicKey.default, // derivedAccounts.feeNoteVault.address,
+        // protocolFeeNoteVault: this.data.protocolFeeNoteVault,
         depositNoteMint: this.data.depositNoteMint,
         protocolFeeNoteVault: this.data.protocolFeeNoteVault,
         pythOraclePrice: this.data.pythOraclePrice || this.data.pythPrice,

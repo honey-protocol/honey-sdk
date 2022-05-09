@@ -21,3 +21,8 @@
         ** specifies the specific asset pool such as SOL, USDC, etc
 
 # Running Tests
+
+## Developing locally with the @honey-finance/sdk
+Look for the secion on local testing in the article below
+
+https://blog.logrocket.com/the-complete-guide-to-publishing-a-react-package-to-npm/

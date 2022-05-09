@@ -1,7 +1,7 @@
 import { Metadata } from '@metaplex-foundation/mpl-token-metadata';
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { Connection, PublicKey } from '@solana/web3.js';
-import { TxnResponse } from '../helpers/JetTypes';
+import { TxnResponse } from '../helpers/honeyTypes';
 import { Amount, HoneyReserve, HoneyUser } from '../wrappers';
 import { TxResponse } from './types';
 
@@ -35,12 +35,19 @@ export const depositNFT = async (
   }
   const tokenMetadata = new Metadata(metadataPubKey, associatedMetadata);
   const tokenMint = new PublicKey(tokenMetadata.data.mint);
-  const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(tokenMint, honeyUser.address);
+  const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(
+    tokenMint,
+    honeyUser.address,
+  );
   if (!associatedTokenAccount) {
     console.error(`Could not find the associated token account: ${associatedTokenAccount}`);
     return [TxnResponse.Failed, []];
   }
-  return await honeyUser.depositNFT(associatedTokenAccount, tokenMint, new PublicKey(tokenMetadata.data.updateAuthority));
+  return await honeyUser.depositNFT(
+    associatedTokenAccount,
+    tokenMint,
+    new PublicKey(tokenMetadata.data.data.creators[0].address),
+  );
 };
 
 export const withdrawNFT = async (
@@ -55,7 +62,11 @@ export const withdrawNFT = async (
   }
   const tokenMetadata = new Metadata(metadataPubKey, associatedMetadata);
   const tokenMint = new PublicKey(tokenMetadata.data.mint);
-  const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(tokenMint, honeyUser.address);
+  const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(
+    tokenMint,
+    honeyUser.address,
+  );
+
   if (!associatedTokenAccount) {
     console.error(`Could not find the associated token account: ${associatedTokenAccount}`);
     return [TxnResponse.Failed, []];
@@ -63,7 +74,7 @@ export const withdrawNFT = async (
   return await honeyUser.withdrawNFT(
     associatedTokenAccount,
     tokenMint,
-    new PublicKey(tokenMetadata.data.updateAuthority),
+    new PublicKey(tokenMetadata.data.data.creators[0].address),
   );
 };
 
@@ -79,7 +90,7 @@ export const borrow = async (
     honeyUser.address,
   );
   const borrowReserve: HoneyReserve = borrowReserves.filter((reserve: HoneyReserve) =>
-    reserve.data.tokenMint.equals(borrowTokenMint),
+    reserve?.data?.tokenMint.equals(borrowTokenMint),
   )[0];
 
   if (!associatedTokenAccount) {
@@ -102,7 +113,7 @@ export const repay = async (
     honeyUser.address,
   );
   const repayReserve: HoneyReserve = repayReserves.filter((reserve: HoneyReserve) =>
-    reserve.data.tokenMint.equals(repayTokenMint),
+    reserve?.data?.tokenMint.equals(repayTokenMint),
   )[0];
   if (!associatedTokenAccount) {
     console.error(`Ata could not be found`);

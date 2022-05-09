@@ -32,8 +32,9 @@ import type {
   User,
   SlopeTxn,
   CustomProgramError,
-} from './JetTypes';
-import { TxnResponse } from './JetTypes';
+  MarketMetadata,
+} from './honeyTypes';
+import { TxnResponse } from './honeyTypes';
 import { MarketReserveInfoList, PositionInfoList, ReserveStateLayout } from './layout';
 import { TokenAmount } from './util';
 import bs58 from 'bs58';
@@ -147,7 +148,7 @@ export const findProgramAddress = async (
 ): Promise<[PublicKey, number]> => {
   const SEEDBYTES = seeds.map((s) => {
     if (typeof s === 'string') {
-      // return new TextEncoder().encode(s);
+      return new TextEncoder().encode(s);
     } else if ('publicKey' in s) {
       return s.publicKey.toBytes();
     } else if ('toBytes' in s) {
@@ -641,13 +642,18 @@ export const parseIdlMetadata = (idlMetadata: IdlMetadata): IdlMetadata => {
   return {
     ...idlMetadata,
     address: new PublicKey(idlMetadata.address),
-    market: toPublicKeys(idlMetadata.market as any as Record<string, string>) as any,
-    reserves: idlMetadata.reserves.map((reserve) => {
-      return {
-        ...reserve,
-        accounts: toPublicKeys(reserve.accounts),
-      };
-    }) as any,
+    market: {
+      market: new PublicKey(idlMetadata.market.market),
+      marketAuthority: new PublicKey(idlMetadata.market.marketAuthority),
+    } as MarketMetadata,
+    reserves: idlMetadata.reserves
+      ? (idlMetadata.reserves.map((reserve) => {
+          return {
+            ...reserve,
+            accounts: toPublicKeys(reserve.accounts),
+          };
+        }) as any)
+      : [],
   };
 };
 

@@ -1,4 +1,4 @@
-import { PublicKey, Keypair, Transaction, sendAndConfirmRawTransaction, sendAndConfirmTransaction } from '@solana/web3.js';
+import { PublicKey, Keypair } from '@solana/web3.js';
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID, u64 } from '@solana/spl-token';
 import * as anchor from '@project-serum/anchor';
 import * as BL from '@solana/buffer-layout';
@@ -22,7 +22,7 @@ const ReserveInfoStruct = BL.struct([
 ]);
 
 const MarketReserveInfoList = BL.seq(ReserveInfoStruct, MAX_RESERVES);
-export const DEX_PID = new PublicKey("DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY"); // localnet
+export const DEX_PID = new PublicKey('DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY'); // localnet
 export interface HoneyMarketReserveInfo {
   address: PublicKey;
   price: anchor.BN;
@@ -54,9 +54,10 @@ export class HoneyMarket implements HoneyMarketData {
     public pythOraclePrice: PublicKey,
     public pythOracleProduct: PublicKey,
     public updateAuthority: PublicKey,
-  ) { }
+  ) {}
 
   public static async fetchData(client: HoneyClient, address: PublicKey): Promise<[any, HoneyMarketReserveInfo[]]> {
+    console.log(address.toString());
     const data: any = await client.program.account.market.fetch(address);
     const reserveInfoData = new Uint8Array(data.reserves);
     const reserveInfoList = MarketReserveInfoList.decode(reserveInfoData) as HoneyMarketReserveInfo[];
@@ -68,7 +69,7 @@ export class HoneyMarket implements HoneyMarketData {
    * Load the market account data from the network.
    * @param client The program client
    * @param address The address of the market.
-   * @returns An object for interacting with the Jet market.
+   * @returns An object for interacting with the Honey market.
    */
   static async load(client: HoneyClient, address: PublicKey): Promise<HoneyMarket> {
     const [data, reserveInfoList] = await HoneyMarket.fetchData(client, address);
@@ -121,7 +122,6 @@ export class HoneyMarket implements HoneyMarketData {
 
     const derivedAccounts = await HoneyReserve.deriveAccounts(this.client, account.publicKey, params.tokenMint);
 
-
     console.log('account.pubkey', account.publicKey.toString());
 
     const bumpSeeds = {
@@ -135,25 +135,21 @@ export class HoneyMarket implements HoneyMarketData {
       depositNoteMint: derivedAccounts.depositNoteMint.bumpSeed,
     };
 
-
     const nftDropletAccount = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
       params.nftDropletMint,
       this.marketAuthority,
-      true
+      true,
     );
 
     const createReserveAccount = await this.client.program.account.reserve.createInstruction(account);
-    let transaction = new Transaction();
-    transaction.add(createReserveAccount);
-    const init_tx = await sendAndConfirmTransaction(
-      this.client.program.provider.connection,
-      transaction,
-      [(this.client.program.provider.wallet as any).payer, account]);
-
-    // const init_tx = await this.client.program.provider.send(transaction, [], { skipPreflight: true });
-    console.log('init_tx', init_tx);
+    // const transaction = new Transaction();
+    // transaction.add(createReserveAccount);
+    // const initTx = await sendAndConfirmTransaction(this.client.program.provider.connection, transaction, [
+    //   (this.client.program.provider.wallet as any).payer,
+    //   account,
+    // ]);
 
     console.log('accounts', {
       market: this.address.toBase58(),
@@ -183,42 +179,40 @@ export class HoneyMarket implements HoneyMarketData {
     });
 
     console.log('this.client.program.programID in initing reserve', this.client.program.programId.toString());
-    const tx = await this.client.program.rpc.initReserve(bumpSeeds, params.config, {
+    const txid = await this.client.program.rpc.initReserve(bumpSeeds, params.config, {
       accounts: {
         market: this.address,
         marketAuthority: this.marketAuthority,
         reserve: account.publicKey,
         vault: derivedAccounts.vault.address,
-        nftDropletMint: params.nftDropletMint,
-        nftDropletVault: nftDropletAccount,
-
-        feeNoteVault: derivedAccounts.feeNoteVault.address,
-        protocolFeeNoteVault: derivedAccounts.protocolFeeNoteVault.address,
-
-        dexSwapTokens: derivedAccounts.dexSwapTokens.address,
-
-        dexOpenOrdersA: derivedAccounts.dexOpenOrdersA.address,
-        dexOpenOrdersB: derivedAccounts.dexOpenOrdersB.address,
-        dexMarketA: params.dexMarketA,
-        dexMarketB: params.dexMarketB,
-        dexProgram: DEX_PID,
-        loanNoteMint: derivedAccounts.loanNoteMint.address,
         depositNoteMint: derivedAccounts.depositNoteMint.address,
-
-        oracleProduct: params.pythOracleProduct,
-        oraclePrice: params.pythOraclePrice,
-        quoteTokenMint: this.quoteTokenMint,
+        // feeNoteVault: derivedAccounts.feeNoteVault.address,
         tokenMint: params.tokenMint,
         tokenProgram: TOKEN_PROGRAM_ID,
+        dexProgram: DEX_PID,
+        oracleProduct: params.pythOracleProduct,
+        oraclePrice: params.pythOraclePrice,
+        loanNoteMint: derivedAccounts.loanNoteMint.address,
+        quoteTokenMint: this.quoteTokenMint,
         owner: this.owner,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: anchor.web3.SystemProgram.programId,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+
+        // additions
+        // nftDropletMint: params.nftDropletMint,
+        // nftDropletVault: nftDropletAccount,
+        // protocolFeeNoteVault: derivedAccounts.protocolFeeNoteVault.address,
+        // dexSwapTokens: derivedAccounts.dexSwapTokens.address,
+        // dexOpenOrdersA: derivedAccounts.dexOpenOrdersA.address,
+        // dexOpenOrdersB: derivedAccounts.dexOpenOrdersB.address,
+        // dexMarketA: params.dexMarketA,
+        // dexMarketB: params.dexMarketB,
       },
-      // instructions: [createReserveAccount],
-      signers: [],
+      signers: [account],
+      instructions: [createReserveAccount],
     });
-    console.log('initReserve tx', tx);
+    console.log('initReserve tx', txid);
     return HoneyReserve.load(this.client, account.publicKey, this);
   }
 }
@@ -241,7 +235,6 @@ export interface CreateMarketParams {
    * name specified in any Pyth/oracle accounts.
    */
   quoteCurrencyName: string;
-
 
   /**
    *  creator public key of the NFT held in the associated metadata
