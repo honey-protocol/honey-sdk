@@ -122,8 +122,6 @@ export class HoneyMarket implements HoneyMarketData {
 
     const derivedAccounts = await HoneyReserve.deriveAccounts(this.client, account.publicKey, params.tokenMint);
 
-    console.log('account.pubkey', account.publicKey.toString());
-
     const bumpSeeds = {
       vault: derivedAccounts.vault.bumpSeed,
       feeNoteVault: derivedAccounts.feeNoteVault.bumpSeed,
@@ -144,15 +142,12 @@ export class HoneyMarket implements HoneyMarketData {
     );
 
     const createReserveAccount = await this.client.program.account.reserve.createInstruction(account);
-    let transaction = new Transaction();
+    const transaction = new Transaction();
     transaction.add(createReserveAccount);
-    const init_tx = await sendAndConfirmTransaction(
-      this.client.program.provider.connection,
-      transaction,
-      [(this.client.program.provider.wallet as any).payer, account]);
-
-    // const init_tx = await this.client.program.provider.send(transaction, [], { skipPreflight: true });
-    console.log('init_tx', init_tx);
+    const initTx = await sendAndConfirmTransaction(this.client.program.provider.connection, transaction, [
+      (this.client.program.provider.wallet as any).payer,
+      account,
+    ]);
 
     console.log('accounts', {
       market: this.address.toBase58(),
@@ -181,7 +176,6 @@ export class HoneyMarket implements HoneyMarketData {
       owner: this.owner.toBase58(),
     });
 
-    console.log('this.client.program.programID in initing reserve', this.client.program.programId.toString());
     const txid = await this.client.program.rpc.initReserve(bumpSeeds, params.config, {
       accounts: {
         market: this.address,
