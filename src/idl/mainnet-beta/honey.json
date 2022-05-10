@@ -1258,7 +1258,10 @@
                     {
                         "name": "marketOracleState",
                         "type": {
-                            "defined": "MarketOracle"
+                            "array": [
+                                "u8",
+                                24
+                            ]
                         }
                     },
                     {
@@ -1961,8 +1964,5 @@
             "name": "AccountNotEmptyError",
             "msg": "the collateral/loan account is not empty"
         }
-    ],
-    "metadata": {
-        "address": "6ujVJiHnyqaTBHzwwfySzTDX5EPFgmXqnibuMp3Hun1w"
-    }
+    ]
 }
