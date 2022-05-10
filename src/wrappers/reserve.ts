@@ -179,14 +179,13 @@ export class HoneyReserve {
 
   async makeRefreshIx(): Promise<TransactionInstruction> {
     if (!this.data) return;
-    const derivedAccounts = await HoneyReserve.deriveAccounts(this.client, this.address, this.data.depositNoteMint);
     return this.client.program.instruction.refreshReserve({
       accounts: {
         market: this.market.address,
         marketAuthority: this.market.marketAuthority,
+
         reserve: this.address,
-        // feeNoteVault: PublicKey.default, // derivedAccounts.feeNoteVault.address,
-        // protocolFeeNoteVault: this.data.protocolFeeNoteVault,
+        feeNoteVault: this.data.feeNoteVault,
         depositNoteMint: this.data.depositNoteMint,
         protocolFeeNoteVault: this.data.protocolFeeNoteVault,
         pythOraclePrice: this.data.pythOraclePrice || this.data.pythPrice,
