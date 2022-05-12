@@ -37,8 +37,8 @@ export interface HoneyMarketData {
   owner: PublicKey;
 
   reserves: HoneyMarketReserveInfo[];
-  pythOraclePrice: PublicKey;
-  pythOracleProduct: PublicKey;
+  nftPythOraclePrice: PublicKey;
+  nftPythOracleProduct: PublicKey;
   updateAuthority: PublicKey;
 }
 
@@ -51,8 +51,8 @@ export class HoneyMarket implements HoneyMarketData {
     public marketAuthority: PublicKey,
     public owner: PublicKey,
     public reserves: HoneyMarketReserveInfo[],
-    public pythOraclePrice: PublicKey,
-    public pythOracleProduct: PublicKey,
+    public nftPythOraclePrice: PublicKey,
+    public nftPythOracleProduct: PublicKey,
     public updateAuthority: PublicKey,
   ) {}
 
@@ -99,8 +99,8 @@ export class HoneyMarket implements HoneyMarketData {
     this.marketAuthority = data.marketAuthority;
     this.quoteCurrency = data.quoteCurrency;
     this.quoteTokenMint = data.quoteTokenMint;
-    this.pythOraclePrice = data.pythOraclePrice;
-    this.pythOracleProduct = data.pythOracleProduct;
+    this.nftPythOraclePrice = data.nftPythOraclePrice;
+    this.nftPythOracleProduct = data.nftPythOracleProduct;
     this.updateAuthority = data.updateAuthority;
   }
 

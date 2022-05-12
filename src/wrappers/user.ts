@@ -809,7 +809,7 @@ export class HoneyUser implements User {
         tokenMint: reserve.data.tokenMint,
         feeReceiverAccount,
         receiverAccount,
-        nftPythOraclePrice: this.market.pythOraclePrice,
+        nftPythOraclePrice: this.market.nftPythOraclePrice,
         tokenProgram: TOKEN_PROGRAM_ID,
       },
     });
