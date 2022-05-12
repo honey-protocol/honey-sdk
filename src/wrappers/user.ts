@@ -326,7 +326,6 @@ export class HoneyUser implements User {
         return [TxnResponse.Failed, []];
       }
     }
-    // const collateralAddress = await deriveAssociatedTokenAccount(tokenMint, this.market.marketAuthority);
 
     const collateralAddress = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -335,15 +334,6 @@ export class HoneyUser implements User {
       this.market.marketAuthority,
       true,
     );
-    // const [collateralAddress, collateralBump] = await PublicKey.findProgramAddress(
-    //   [
-    //     Buffer.from('nft'),
-    //     this.market.address.toBuffer(),
-    //     tokenMint.toBuffer(),
-    //     this.address.toBuffer()
-    //   ],
-    //   this.client.program.programId,
-    // );
 
     const derivedMetadata = await this.findNftMetadata(tokenMint);
     const collateralData = await this.conn.getAccountInfo(collateralAddress);
@@ -819,6 +809,7 @@ export class HoneyUser implements User {
         tokenMint: reserve.data.tokenMint,
         feeReceiverAccount,
         receiverAccount,
+        nftPythOraclePrice: this.market.pythOraclePrice,
         tokenProgram: TOKEN_PROGRAM_ID,
       },
     });
