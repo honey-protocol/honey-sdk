@@ -242,10 +242,6 @@ export class HoneyUser implements User {
       this.client.program.programId,
     );
 
-    // const [collateralAddress, collateralBump] = await PublicKey.findProgramAddress(
-    //   [Buffer.from('nft'), this.market.address.toBuffer(), tokenMint.toBuffer(), this.address.toBuffer()],
-    //   this.client.program.programId,
-    // );
     const collateralAddress = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
