@@ -6,6 +6,7 @@ import { MarketReserveInfoList, ReserveStateLayout } from '../helpers/layout';
 import { ConnectedWallet } from '../helpers/walletType';
 import { useMarket } from '../hooks';
 import { Connection, PublicKey } from '@solana/web3.js';
+import { BN } from '@project-serum/anchor';
 
 interface HoneyContext {
   market: IMarket | null,
@@ -70,7 +71,7 @@ export interface IReserve {
   tokenMint: PublicKey;
   vault: PublicKey;
   version: number;
-  reserveState: ReserveState;
+  reserveState: ReserveStateStruct;
 }
 
 export interface ReserveState {
@@ -85,6 +86,25 @@ export interface ReserveState {
   _UNUSED_0_: Uint8Array;
   _UNUSED_1_: Uint8Array;
 }
+
+export type ReserveStateStruct = CacheStruct & {
+  accruedUntil: BN,
+  outstandingDebt: BN,
+  uncollectedFees: BN,
+  totalDeposits: BN,
+  totalDepositNotes: BN,
+  totalLoanNotes: BN,
+  _reserved: number[],
+};
+
+export interface CacheStruct {
+  /** The last slot that this information was updated in */
+  lastUpdated: BN,
+  /** Whether the value has been manually invalidated */
+  invalidated: number,
+  /** Unused space */
+  _reserved: number[],
+};
 
 export const HoneyProvider: FC<HoneyProps> = ({
   children,
@@ -118,13 +138,12 @@ export const HoneyProvider: FC<HoneyProps> = ({
       for (const reserve of reserveInfoList) {
         if (reserve.reserve.equals(PublicKey.default)) return;
         const reserveValue = await program.account.reserve.fetch(reserve.reserve) as IReserve;
-        const reserveState = ReserveStateLayout.decode(Buffer.from(reserveValue.state as any as number[])) as ReserveState;
+        const reserveState = ReserveStateLayout.decode(Buffer.from(reserveValue.state as any as number[])) as ReserveStateStruct;
         reserveValue.reserveState = reserveState;
         reservesList.push(reserveValue);
         setReserves(reservesList);
-
       }
-      console.log("resreves list", reservesList);
+      console.log("reserves list", reservesList);
       setReserves(reservesList);
     }
 

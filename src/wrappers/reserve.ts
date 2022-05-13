@@ -8,6 +8,8 @@ import { HoneyMarket } from './market';
 import * as util from './util';
 import { BN } from '@project-serum/anchor';
 import { DerivedAccount } from './derived-account';
+import { IReserve } from '../contexts';
+import { ReserveStateLayout, ReserveStateStruct } from '../helpers';
 
 export interface ReserveConfig {
   utilizationRate1: number;
@@ -145,8 +147,8 @@ export class HoneyReserve {
     private client: HoneyClient,
     private market: HoneyMarket,
     public address: PublicKey,
-    public data?: ReserveData,
-    public state?: ReserveStateData,
+    public data?: IReserve,
+    public state?: ReserveStateStruct,
   ) {
     this.conn = this.client.program.provider.connection;
   }
@@ -154,10 +156,12 @@ export class HoneyReserve {
   async refresh(): Promise<void> {
     await this.market.refresh();
 
-    const data: any = await this.client.program.account.reserve.fetch(this.address);
-    const stateData = new Uint8Array(data.state);
-    this.data = data as ReserveData;
-    this.state = ReserveStateStruct.decode(stateData) as ReserveStateData;
+    const reserveData = (await this.client.program.account.reserve.fetch(this.address)) as IReserve;
+    // const reserveState = ReserveStateLayout.decode(Buffer.from(reserveData.state as any as number[])) as ReserveState;
+    const reserveState = ReserveStateLayout.decode(new Uint8Array(reserveData.state)) as ReserveStateStruct;
+    reserveData.reserveState = reserveState;
+    this.data = reserveData;
+    this.state = reserveState;
   }
 
   async sendRefreshTx(): Promise<string> {
@@ -170,7 +174,7 @@ export class HoneyReserve {
       console.log('State is not set, call refresh');
       return;
     }
-    let accruedUntil = this.state.accruedUntil;
+    let accruedUntil = new BN(this.state.accruedUntil);
     while (accruedUntil.add(MAX_ACCRUAL_SECONDS).lt(new BN(Math.floor(Date.now() / 1000)))) {
       this.sendRefreshTx();
       accruedUntil = accruedUntil.add(MAX_ACCRUAL_SECONDS);
@@ -183,12 +187,9 @@ export class HoneyReserve {
       accounts: {
         market: this.market.address,
         marketAuthority: this.market.marketAuthority,
-
         reserve: this.address,
-        // feeNoteVault: this.data.feeNoteVault,
         depositNoteMint: this.data.depositNoteMint,
-        // protocolFeeNoteVault: this.data.protocolFeeNoteVault,
-        pythOraclePrice: this.data.pythOraclePrice || this.data.pythPrice,
+        pythOraclePrice: this.data.pythOraclePrice,
         tokenProgram: TOKEN_PROGRAM_ID,
       },
     });
@@ -206,10 +207,13 @@ export class HoneyReserve {
   }
 
   static async load(client: HoneyClient, address: PublicKey, maybeMarket?: HoneyMarket): Promise<HoneyReserve> {
-    const data = (await client.program.account.reserve.fetch(address)) as ReserveData;
-    const market = maybeMarket || (await HoneyMarket.load(client, data.market));
-
-    return new HoneyReserve(client, market, address, data);
+    const reserveData = (await client.program.account.reserve.fetch(address)) as IReserve;
+    const reserveState = ReserveStateLayout.decode(
+      Buffer.from(reserveData.state as any as number[]),
+    ) as ReserveStateStruct;
+    reserveData.reserveState = reserveState;
+    const market = maybeMarket || (await HoneyMarket.load(client, reserveData.market));
+    return new HoneyReserve(client, market, address, reserveData);
   }
 
   /**
