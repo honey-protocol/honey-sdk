@@ -112,6 +112,7 @@ export interface ReserveStateData {
   accruedUntil: anchor.BN;
   outstandingDebt: anchor.BN;
   uncollectedFees: anchor.BN;
+  protocolUncollectedFees: anchor.BN;
   totalDeposits: anchor.BN;
   totalDepositNotes: anchor.BN;
   totalLoanNotes: anchor.BN;
