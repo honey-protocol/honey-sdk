@@ -36,7 +36,7 @@ export const useMarket = (
       const reserves: HoneyReserve[] = market.reserves.map(
         (reserve) => new HoneyReserve(client, market, reserve.address),
       );
-      Promise.all(
+      await Promise.all(
         reserves.map(async (reserve) => {
           if (reserve.address && reserve.address.toBase58() !== PublicKey.default.toBase58()) await reserve.refresh();
         }),
