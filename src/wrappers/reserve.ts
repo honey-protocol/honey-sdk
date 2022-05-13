@@ -186,8 +186,8 @@ export class HoneyReserve {
 
         reserve: this.address,
         // feeNoteVault: this.data.feeNoteVault,
-        // depositNoteMint: this.data.depositNoteMint,
-        protocolFeeNoteVault: this.data.protocolFeeNoteVault,
+        depositNoteMint: this.data.depositNoteMint,
+        // protocolFeeNoteVault: this.data.protocolFeeNoteVault,
         pythOraclePrice: this.data.pythOraclePrice || this.data.pythPrice,
         tokenProgram: TOKEN_PROGRAM_ID,
       },
