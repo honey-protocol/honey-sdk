@@ -159,8 +159,8 @@ export class HoneyReserve {
 
     const reserveData = (await this.client.program.account.reserve.fetch(this.address)) as IReserve;
     // const reserveState = ReserveStateLayout.decode(Buffer.from(reserveData.state as any as number[])) as ReserveState;
-    // const reserveState = ReserveStateLayout.decode(new Uint8Array(reserveData.state)) as ReserveStateStruct;
-    const reserveState = this.client.program.coder.accounts.decode('Reserve', Buffer.from(reserveData.state));
+    const reserveState = ReserveStateLayout.decode(new Uint8Array(reserveData.state)) as ReserveStateStruct;
+    // const reserveState = this.client.program.coder.accounts.decode('Reserve', Buffer.from(reserveData.state));
     reserveData.reserveState = reserveState;
     this.data = reserveData;
     this.state = reserveState;
