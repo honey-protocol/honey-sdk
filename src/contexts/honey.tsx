@@ -74,19 +74,6 @@ export interface IReserve {
   reserveState: ReserveStateStruct;
 }
 
-export interface ReserveState {
-  accruedUntil: number;
-  invalidated: number;
-  lastUpdated: number;
-  outstandingDebt: number;
-  totalDepositNotes: number;
-  totalDeposits: number;
-  totalLoanNotes: number;
-  uncollectedFees: number;
-  _UNUSED_0_: Uint8Array;
-  _UNUSED_1_: Uint8Array;
-}
-
 export type ReserveStateStruct = CacheStruct & {
   accruedUntil: BN,
   outstandingDebt: BN,
@@ -138,7 +125,7 @@ export const HoneyProvider: FC<HoneyProps> = ({
       for (const reserve of reserveInfoList) {
         if (reserve.reserve.equals(PublicKey.default)) return;
         const reserveValue = await program.account.reserve.fetch(reserve.reserve) as IReserve;
-        const reserveState = ReserveStateLayout.decode(Buffer.from(reserveValue.state as any as number[])) as ReserveStateStruct;
+        const reserveState = program.coder.accounts.decode("Reserve", Buffer.from(reserveValue.state))
         reserveValue.reserveState = reserveState;
         reservesList.push(reserveValue);
         setReserves(reservesList);

@@ -158,7 +158,8 @@ export class HoneyReserve {
 
     const reserveData = (await this.client.program.account.reserve.fetch(this.address)) as IReserve;
     // const reserveState = ReserveStateLayout.decode(Buffer.from(reserveData.state as any as number[])) as ReserveState;
-    const reserveState = ReserveStateLayout.decode(new Uint8Array(reserveData.state)) as ReserveStateStruct;
+    // const reserveState = ReserveStateLayout.decode(new Uint8Array(reserveData.state)) as ReserveStateStruct;
+    const reserveState = this.client.program.coder.accounts.decode('Reserve', Buffer.from(reserveData.state));
     reserveData.reserveState = reserveState;
     this.data = reserveData;
     this.state = reserveState;
@@ -208,9 +209,7 @@ export class HoneyReserve {
 
   static async load(client: HoneyClient, address: PublicKey, maybeMarket?: HoneyMarket): Promise<HoneyReserve> {
     const reserveData = (await client.program.account.reserve.fetch(address)) as IReserve;
-    const reserveState = ReserveStateLayout.decode(
-      Buffer.from(reserveData.state as any as number[]),
-    ) as ReserveStateStruct;
+    const reserveState = client.program.coder.accounts.decode('Reserve', Buffer.from(reserveData.state));
     reserveData.reserveState = reserveState;
     const market = maybeMarket || (await HoneyMarket.load(client, reserveData.market));
     return new HoneyReserve(client, market, address, reserveData);
