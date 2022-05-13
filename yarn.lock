@@ -51,6 +51,23 @@
     "@ethersproject/logger" "^5.6.0"
     hash.js "1.1.7"
 
+"@honey-finance/sdk@^1.0.59":
+  version "1.0.59"
+  resolved "https://registry.yarnpkg.com/@honey-finance/sdk/-/sdk-1.0.59.tgz#893559171a6922eaffc5e62a17ff1267c7610f7a"
+  integrity sha512-5EtQ5VCpS3q7ZIhUIZDbVPaR4vGUrwMC+WMkEa1rv86JmH45hnujHpOJAbGUpQhY4TaIlwTMkuIOYv9JOIpEAA==
+  dependencies:
+    "@metaplex-foundation/mpl-token-metadata" "^1.2.0"
+    "@project-serum/anchor" "^0.20.1"
+    "@project-serum/serum" "^0.13.61"
+    "@pythnetwork/client" "^2.5.3"
+    "@rollup/plugin-commonjs" "^21.1.0"
+    "@solana/buffer-layout" "^3.0.0"
+    "@solana/spl-token" "^0.1.8"
+    "@solana/web3.js" "^1.32.1"
+    "@types/chai" "^4.3.0"
+    "@types/chai-as-promised" "^7.1.5"
+    "@types/mocha" "^9.1.0"
+
 "@jest/types@^27.5.1":
   version "27.5.1"
   resolved "https://registry.yarnpkg.com/@jest/types/-/types-27.5.1.tgz#3c79ec4a8ba61c170bf937bcf9e98a9df175ec80"
