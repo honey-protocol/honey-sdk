@@ -991,6 +991,7 @@ export class HoneyUser implements User {
       }
     });
 
+    console.log(programId);
     return await anchor.web3.PublicKey.findProgramAddress(SEEDBYTES, programId);
   }
 
