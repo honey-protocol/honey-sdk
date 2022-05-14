@@ -376,30 +376,20 @@ export class HoneyUser implements User {
     }
 
     const tx = new Transaction();
-    // const DepositNFTBumpSeeds = {
-    //   collateralAccount: collateralBump,
-    // };
-    const depositNFTIx = await this.client.program.instruction.depositNft(
-      derivedMetadata.bumpSeed, // DepositNFTBumpSeeds,
-      // derivedMetadata.bumpSeed,
-      {
-        accounts: {
-          market: this.market.address,
-          marketAuthority: this.market.marketAuthority,
-          obligation: obligationAddress,
-          depositSource: tokenAccount,
-          depositNftMint: tokenMint,
-          nftCollectionCreator: updateAuthority,
-          metadata: derivedMetadata.address,
-          owner: this.address,
-          collateralAccount: collateralAddress,
-
-          tokenProgram: TOKEN_PROGRAM_ID,
-          // rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-          // systemProgram: anchor.web3.SystemProgram.programId,
-        },
+    const depositNFTIx = await this.client.program.instruction.depositNft(derivedMetadata.bumpSeed, {
+      accounts: {
+        market: this.market.address,
+        marketAuthority: this.market.marketAuthority,
+        obligation: obligationAddress,
+        depositSource: tokenAccount,
+        depositNftMint: tokenMint,
+        nftCollectionCreator: updateAuthority,
+        metadata: derivedMetadata.address,
+        owner: this.address,
+        collateralAccount: collateralAddress,
+        tokenProgram: TOKEN_PROGRAM_ID,
       },
-    );
+    });
     tx.add(depositNFTIx);
     try {
       const txid = await this.client.program.provider.send(tx);
@@ -711,7 +701,7 @@ export class HoneyUser implements User {
 
   async borrow(reserve: HoneyReserve, receiver: PublicKey, amount: Amount): Promise<TxResponse> {
     const ixs = await this.makeBorrowTx(reserve, receiver, amount);
-    return await sendAllTransactions(this.client.program.provider, ixs);
+    return await sendAllTransactions(this.client.program.provider, ixs, true);
   }
 
   async makeBorrowTx(reserve: HoneyReserve, receiver: PublicKey, amount: Amount): Promise<InstructionAndSigner[]> {
@@ -900,11 +890,11 @@ export class HoneyUser implements User {
       accounts: {
         market: this.market.address,
         marketAuthority: this.market.marketAuthority,
+        obligation: this.obligation.address,
 
         reserve: reserve.address,
         loanNoteMint: reserve.data.loanNoteMint,
         owner: this.address,
-        obligation: this.obligation.address,
         loanAccount: account.address,
 
         tokenProgram: TOKEN_PROGRAM_ID,
