@@ -841,51 +841,8 @@ export class HoneyUser implements User {
     });
   }
 
-  private async makeInitNFTCollateralAccountIx(
-    tokenMint: PublicKey,
-    nftCollateral: DerivedAccount,
-    metadata: DerivedAccount,
-    updateAuthority: PublicKey,
-  ): Promise<TransactionInstruction> {
-    return this.client.program.instruction.initNftAccount(nftCollateral.bumpSeed, metadata.bumpSeed, {
-      accounts: {
-        market: this.market.address,
-        marketAuthority: this.market.marketAuthority,
-        obligation: this.obligation.address,
-
-        depositNftMint: tokenMint,
-        updateAuthority,
-        metadata: metadata.address,
-        owner: this.address,
-        collateralAccount: nftCollateral.address,
-        tokenProgram: TOKEN_PROGRAM_ID,
-
-        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-        systemProgram: anchor.web3.SystemProgram.programId,
-      },
-    });
-  }
-
-  private makeInitCollateralAccountIx(reserve: HoneyReserve, account: DerivedAccount): TransactionInstruction {
-    return this.client.program.instruction.initCollateralAccount(account.bumpSeed, {
-      accounts: {
-        market: this.market.address,
-        marketAuthority: this.market.marketAuthority,
-
-        reserve: reserve.address,
-        depositNoteMint: reserve.data.depositNoteMint,
-        owner: this.address,
-        obligation: this.obligation.address,
-        collateralAccount: account.address,
-
-        tokenProgram: TOKEN_PROGRAM_ID,
-        systemProgram: SystemProgram.programId,
-        rent: SYSVAR_RENT_PUBKEY,
-      },
-    });
-  }
-
   private makeInitLoanAccountIx(reserve: HoneyReserve, account: DerivedAccount): TransactionInstruction {
+    console.log('loan account ', account.address.toString());
     return this.client.program.instruction.initLoanAccount(account.bumpSeed, {
       accounts: {
         market: this.market.address,
@@ -991,7 +948,7 @@ export class HoneyUser implements User {
       }
     });
 
-    console.log(programId);
+    console.log(programId.toString());
     return await anchor.web3.PublicKey.findProgramAddress(SEEDBYTES, programId);
   }
 
