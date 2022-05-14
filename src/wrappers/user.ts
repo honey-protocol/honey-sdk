@@ -803,7 +803,6 @@ export class HoneyUser implements User {
         borrower: this.address,
         loanAccount: loanAccountPK,
         tokenMint: reserve.data.tokenMint,
-        feeReceiverAccount,
         receiverAccount,
         nftPythOraclePrice: this.market.nftPythOraclePrice,
         tokenProgram: TOKEN_PROGRAM_ID,
