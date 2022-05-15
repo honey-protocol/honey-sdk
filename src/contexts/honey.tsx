@@ -7,6 +7,7 @@ import { ConnectedWallet } from '../helpers/walletType';
 import { useMarket } from '../hooks';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { BN } from '@project-serum/anchor';
+import { HoneyReserve } from '../wrappers';
 
 interface HoneyContext {
   market: IMarket | null,
@@ -101,7 +102,7 @@ export const HoneyProvider: FC<HoneyProps> = ({
   honeyMarketId
 }) => {
   const { program, coder } = useAnchor();
-  const { honeyMarket } = useMarket(connection, wallet, honeyProgramId, honeyMarketId)
+  const { honeyClient, honeyMarket } = useMarket(connection, wallet, honeyProgramId, honeyMarketId)
 
   const [market, setMarket] = useState<IMarket | null>(null);
   const [marketReserveInfo, setMarketReserveInfo] = useState<HoneyMarketReserveInfo[]>()
@@ -124,11 +125,8 @@ export const HoneyProvider: FC<HoneyProps> = ({
       const reservesList = [] as IReserve[];
       for (const reserve of reserveInfoList) {
         if (reserve.reserve.equals(PublicKey.default)) return;
-        const reserveValue = await program.account.reserve.fetch(reserve.reserve) as IReserve;
-        const reserveState = program.coder.accounts.decode("Reserve", Buffer.from(reserveValue.state))
-        reserveValue.reserveState = reserveState;
-        reservesList.push(reserveValue);
-        setReserves(reservesList);
+        const { data, state } = await HoneyReserve.decodeReserve(honeyClient, reserve.reserve);
+        reservesList.push(data);
       }
       console.log("reserves list", reservesList);
       setReserves(reservesList);
