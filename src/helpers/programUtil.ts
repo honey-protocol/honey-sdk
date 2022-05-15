@@ -592,25 +592,6 @@ export const parseTokenAccount = (account: AccountInfo<Buffer>, accountPubkey: P
   return decoded;
 };
 
-export const parseMarketAccount = (account: Buffer, coder: anchor.Coder) => {
-  let market = coder.accounts.decode<MarketAccount>('Market', account);
-
-  let reserveInfoData = new Uint8Array(market.reserves as any as number[]);
-  let reserveInfoList = MarketReserveInfoList.decode(reserveInfoData) as HoneyMarketReserveInfo[];
-
-  market.reserves = reserveInfoList;
-  return market;
-};
-
-export const parseReserveAccount = (account: Buffer, coder: anchor.Coder) => {
-  let reserve = coder.accounts.decode<ReserveAccount>('Reserve', account);
-
-  const reserveState = ReserveStateLayout.decode(Buffer.from(reserve.state as any as number[])) as ReserveStateStruct;
-
-  reserve.state = reserveState;
-  return reserve;
-};
-
 export const parseObligationAccount = (account: Buffer, coder: anchor.Coder) => {
   let obligation = coder.accounts.decode<ObligationAccount>('Obligation', account);
 
