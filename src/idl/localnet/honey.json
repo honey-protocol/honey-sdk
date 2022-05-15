@@ -1403,42 +1403,6 @@
                         "type": "publicKey"
                     },
                     {
-                        "name": "feeNoteVault",
-                        "type": "publicKey"
-                    },
-                    {
-                        "name": "protocolFeeNoteVault",
-                        "type": "publicKey"
-                    },
-                    {
-                        "name": "nftDropletMint",
-                        "type": "publicKey"
-                    },
-                    {
-                        "name": "nftDropletVault",
-                        "type": "publicKey"
-                    },
-                    {
-                        "name": "dexSwapTokens",
-                        "type": "publicKey"
-                    },
-                    {
-                        "name": "dexOpenOrdersA",
-                        "type": "publicKey"
-                    },
-                    {
-                        "name": "dexOpenOrdersB",
-                        "type": "publicKey"
-                    },
-                    {
-                        "name": "dexMarketA",
-                        "type": "publicKey"
-                    },
-                    {
-                        "name": "dexMarketB",
-                        "type": "publicKey"
-                    },
-                    {
                         "name": "reserved0",
                         "type": {
                             "array": [
@@ -1974,8 +1938,5 @@
             "name": "AccountNotEmptyError",
             "msg": "the collateral/loan account is not empty"
         }
-    ],
-    "metadata": {
-        "address": "6ujVJiHnyqaTBHzwwfySzTDX5EPFgmXqnibuMp3Hun1w"
-    }
+    ]
 }
