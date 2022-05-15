@@ -124,7 +124,9 @@ export const HoneyProvider: FC<HoneyProps> = ({
 
       const reservesList = [] as IReserve[];
       for (const reserve of reserveInfoList) {
-        if (reserve.reserve.equals(PublicKey.default)) return;
+        if (reserve.reserve.equals(PublicKey.default)) {
+          continue;
+        };
         const { data, state } = await HoneyReserve.decodeReserve(honeyClient, reserve.reserve);
         reservesList.push(data);
       }
