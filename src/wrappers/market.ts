@@ -28,6 +28,8 @@ export interface HoneyMarketReserveInfo {
   price: anchor.BN;
   depositNoteExchangeRate: anchor.BN;
   loanNoteExchangeRate: anchor.BN;
+  minCollateralRatio: anchor.BN;
+  liquidationBonus: number;
 }
 
 export interface HoneyMarketData {
