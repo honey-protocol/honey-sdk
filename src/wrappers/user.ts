@@ -557,7 +557,7 @@ export class HoneyUser implements User {
   async deposit(reserve: HoneyReserve, tokenAccount: PublicKey, amount: Amount): Promise<TxResponse> {
     const [transaction, signers] = await this.makeDepositTx(reserve, tokenAccount, amount);
     try {
-      const txid = await this.client.program.provider.send(transaction, signers);
+      const txid = await this.client.program.provider.send(transaction, signers, { skipPreflight: true });
       return [TxnResponse.Success, [txid]];
     } catch (err) {
       console.error(`Deposit error: ${err}`);
