@@ -392,7 +392,7 @@ export class HoneyUser implements User {
     });
     tx.add(depositNFTIx);
     try {
-      const txid = await this.client.program.provider.send(tx);
+      const txid = await this.client.program.provider.send(tx, [], { skipPreflight: true });
       txids.push(txid);
       return [TxnResponse.Success, txids];
     } catch (err) {
