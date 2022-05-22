@@ -778,8 +778,6 @@ export class HoneyUser implements User {
       this.client.program.programId,
     );
 
-    console.log(`other loan account ${loanAccountPK.toString()}`);
-
     const borrowSeeds = {
       loanAccount: loanAccountBump,
       // feeReceiverAccount: feeReceiverAccountBump,

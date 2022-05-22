@@ -188,10 +188,23 @@ export class HoneyReserve {
 
   async makeRefreshIx(): Promise<TransactionInstruction> {
     if (!this.data) return;
+
+    const [feeAccount, feeAccountBump] = await PublicKey.findProgramAddress(
+      [Buffer.from('fee-vault'), this.address.toBuffer()],
+      this.client.program.programId,
+    );
+
+    const [protocolFeeAccount, protocolFeeAccountBump] = await PublicKey.findProgramAddress(
+      [Buffer.from('protocol-fee-vault'), this.address.toBuffer()],
+      this.client.program.programId,
+    );
+
     return this.client.program.instruction.refreshReserve({
       accounts: {
         market: this.market.address,
         marketAuthority: this.market.marketAuthority,
+        feeNoteVault: feeAccount,
+        protocolFeeNoteVault: protocolFeeAccount,
         reserve: this.address,
         depositNoteMint: this.data.depositNoteMint,
         pythOraclePrice: this.data.pythOraclePrice,
