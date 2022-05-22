@@ -203,6 +203,7 @@ export type ReserveStateStruct = CacheStruct & {
   accruedUntil: BN;
   outstandingDebt: BN;
   uncollectedFees: BN;
+  uncollectedProtocolFees: BN;
   totalDeposits: BN;
   totalDepositNotes: BN;
   totalLoanNotes: BN;
