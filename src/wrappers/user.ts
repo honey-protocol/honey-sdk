@@ -71,6 +71,7 @@ export const PositionStruct = BL.struct([
 
 export const SOLVENT_PROGRAM = new PublicKey('GwRvoU6vTXQAbS75KaMbm7o2iTYVtdEnF4mFUbZr9Cmb');
 export const SOLVENT_FEE_ACCOUNT_DEVNET = new PublicKey('HkjFiwUW7qnREVm2PxBg8LUrCvjExrJjyYY51wsZTUK8');
+
 export class HoneyUser implements User {
   private _deposits: TokenAmount[] = [];
   private _collateral: TokenAmount[] = [];

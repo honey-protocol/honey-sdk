@@ -146,10 +146,12 @@ export class HoneyMarket implements HoneyMarketData {
     const createReserveAccount = await this.client.program.account.reserve.createInstruction(account);
     const transaction = new Transaction();
     transaction.add(createReserveAccount);
-    // const initTx = await sendAndConfirmTransaction(this.client.program.provider.connection, transaction, [
-    //   (this.client.program.provider.wallet as any).payer,
-    //   account,
-    // ]);
+    const initTx = await sendAndConfirmTransaction(
+      this.client.program.provider.connection,
+      transaction,
+      [(this.client.program.provider.wallet as any).payer, account],
+      { skipPreflight: true },
+    );
 
     console.log('accounts', {
       market: this.address.toBase58(),
@@ -212,7 +214,7 @@ export class HoneyMarket implements HoneyMarketData {
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
       },
       signers: [],
-      instructions: [createReserveAccount],
+      // instructions: [createReserveAccount],
     });
     console.log('initReserve tx', txid);
     return HoneyReserve.load(this.client, account.publicKey, this);
