@@ -29,6 +29,9 @@ import { ObligationAccount, TxnResponse } from '../helpers/honeyTypes';
 import { TokenAmount } from './token-amount';
 
 export const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
+export const SOLVENT_PROGRAM = new PublicKey('GwRvoU6vTXQAbS75KaMbm7o2iTYVtdEnF4mFUbZr9Cmb');
+export const SOLVENT_FEE_ACCOUNT_DEVNET = new PublicKey('HkjFiwUW7qnREVm2PxBg8LUrCvjExrJjyYY51wsZTUK8');
+
 export interface User {
   address: PublicKey;
 
@@ -68,9 +71,6 @@ export const PositionStruct = BL.struct([
   BL.u16('reserve_index'),
   BL.blob(66),
 ]);
-
-export const SOLVENT_PROGRAM = new PublicKey('GwRvoU6vTXQAbS75KaMbm7o2iTYVtdEnF4mFUbZr9Cmb');
-export const SOLVENT_FEE_ACCOUNT_DEVNET = new PublicKey('HkjFiwUW7qnREVm2PxBg8LUrCvjExrJjyYY51wsZTUK8');
 
 export class HoneyUser implements User {
   private _deposits: TokenAmount[] = [];
@@ -768,10 +768,10 @@ export class HoneyUser implements User {
       }),
     );
 
-    const [feeReceiverAccount, feeReceiverAccountBump] = await PublicKey.findProgramAddress(
-      [Buffer.from('honey-protocol-fee'), reserve.data.tokenMint.toBuffer()],
-      this.client.program.programId,
-    );
+    // const [feeReceiverAccount, feeReceiverAccountBump] = await PublicKey.findProgramAddress(
+    //   [Buffer.from('honey-protocol-fee'), reserve.data.tokenMint.toBuffer()],
+    //   this.client.program.programId,
+    // );
 
     const [loanAccountPK, loanAccountBump] = await PublicKey.findProgramAddress(
       [Buffer.from('loan'), reserve.address.toBuffer(), this.obligation.address.toBuffer(), this.address.toBuffer()],
@@ -782,7 +782,7 @@ export class HoneyUser implements User {
 
     const borrowSeeds = {
       loanAccount: loanAccountBump,
-      feeReceiverAccount: feeReceiverAccountBump,
+      // feeReceiverAccount: feeReceiverAccountBump,
     };
     const borrowIx = this.client.program.instruction.borrow(borrowSeeds, amount, {
       accounts: {
@@ -951,7 +951,6 @@ export class HoneyUser implements User {
       }
     });
 
-    console.log(programId.toString());
     return await anchor.web3.PublicKey.findProgramAddress(SEEDBYTES, programId);
   }
 

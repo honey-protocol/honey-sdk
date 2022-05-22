@@ -124,10 +124,20 @@ export class HoneyMarket implements HoneyMarketData {
 
     const derivedAccounts = await HoneyReserve.deriveAccounts(this.client, account.publicKey, params.tokenMint);
 
+    const [feeAccount, feeAccountBump] = await PublicKey.findProgramAddress(
+      [Buffer.from('fee-vault'), account.publicKey.toBuffer()],
+      this.client.program.programId,
+    );
+
+    const [protocolFeeAccount, protocolFeeAccountBump] = await PublicKey.findProgramAddress(
+      [Buffer.from('protocol-fee-vault'), account.publicKey.toBuffer()],
+      this.client.program.programId,
+    );
+
     const bumpSeeds = {
       vault: derivedAccounts.vault.bumpSeed,
-      feeNoteVault: derivedAccounts.feeNoteVault.bumpSeed,
-      protocolFeeNoteVault: derivedAccounts.protocolFeeNoteVault.bumpSeed,
+      feeNoteVault: feeAccountBump,
+      protocolFeeNoteVault: protocolFeeAccountBump,
       dexOpenOrdersA: derivedAccounts.dexOpenOrdersA.bumpSeed,
       dexOpenOrdersB: derivedAccounts.dexOpenOrdersB.bumpSeed,
       dexSwapTokens: derivedAccounts.dexSwapTokens.bumpSeed,
@@ -152,6 +162,7 @@ export class HoneyMarket implements HoneyMarketData {
       [(this.client.program.provider.wallet as any).payer, account],
       { skipPreflight: true },
     );
+    console.log(`Init reserve account tx ${initTx}`);
 
     console.log('accounts', {
       market: this.address.toBase58(),
@@ -163,6 +174,9 @@ export class HoneyMarket implements HoneyMarketData {
 
       feeNoteVault: derivedAccounts.feeNoteVault.address.toBase58(),
       protocolFeeNoteVault: derivedAccounts.protocolFeeNoteVault.address.toBase58(),
+
+      feeAccount: feeAccount.toBase58(),
+      protocolFeeAccount: protocolFeeAccount.toBase58(),
 
       dexSwapTokens: derivedAccounts.dexSwapTokens.address.toBase58(),
       dexOpenOrdersA: derivedAccounts.dexOpenOrdersA.address.toBase58(),
@@ -190,15 +204,15 @@ export class HoneyMarket implements HoneyMarketData {
         nftDropletMint: params.nftDropletMint,
         nftDropletVault: nftDropletAccount,
 
-        feeNoteVault: derivedAccounts.feeNoteVault.address,
-        protocolFeeNoteVault: derivedAccounts.protocolFeeNoteVault.address,
+        feeNoteVault: feeAccount,
+        protocolFeeNoteVault: protocolFeeAccount,
 
-        dexSwapTokens: derivedAccounts.dexSwapTokens.address,
+        // dexSwapTokens: derivedAccounts.dexSwapTokens.address,
 
-        dexOpenOrdersA: derivedAccounts.dexOpenOrdersA.address,
-        dexOpenOrdersB: derivedAccounts.dexOpenOrdersB.address,
-        dexMarketA: params.dexMarketA,
-        dexMarketB: params.dexMarketB,
+        // dexOpenOrdersA: derivedAccounts.dexOpenOrdersA.address,
+        // dexOpenOrdersB: derivedAccounts.dexOpenOrdersB.address,
+        // dexMarketA: params.dexMarketA,
+        // dexMarketB: params.dexMarketB,
         dexProgram: DEX_PID,
         loanNoteMint: derivedAccounts.loanNoteMint.address,
         depositNoteMint: derivedAccounts.depositNoteMint.address,
