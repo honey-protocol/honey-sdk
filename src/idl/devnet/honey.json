@@ -65,6 +65,16 @@
                     "isSigner": false
                 },
                 {
+                    "name": "feeNoteVault",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "protocolFeeNoteVault",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
                     "name": "tokenMint",
                     "isMut": false,
                     "isSigner": false
@@ -1180,6 +1190,16 @@
                     "isSigner": false
                 },
                 {
+                    "name": "feeNoteVault",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "protocolFeeNoteVault",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
                     "name": "depositNoteMint",
                     "isMut": true,
                     "isSigner": false
@@ -1400,6 +1420,14 @@
                     },
                     {
                         "name": "vault",
+                        "type": "publicKey"
+                    },
+                    {
+                        "name": "feeNoteVault",
+                        "type": "publicKey"
+                    },
+                    {
+                        "name": "protocolFeeNoteVault",
                         "type": "publicKey"
                     },
                     {

@@ -203,9 +203,9 @@ export class HoneyReserve {
       accounts: {
         market: this.market.address,
         marketAuthority: this.market.marketAuthority,
+        reserve: this.address,
         feeNoteVault: feeAccount,
         protocolFeeNoteVault: protocolFeeAccount,
-        reserve: this.address,
         depositNoteMint: this.data.depositNoteMint,
         pythOraclePrice: this.data.pythOraclePrice,
         tokenProgram: TOKEN_PROGRAM_ID,
