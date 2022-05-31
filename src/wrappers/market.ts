@@ -39,8 +39,7 @@ export interface HoneyMarketData {
   owner: PublicKey;
 
   reserves: HoneyMarketReserveInfo[];
-  nftPythOraclePrice: PublicKey;
-  nftPythOracleProduct: PublicKey;
+  nftSwithchboardPriceAggregator: PublicKey;
   updateAuthority: PublicKey;
 }
 
@@ -53,8 +52,7 @@ export class HoneyMarket implements HoneyMarketData {
     public marketAuthority: PublicKey,
     public owner: PublicKey,
     public reserves: HoneyMarketReserveInfo[],
-    public nftPythOraclePrice: PublicKey,
-    public nftPythOracleProduct: PublicKey,
+    public nftSwithchboardPriceAggregator: PublicKey,
     public updateAuthority: PublicKey,
   ) {}
 
@@ -84,8 +82,7 @@ export class HoneyMarket implements HoneyMarketData {
       data.marketAuthority,
       data.owner,
       reserveInfoList,
-      data.nftPythOraclePrice,
-      data.nftPythOracleProduct,
+      data.nftSwithchboardPriceAggregator,
       data.updateAuthority,
     );
   }
@@ -101,8 +98,7 @@ export class HoneyMarket implements HoneyMarketData {
     this.marketAuthority = data.marketAuthority;
     this.quoteCurrency = data.quoteCurrency;
     this.quoteTokenMint = data.quoteTokenMint;
-    this.nftPythOraclePrice = data.nftPythOraclePrice;
-    this.nftPythOracleProduct = data.nftPythOracleProduct;
+    this.nftSwithchboardPriceAggregator = data.nftSwithchboardPriceAggregator;
     this.updateAuthority = data.updateAuthority;
   }
 
@@ -187,8 +183,7 @@ export class HoneyMarket implements HoneyMarketData {
       loanNoteMint: derivedAccounts.loanNoteMint.address.toBase58(),
       depositNoteMint: derivedAccounts.depositNoteMint.address.toBase58(),
 
-      oracleProduct: params.pythOracleProduct.toBase58(),
-      oraclePrice: params.pythOraclePrice.toBase58(),
+      oraclePrice: params.switchboardOracle.toBase58(),
       quoteTokenMint: this.quoteTokenMint.toBase58(),
       tokenMint: params.tokenMint.toBase58(),
       owner: this.owner.toBase58(),
@@ -217,8 +212,7 @@ export class HoneyMarket implements HoneyMarketData {
         loanNoteMint: derivedAccounts.loanNoteMint.address,
         depositNoteMint: derivedAccounts.depositNoteMint.address,
 
-        oracleProduct: params.pythOracleProduct,
-        oraclePrice: params.pythOraclePrice,
+        oraclePrice: params.switchboardOracle,
         quoteTokenMint: this.quoteTokenMint,
         tokenMint: params.tokenMint,
         tokenProgram: TOKEN_PROGRAM_ID,
@@ -250,7 +244,7 @@ export interface CreateMarketParams {
 
   /**
    * The name of the currency used for quotes, this has to match the
-   * name specified in any Pyth/oracle accounts.
+   * name specified in any Switchboard/oracle accounts.
    */
   quoteCurrencyName: string;
 
@@ -260,14 +254,9 @@ export interface CreateMarketParams {
   nftCollectionCreator: PublicKey;
 
   /**
-   *  price oracles modeled after pyth
+   *  price oracles modeled from switchboard
    */
   nftOraclePrice: PublicKey;
-
-  /**
-   *  product for partnered price oracle
-   */
-  nftOracleProduct: PublicKey;
 
   /**
    * The account to use for the market data.

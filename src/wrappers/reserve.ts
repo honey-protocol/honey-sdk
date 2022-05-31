@@ -51,14 +51,9 @@ export interface CreateReserveParams {
   tokenMint: PublicKey;
 
   /**
-   * The Pyth account containing the price information for the reserve token.
+   * The Switchboard account containing the price information for the reserve token.
    */
-  pythOraclePrice: PublicKey;
-
-  /**
-   * The Pyth account containing the metadata about the reserve token.
-   */
-  pythOracleProduct: PublicKey;
+  switchboardOracle: PublicKey;
 
   /**
    * The initial configuration for the reserve
@@ -91,10 +86,7 @@ export interface CreateReserveParams {
 export interface ReserveData {
   // index: number;
   market: PublicKey;
-  pythPrice: PublicKey;
-  pythProduct: PublicKey;
-  pythOraclePrice?: PublicKey;
-  pythOracleProduct?: PublicKey;
+  switchBoardOracle: PublicKey;
   tokenMint: PublicKey;
   depositNoteMint: PublicKey;
   loanNoteMint: PublicKey;
@@ -207,7 +199,7 @@ export class HoneyReserve {
         feeNoteVault: feeAccount,
         protocolFeeNoteVault: protocolFeeAccount,
         depositNoteMint: this.data.depositNoteMint,
-        pythOraclePrice: this.data.pythOraclePrice,
+        swithchboardPriceAggregator: this.data.swithchboardPriceAggregator,
         tokenProgram: TOKEN_PROGRAM_ID,
       },
     });

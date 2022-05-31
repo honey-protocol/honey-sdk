@@ -48,8 +48,7 @@ const getEmptyReserve = (reserveMeta: HoneyReserve) => {
     depositNoteMint: PublicKey.default,
     loanNoteMintPubkey: reserveMeta.data.loanNoteMint,
     loanNoteMint: PublicKey.default,
-    pythPricePubkey: reserveMeta.data.pythPrice || reserveMeta.data.pythOraclePrice,
-    pythProductPubkey: reserveMeta.data.pythProduct || reserveMeta.data.pythOracleProduct,
+    swithchboardPriceAggregatorPubkey: reserveMeta.data.swithchboardPriceAggregator,
   } as unknown as Reserve;
   return reserve;
 };

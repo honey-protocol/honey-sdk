@@ -795,7 +795,7 @@ export class HoneyUser implements User {
         loanAccount: loanAccountPK,
         tokenMint: reserve.data.tokenMint,
         receiverAccount,
-        nftPythOraclePrice: this.market.nftPythOraclePrice,
+        nftSwithchboardPriceAggregator: this.market.nftSwithchboardPriceAggregator,
         tokenProgram: TOKEN_PROGRAM_ID,
       },
     });
