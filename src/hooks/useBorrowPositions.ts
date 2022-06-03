@@ -107,7 +107,7 @@ export const useBorrowPositions = (
 
   const refreshPositions = async () => {
     await fetchData();
-  }
+  };
 
   // build borrow positions
   useEffect(() => {
