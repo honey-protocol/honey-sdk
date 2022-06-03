@@ -43,7 +43,6 @@ export const useBorrowPositions = (
     error?: Error;
   }>({ loading: false });
 
-  const { market, marketReserveInfo, parsedReserves } = useHoney();
   const { honeyUser } = useMarket(connection, wallet, honeyId, honeyMarketId);
 
   const fetchData = async () => {
@@ -106,6 +105,10 @@ export const useBorrowPositions = (
     setStatus({ loading: false, collateralNFTPositions, loanPositions, fungibleCollateralPosition });
   };
 
+  const refreshPositions = async () => {
+    await fetchData();
+  }
+
   // build borrow positions
   useEffect(() => {
     if (!honeyUser) {
@@ -115,5 +118,5 @@ export const useBorrowPositions = (
     fetchData();
   }, [honeyUser]);
 
-  return { ...status };
+  return { ...status, refreshPositions };
 };
