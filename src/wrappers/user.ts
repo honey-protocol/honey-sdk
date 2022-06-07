@@ -702,7 +702,7 @@ export class HoneyUser implements User {
 
   async borrow(reserve: HoneyReserve, receiver: PublicKey, amount: Amount): Promise<TxResponse> {
     const ixs = await this.makeBorrowTx(reserve, receiver, amount);
-    return await sendAllTransactions(this.client.program.provider, ixs, true);
+    return await sendAllTransactions(this.client.program.provider, ixs);
   }
 
   async makeBorrowTx(reserve: HoneyReserve, receiver: PublicKey, amount: Amount): Promise<InstructionAndSigner[]> {
