@@ -14,7 +14,10 @@ export interface PlaceBidParams {
 }
 
 export interface RevokeBidParams {
-
+    market: PublicKey;
+    bidder: PublicKey;
+    withdraw_source: PublicKey;
+    bid_mint: PublicKey;
 }
 
 export interface ExecuteBidParams {
@@ -75,6 +78,7 @@ export class LiquidatorClient {
                     market: params.market,
                     marketAuthority: market_authority.address,
                     bid: bid.address,
+                    bidder: params.bidder,
                     bidEscrow: bid_escrow.address,
                     bidEscrowAuthority: bid_escrow_authority.address,
                     bidMint: params.bid_mint,
@@ -87,7 +91,27 @@ export class LiquidatorClient {
     }
 
     async revokeBid(params: RevokeBidParams) {
+        const bid = await this.findBidAccount(params.market, params.bidder);
+        const bid_escrow = await this.findEscrowAccount(params.market, params.bidder);
+        const bid_escrow_authority = await this.findBidEscrowAuthorityAccount(bid_escrow.address);
+        const market_authority = await this.findMarketAuthority(params.market);
 
+        const tx = await this.program.rpc.placeRevokeBid(
+            {
+                accounts: {
+                    market: params.market,
+                    marketAuthority: market_authority.address,
+                    bid: bid.address,
+                    bidder: params.bidder,
+                    bidEscrow: bid_escrow.address,
+                    bidEscrowAuthority: bid_escrow_authority.address,
+                    bidMint: params.bid_mint,
+                    withdrawSource: params.withdraw_source
+                },
+            },
+        );
+
+        return tx;
     }
 
     async executeBid(params: ExecuteBidParams) {

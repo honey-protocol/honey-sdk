@@ -85,8 +85,10 @@ export class HoneyUser implements User {
     public address: PublicKey,
     private obligation: DerivedAccount,
     public reserves: HoneyReserve[],
+    public skipPreflight?: boolean,
   ) {
     this.conn = this.client.program.provider.connection;
+    this.skipPreflight = skipPreflight || false; // TODO: cleanup transaction sending to obey this param
   }
 
   static async load(
