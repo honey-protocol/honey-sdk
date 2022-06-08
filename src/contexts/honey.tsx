@@ -13,11 +13,13 @@ interface HoneyContext {
   market: IMarket | null,
   marketReserveInfo: HoneyMarketReserveInfo[] | null,
   parsedReserves: IReserve[] | null;
+  fetchMarket: Function
 }
 const HoneyContext = React.createContext<HoneyContext>({
   market: null,
   marketReserveInfo: null,
-  parsedReserves: null
+  parsedReserves: null,
+  fetchMarket: () => { }
 });
 
 export const useHoney = () => {
@@ -109,31 +111,31 @@ export const HoneyProvider: FC<HoneyProps> = ({
   const [marketReserveInfo, setMarketReserveInfo] = useState<HoneyMarketReserveInfo[]>()
   const [parsedReserves, setReserves] = useState<IReserve[] | null>();
 
+  const fetchMarket = async () => {
+    // market info
+    const marketValue = await program.account.market.fetch(honeyMarket.address);
+    setMarket(marketValue as IMarket);
+
+    // reserve info
+    const reserveInfoData = new Uint8Array(marketValue.reserves as any as number[]);
+    const reserveInfoList = MarketReserveInfoList.decode(reserveInfoData) as HoneyMarketReserveInfo[];
+    setMarketReserveInfo(reserveInfoList);
+
+    const reservesList = [] as IReserve[];
+    for (const reserve of reserveInfoList) {
+      if (reserve.reserve.equals(PublicKey.default)) {
+        continue;
+      };
+      const { data, state } = await HoneyReserve.decodeReserve(honeyClient, reserve.reserve);
+      reservesList.push(data);
+    }
+    console.log("reserves list", reservesList);
+    setReserves(reservesList);
+  }
+
   useEffect(() => {
     if (!program?.provider?.connection || !coder || !honeyMarket?.address)
       return
-
-    const fetchMarket = async () => {
-      // market info
-      const marketValue = await program.account.market.fetch(honeyMarket.address);
-      setMarket(marketValue as IMarket);
-
-      // reserve info
-      const reserveInfoData = new Uint8Array(marketValue.reserves as any as number[]);
-      const reserveInfoList = MarketReserveInfoList.decode(reserveInfoData) as HoneyMarketReserveInfo[];
-      setMarketReserveInfo(reserveInfoList);
-
-      const reservesList = [] as IReserve[];
-      for (const reserve of reserveInfoList) {
-        if (reserve.reserve.equals(PublicKey.default)) {
-          continue;
-        };
-        const { data, state } = await HoneyReserve.decodeReserve(honeyClient, reserve.reserve);
-        reservesList.push(data);
-      }
-      console.log("reserves list", reservesList);
-      setReserves(reservesList);
-    }
 
     fetchMarket();
 
@@ -142,7 +144,8 @@ export const HoneyProvider: FC<HoneyProps> = ({
   const honeyContext = {
     market,
     marketReserveInfo,
-    parsedReserves
+    parsedReserves,
+    fetchMarket
   }
   return (
     <HoneyContext.Provider
