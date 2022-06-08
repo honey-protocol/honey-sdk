@@ -2,6 +2,7 @@ import type { AccountInfo, PublicKey } from '@solana/web3.js';
 import type BN from 'bn.js';
 import type WalletAdapter from './walletAdapter';
 import type { TokenAmount } from './util';
+import { CacheStruct, ReserveStateStruct } from '../contexts';
 
 // Web3
 export interface HasPublicKey {
@@ -93,14 +94,7 @@ export type CacheReserveInfoStruct = CacheStruct & {
   /** Unused space */
   _reserved: number[];
 };
-export interface CacheStruct {
-  /** The last slot that this information was updated in */
-  lastUpdated: BN;
-  /** Whether the value has been manually invalidated */
-  invalidated: number;
-  /** Unused space */
-  _reserved: number[];
-}
+
 export interface MarketMetadata {
   market: PublicKey;
   marketAuthority: PublicKey;
@@ -199,16 +193,6 @@ export interface ReserveConfigStruct {
   /** Unused space */
   _reserved1: number[];
 }
-export type ReserveStateStruct = CacheStruct & {
-  accruedUntil: BN;
-  outstandingDebt: BN;
-  uncollectedFees: BN;
-  uncollectedProtocolFees: BN;
-  totalDeposits: BN;
-  totalDepositNotes: BN;
-  totalLoanNotes: BN;
-  _reserved: number[];
-};
 export interface ReserveMetadata {
   name: string;
   abbrev: string;

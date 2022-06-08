@@ -27,7 +27,6 @@ import type {
   ObligationPositionStruct,
   ReserveAccount,
   ReserveConfigStruct,
-  ReserveStateStruct,
   ToBytes,
   User,
   SlopeTxn,

@@ -7,6 +7,7 @@ export { HoneyMarket, MarketFlags, CreateMarketParams } from './market';
 export { HoneyReserve, CreateReserveParams } from './reserve';
 export type { ReserveConfig } from './reserve';
 export { HoneyUser, SOLVENT_FEE_ACCOUNT_DEVNET, SOLVENT_PROGRAM } from './user';
+export { LiquidatorClient, PlaceBidParams, RevokeBidParams, ExecuteBidParams } from './liquidator';
 export * from './derived-account';
 
 export const PLACEHOLDER_ACCOUNT = PublicKey.default;

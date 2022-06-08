@@ -1219,6 +1219,33 @@
         }
     ],
     "accounts": [{
+            "name": "Bid",
+            "type": {
+                "kind": "struct",
+                "fields": [{
+                        "name": "market",
+                        "type": "publicKey"
+                    },
+                    {
+                        "name": "bidEscrow",
+                        "type": "publicKey"
+                    },
+                    {
+                        "name": "bidEscrowAuthority",
+                        "type": "publicKey"
+                    },
+                    {
+                        "name": "bidder",
+                        "type": "publicKey"
+                    },
+                    {
+                        "name": "bidLimit",
+                        "type": "u64"
+                    }
+                ]
+            }
+        },
+        {
             "name": "Market",
             "type": {
                 "kind": "struct",
@@ -1750,6 +1777,14 @@
             ]
         },
         {
+            "name": "ExecuteLiquidateEvent",
+            "fields": [{
+                "name": "bid",
+                "type": "publicKey",
+                "index": false
+            }]
+        },
+        {
             "name": "LiquidateEvent",
             "fields": [{
                     "name": "borrower",
@@ -1781,6 +1816,25 @@
             ]
         },
         {
+            "name": "PlaceBidEvent",
+            "fields": [{
+                    "name": "bid",
+                    "type": "publicKey",
+                    "index": false
+                },
+                {
+                    "name": "bidder",
+                    "type": "publicKey",
+                    "index": false
+                },
+                {
+                    "name": "bidLimit",
+                    "type": "u64",
+                    "index": false
+                }
+            ]
+        },
+        {
             "name": "RepayEvent",
             "fields": [{
                     "name": "borrower",
@@ -1797,6 +1851,20 @@
                     "type": {
                         "defined": "Amount"
                     },
+                    "index": false
+                }
+            ]
+        },
+        {
+            "name": "RevokeBidEvent",
+            "fields": [{
+                    "name": "bid",
+                    "type": "publicKey",
+                    "index": false
+                },
+                {
+                    "name": "bidder",
+                    "type": "publicKey",
                     "index": false
                 }
             ]
@@ -1966,5 +2034,8 @@
             "name": "AccountNotEmptyError",
             "msg": "the collateral/loan account is not empty"
         }
-    ]
+    ],
+    "metadata": {
+        "address": "6ujVJiHnyqaTBHzwwfySzTDX5EPFgmXqnibuMp3Hun1w"
+    }
 }
