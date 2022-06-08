@@ -88,7 +88,7 @@ export const useBorrowPositions = (
     obligation.loans.map((loan: any) => {
       if (loan.account.equals(PublicKey.default)) return;
       loanPositions.push({
-        amount: loan.amount.toNumber() / (10 ** 15),
+        amount: loan.amount.toNumber() / 10 ** 15,
         tokenAccount: loan.account,
       });
     });
@@ -97,7 +97,7 @@ export const useBorrowPositions = (
     obligation.collateral.map((collateral: any) => {
       if (collateral.account.equals(PublicKey.default)) return;
       fungibleCollateralPosition.push({
-        amount: collateral.amount.toNumber() / (10 ** 15),
+        amount: collateral.amount.toNumber() / 10 ** 15,
         tokenAccount: collateral.account,
       });
     });

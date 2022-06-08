@@ -19,7 +19,8 @@ const HoneyContext = React.createContext<HoneyContext>({
   market: null,
   marketReserveInfo: null,
   parsedReserves: null,
-  fetchMarket: () => { }
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  fetchMarket: () => null
 });
 
 export const useHoney = () => {
