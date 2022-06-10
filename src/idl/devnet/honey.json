@@ -991,6 +991,244 @@
             ]
         },
         {
+            "name": "placeLiquidateBid",
+            "accounts": [{
+                    "name": "market",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "marketAuthority",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "bid",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "bidder",
+                    "isMut": false,
+                    "isSigner": true
+                },
+                {
+                    "name": "depositSource",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "bidMint",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "bidEscrow",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "bidEscrowAuthority",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "tokenProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "associatedTokenProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "rent",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": [{
+                    "name": "bump",
+                    "type": {
+                        "defined": "PlaceLiquidateBidBumps"
+                    }
+                },
+                {
+                    "name": "bidLimit",
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "revokeLiquidateBid",
+            "accounts": [{
+                    "name": "market",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "marketAuthority",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "bid",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "bidder",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "withdrawSource",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "bidMint",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "bidEscrow",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "bidEscrowAuthority",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "tokenProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "associatedTokenProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "rent",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": [{
+                "name": "withdrawAmount",
+                "type": "u64"
+            }]
+        },
+        {
+            "name": "executeLiquidateBid",
+            "accounts": [{
+                    "name": "market",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "marketAuthority",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "obligation",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "reserve",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "loanNoteMint",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "loanReserveVault",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "collateralReserve",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "collateralAccount",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "loanAccount",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "vault",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "bid",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "payerAccount",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "nftEscrow",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "nftMint",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "nftTokenAccount",
+                    "isMut": false,
+                    "isSigner": false
+                },
+                {
+                    "name": "payer",
+                    "isMut": false,
+                    "isSigner": true
+                },
+                {
+                    "name": "tokenProgram",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": [{
+                "name": "amount",
+                "type": {
+                    "defined": "Amount"
+                }
+            }]
+        },
+        {
             "name": "mockLiquidateDex",
             "accounts": [{
                     "name": "sourceMarket",
@@ -1233,6 +1471,15 @@
                     {
                         "name": "bidEscrowAuthority",
                         "type": "publicKey"
+                    },
+                    {
+                        "name": "authorityBumpSeed",
+                        "type": {
+                            "array": [
+                                "u8",
+                                1
+                            ]
+                        }
                     },
                     {
                         "name": "bidder",
@@ -1561,6 +1808,25 @@
             }
         },
         {
+            "name": "PlaceLiquidateBidBumps",
+            "type": {
+                "kind": "struct",
+                "fields": [{
+                        "name": "bid",
+                        "type": "u8"
+                    },
+                    {
+                        "name": "bidEscrow",
+                        "type": "u8"
+                    },
+                    {
+                        "name": "bidEscrowAuthority",
+                        "type": "u8"
+                    }
+                ]
+            }
+        },
+        {
             "name": "ReserveConfig",
             "type": {
                 "kind": "struct",
@@ -1866,6 +2132,11 @@
                     "name": "bidder",
                     "type": "publicKey",
                     "index": false
+                },
+                {
+                    "name": "bidLimit",
+                    "type": "u64",
+                    "index": false
                 }
             ]
         },
@@ -2034,8 +2305,5 @@
             "name": "AccountNotEmptyError",
             "msg": "the collateral/loan account is not empty"
         }
-    ],
-    "metadata": {
-        "address": "6ujVJiHnyqaTBHzwwfySzTDX5EPFgmXqnibuMp3Hun1w"
-    }
+    ]
 }
