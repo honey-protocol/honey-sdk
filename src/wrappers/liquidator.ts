@@ -23,8 +23,8 @@ export interface PlaceBidParams {
 export interface RevokeBidParams {
     market: PublicKey;
     bidder: PublicKey;
-    withdraw_source: PublicKey;
     bid_mint: PublicKey;
+    withdraw_destination?: PublicKey;
 }
 
 export interface ExecuteBidParams {
@@ -105,8 +105,9 @@ export class LiquidatorClient {
         const amountBN = new anchor.BN(amount);
 
         const bidder = params.bidder;
-        const depositSource = Keypair.generate();
 
+        // wSOL deposit
+        const depositSource = Keypair.generate();
         const tx = new Transaction().add(
             // create token account
             SystemProgram.createAccount({
@@ -125,10 +126,9 @@ export class LiquidatorClient {
                 bidder
             ),
         );
-        console.log(bumps);
 
         const ix = await this.program.instruction.placeLiquidateBid(
-            bumps, 
+            bumps,
             amountBN,
             {
                 accounts: {
@@ -143,7 +143,6 @@ export class LiquidatorClient {
 
                     // system accounts 
                     tokenProgram: TOKEN_PROGRAM_ID,
-                    associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
                     systemProgram: anchor.web3.SystemProgram.programId,
                 },
@@ -163,12 +162,47 @@ export class LiquidatorClient {
     }
 
     async revokeBid(params: RevokeBidParams) {
+        console.log({ params });
+
         const bid = await this.findBidAccount(params.market, params.bidder);
         const bid_escrow = await this.findEscrowAccount(params.market, params.bidder);
         const bid_escrow_authority = await this.findBidEscrowAuthorityAccount(bid_escrow.address);
         const market_authority = await this.findMarketAuthority(params.market);
 
-        const tx = await this.program.rpc.revokeLiquidateBid(
+        const bumps = {
+            bid: bid.bumpSeed,
+            bidEscrow: bid_escrow.bumpSeed,
+            bidEscrowAuthority: bid_escrow_authority.bumpSeed
+        }
+
+        const amount = 5 * 1e9; /* Wrapped SOL's decimals is 9 */
+        const amountBN = new anchor.BN(amount);
+        const bidder = params.bidder;
+
+        // wSOL withdrawal
+        const withdrawDestination = Keypair.generate();
+        const tx = new Transaction().add(
+            // create token account
+            SystemProgram.createAccount({
+                fromPubkey: bidder,
+                newAccountPubkey: withdrawDestination.publicKey,
+                space: TokenAccountLayout.span,
+                lamports:
+                    (await Token.getMinBalanceRentForExemptAccount(this.program.provider.connection)), // rent + amount
+                programId: TOKEN_PROGRAM_ID,
+            }),
+            // init token account
+            Token.createInitAccountInstruction(
+                TOKEN_PROGRAM_ID,
+                NATIVE_MINT,
+                withdrawDestination.publicKey,
+                bidder
+            ),
+        );
+
+        const ix = await this.program.instruction.revokeLiquidateBid(
+            bumps,
+            amountBN,
             {
                 accounts: {
                     market: params.market,
@@ -178,17 +212,27 @@ export class LiquidatorClient {
                     bidEscrow: bid_escrow.address,
                     bidEscrowAuthority: bid_escrow_authority.address,
                     bidMint: params.bid_mint,
-                    withdrawSource: params.withdraw_source,
+                    withdrawDestination: withdrawDestination.publicKey,
 
                     // system accounts 
                     tokenProgram: TOKEN_PROGRAM_ID,
-                    associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
                     systemProgram: anchor.web3.SystemProgram.programId,
                 },
             },
         );
 
+        tx.add(ix);
+        tx.add(Token.createCloseAccountInstruction(
+            TOKEN_PROGRAM_ID,
+            withdrawDestination.publicKey,
+            bidder,
+            bidder,
+            [])
+        );
+
+        const result = await this.program.provider.send(tx, [withdrawDestination], { skipPreflight: true });
+        console.log(result);
         return tx;
     }
 
