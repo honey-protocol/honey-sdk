@@ -1232,6 +1232,11 @@
           "isSigner": false
         },
         {
+          "name": "bidMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "bidEscrow",
           "isMut": true,
           "isSigner": false
@@ -1253,6 +1258,16 @@
         },
         {
           "name": "receiverAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "liquidationFeeReceiver",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "leftoversReceiver",
           "isMut": true,
           "isSigner": false
         },
@@ -1546,6 +1561,10 @@
           },
           {
             "name": "bidEscrowAuthority",
+            "type": "publicKey"
+          },
+          {
+            "name": "bidMint",
             "type": "publicKey"
           },
           {
@@ -2456,6 +2475,14 @@
       "code": 328,
       "name": "AccountNotEmptyError",
       "msg": "the collateral/loan account is not empty"
+    },
+    {
+      "code": 329,
+      "name": "BidMintMismatch",
+      "msg": "the liquidation bid's token account doesn't match the reserve"
     }
-  ]
+  ],
+  "metadata": {
+    "address": "6ujVJiHnyqaTBHzwwfySzTDX5EPFgmXqnibuMp3Hun1w"
+  }
 }

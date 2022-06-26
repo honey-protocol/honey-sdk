@@ -83,6 +83,7 @@ export class LiquidatorClient {
 
     async placeBid(params: PlaceBidParams) {
         const bid = await this.findBidAccount(params.market, params.bidder);
+        console.log(bid.address.toString());
         const bid_escrow = await this.findEscrowAccount(params.market, params.bidder);
         const bid_escrow_authority = await this.findBidEscrowAuthorityAccount(bid_escrow.address);
         const market_authority = await this.findMarketAuthority(params.market);
@@ -236,7 +237,6 @@ export class LiquidatorClient {
         const bid_escrow = await this.findEscrowAccount(params.market, params.bidder);
         const bid_escrow_authority = await this.findBidEscrowAuthorityAccount(bid_escrow.address);
         const market_authority = await this.findMarketAuthority(params.market);
-        const amount = Amount.tokens(params.amount);
 
         const bumps = {
             bid: bid.bumpSeed,
@@ -248,6 +248,13 @@ export class LiquidatorClient {
         const reserve = await this.program.account.reserve.fetch(params.reserve);
         const obligation = await this.program.account.obligation.fetch(params.obligation);
         const bidData = await this.program.account.bid.fetch(bid.address);
+        const amount = Amount.tokens(bidData.bidLimit);
+
+        // pay for these should be ther person getting liquidated
+        const loanNoteAddress = await this.findLoanNoteAddress(params.reserve, params.obligation, params.payer);
+        const loanNoteMint = await this.findLoanNoteMintAddress(params.reserve, reserve.tokenMint)
+        // const collateralAddress = await this.findCollateralAddress(params.reserve, params.obligation, params.payer);
+        const vault = await this.findVaultAddress(params.market, params.reserve);
 
         // find the registered nft to liqudiate
         const vaultedNFTMint = obligation.collateralNftMint[0];
@@ -259,31 +266,32 @@ export class LiquidatorClient {
             true
         );
 
-        // pay for these should be ther person getting liquidated
-        const loanNoteAddress = await this.findLoanNoteAddress(params.reserve, params.obligation, params.payer);
-        const loanNoteMint = await this.findLoanNoteMintAddress(params.reserve, reserve.tokenMint)
-        // const collateralAddress = await this.findCollateralAddress(params.reserve, params.obligation, params.payer);
-        const vault = await this.findVaultAddress(params.market, params.reserve);
-
-        const nftTokenAccount: PublicKey = await Token.getAssociatedTokenAddress(
-            ASSOCIATED_TOKEN_PROGRAM_ID,
-            TOKEN_PROGRAM_ID,
-            params.nftMint,
-            params.payer,
-        );
-
         const receiverAccount: PublicKey = await Token.getAssociatedTokenAddress(
             ASSOCIATED_TOKEN_PROGRAM_ID,
             TOKEN_PROGRAM_ID,
             params.nftMint,
-            params.payer,
+            bidData.bidder,
         );
 
+        const liquidationFeeReceiver = await Token.getAssociatedTokenAddress(
+            ASSOCIATED_TOKEN_PROGRAM_ID,
+            TOKEN_PROGRAM_ID,
+            bidData.bidMint,
+            params.payer,
+        )
+
+        console.log(liquidationFeeReceiver.toString());
+
+        const leftoversReceiver = await Token.getAssociatedTokenAddress(
+            ASSOCIATED_TOKEN_PROGRAM_ID,
+            TOKEN_PROGRAM_ID,
+            bidData.bidMint,
+            bidData.bidder,
+        )
+        console.log(leftoversReceiver.toString());
 
         const refreshIx = await reserves[0].makeRefreshIx();
         const tx = new Transaction().add(refreshIx);
-
-
         const ix = await this.program.instruction.executeLiquidateBid(
             bumps,
             amount,
@@ -299,12 +307,14 @@ export class LiquidatorClient {
                     collateralAccount: vaultedNFT,
                     bid: bid.address,
                     bidder: bidData.bidder,
+                    bidMint: bidData.bidMint,
                     bidEscrow: bidData.bidEscrow,
                     bidEscrowAuthority: bid_escrow_authority.address,
                     payerAccount: bidData.bidEscrow,
                     nftMint: params.nftMint,
-                    nftTokenAccount: nftTokenAccount,
                     receiverAccount: receiverAccount,
+                    liquidationFeeReceiver,
+                    leftoversReceiver,
                     payer: params.payer,
                     // system accounts 
                     tokenProgram: TOKEN_PROGRAM_ID,
