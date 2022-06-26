@@ -231,16 +231,33 @@ export class LiquidatorClient {
      * @param params 
      * @returns 
      */
-    async executeBid(honeyReserve: HoneyReserve, params: ExecuteBidParams) {
+    async executeBid(reserves: HoneyReserve[], params: ExecuteBidParams) {
         const bid = await this.findBidAccount(params.market, params.bidder);
         const bid_escrow = await this.findEscrowAccount(params.market, params.bidder);
         const bid_escrow_authority = await this.findBidEscrowAuthorityAccount(bid_escrow.address);
         const market_authority = await this.findMarketAuthority(params.market);
         const amount = Amount.tokens(params.amount);
 
+        const bumps = {
+            bid: bid.bumpSeed,
+            bidEscrow: bid_escrow.bumpSeed,
+            bidEscrowAuthority: bid_escrow_authority.bumpSeed
+        }
+
         const market = await this.program.account.market.fetch(params.market);
         const reserve = await this.program.account.reserve.fetch(params.reserve);
+        const obligation = await this.program.account.obligation.fetch(params.obligation);
         const bidData = await this.program.account.bid.fetch(bid.address);
+
+        // find the registered nft to liqudiate
+        const vaultedNFTMint = obligation.collateralNftMint[0];
+        const vaultedNFT: PublicKey = await Token.getAssociatedTokenAddress(
+            ASSOCIATED_TOKEN_PROGRAM_ID,
+            TOKEN_PROGRAM_ID,
+            vaultedNFTMint,
+            market_authority.address,
+            true
+        );
 
         // pay for these should be ther person getting liquidated
         const loanNoteAddress = await this.findLoanNoteAddress(params.reserve, params.obligation, params.payer);
@@ -262,11 +279,14 @@ export class LiquidatorClient {
             params.payer,
         );
 
-        const refreshIx = await honeyReserve.makeRefreshIx();
+
+        const refreshIx = await reserves[0].makeRefreshIx();
         const tx = new Transaction().add(refreshIx);
 
 
-        const ix = await this.program.instruction.executeLiquidateBid(amount,
+        const ix = await this.program.instruction.executeLiquidateBid(
+            bumps,
+            amount,
             {
                 accounts: {
                     market: params.market,
@@ -276,8 +296,11 @@ export class LiquidatorClient {
                     vault: vault.address,
                     loanNoteMint: loanNoteMint.address,
                     loanAccount: loanNoteAddress.address,
-                    // collateralAccount: collateralAddress.address,
+                    collateralAccount: vaultedNFT,
                     bid: bid.address,
+                    bidder: bidData.bidder,
+                    bidEscrow: bidData.bidEscrow,
+                    bidEscrowAuthority: bid_escrow_authority.address,
                     payerAccount: bidData.bidEscrow,
                     nftMint: params.nftMint,
                     nftTokenAccount: nftTokenAccount,

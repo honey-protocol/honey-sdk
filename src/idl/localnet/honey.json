@@ -1227,7 +1227,17 @@
           "isSigner": false
         },
         {
-          "name": "payerAccount",
+          "name": "bidder",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "bidEscrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "bidEscrowAuthority",
           "isMut": false,
           "isSigner": false
         },
@@ -1237,8 +1247,8 @@
           "isSigner": false
         },
         {
-          "name": "nftTokenAccount",
-          "isMut": false,
+          "name": "collateralAccount",
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -1255,9 +1265,30 @@
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": [
+        {
+          "name": "bump",
+          "type": {
+            "defined": "ExecuteLiquidateBidBumps"
+          }
+        },
         {
           "name": "amount",
           "type": {
@@ -1820,6 +1851,26 @@
           {
             "name": "value",
             "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ExecuteLiquidateBidBumps",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bid",
+            "type": "u8"
+          },
+          {
+            "name": "bidEscrow",
+            "type": "u8"
+          },
+          {
+            "name": "bidEscrowAuthority",
+            "type": "u8"
           }
         ]
       }
@@ -2406,8 +2457,5 @@
       "name": "AccountNotEmptyError",
       "msg": "the collateral/loan account is not empty"
     }
-  ],
-  "metadata": {
-    "address": "6ujVJiHnyqaTBHzwwfySzTDX5EPFgmXqnibuMp3Hun1w"
-  }
+  ]
 }
