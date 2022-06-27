@@ -21,6 +21,14 @@ export interface PlaceBidParams {
     deposit_source?: PublicKey;
 }
 
+export interface IncreaseBidParams {
+    bid_increase: number;
+    market: PublicKey;
+    bidder: PublicKey;
+    bid_mint: PublicKey;
+    deposit_source?: PublicKey;
+}
+
 export interface RevokeBidParams {
     market: PublicKey;
     bidder: PublicKey;
@@ -121,6 +129,79 @@ export class LiquidatorClient {
         );
 
         const ix = await this.program.instruction.placeLiquidateBid(
+            bumps,
+            amountBN,
+            {
+                accounts: {
+                    market: params.market,
+                    marketAuthority: market_authority.address,
+                    bid: bid.address,
+                    bidder: params.bidder,
+                    depositSource: depositSource.publicKey,
+                    bidMint: params.bid_mint,
+                    bidEscrow: bid_escrow.address,
+                    bidEscrowAuthority: bid_escrow_authority.address,
+
+                    // system accounts 
+                    tokenProgram: TOKEN_PROGRAM_ID,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                    systemProgram: anchor.web3.SystemProgram.programId,
+                },
+            },
+        );
+        tx.add(ix);
+        tx.add(Token.createCloseAccountInstruction(
+            TOKEN_PROGRAM_ID,
+            depositSource.publicKey,
+            bidder,
+            bidder,
+            []));
+
+        const result = await this.program.provider.send(tx, [depositSource], { skipPreflight: true });
+        console.log(result);
+        return tx;
+    }
+
+    async increaseBid(params: IncreaseBidParams) {
+        const bid = await this.findBidAccount(params.market, params.bidder);
+        console.log(bid.address.toString());
+        const bid_escrow = await this.findEscrowAccount(params.market, params.bidder);
+        const bid_escrow_authority = await this.findBidEscrowAuthorityAccount(bid_escrow.address);
+        const market_authority = await this.findMarketAuthority(params.market);
+
+        const bumps = {
+            bid: bid.bumpSeed,
+            bidEscrow: bid_escrow.bumpSeed,
+            bidEscrowAuthority: bid_escrow_authority.bumpSeed
+        }
+
+        const amount = params.bid_increase * 1e9; /* Wrapped SOL's decimals is 9 */
+        const amountBN = new anchor.BN(amount);
+
+        const bidder = params.bidder;
+
+        // wSOL deposit
+        const depositSource = Keypair.generate();
+        const tx = new Transaction().add(
+            // create token account
+            SystemProgram.createAccount({
+                fromPubkey: bidder,
+                newAccountPubkey: depositSource.publicKey,
+                space: TokenAccountLayout.span,
+                lamports:
+                    (await Token.getMinBalanceRentForExemptAccount(this.program.provider.connection)) + amount, // rent + amount
+                programId: TOKEN_PROGRAM_ID,
+            }),
+            // init token account
+            Token.createInitAccountInstruction(
+                TOKEN_PROGRAM_ID,
+                NATIVE_MINT,
+                depositSource.publicKey,
+                bidder
+            ),
+        );
+
+        const ix = await this.program.instruction.increaseLiquidateBid(
             bumps,
             amountBN,
             {
