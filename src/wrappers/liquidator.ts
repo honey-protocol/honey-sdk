@@ -11,9 +11,18 @@ import {
     AccountLayout as TokenAccountLayout,
     Token
 } from "@solana/spl-token";
+import { Amount, HoneyReserve } from '.';
 
 export interface PlaceBidParams {
     bid_limit: number;
+    market: PublicKey;
+    bidder: PublicKey;
+    bid_mint: PublicKey;
+    deposit_source?: PublicKey;
+}
+
+export interface IncreaseBidParams {
+    bid_increase: number;
     market: PublicKey;
     bidder: PublicKey;
     bid_mint: PublicKey;
@@ -28,22 +37,13 @@ export interface RevokeBidParams {
 }
 
 export interface ExecuteBidParams {
+    amount: number;
     market: PublicKey;
+    obligation: PublicKey;
+    reserve: PublicKey;
+    nftMint: PublicKey;
+    payer: PublicKey;
     bidder: PublicKey;
-    obligation: PublicKey
-    reserve: PublicKey,
-    loanNoteMint: PublicKey,
-    loanReserveVault: PublicKey,
-    collateralReserve: PublicKey,
-    collateralAccount: PublicKey,
-    loanAccount: PublicKey,
-    vault: PublicKey,
-    nftAccount: PublicKey,
-    nftTokenAccount: PublicKey,
-    nftTokenMint: PublicKey,
-    nftMint: PublicKey,
-    nftEscrow: PublicKey,
-    payerAccount: PublicKey,
 }
 
 type DerivedAccountSeed = HasPublicKey | ToBytes | Uint8Array | string;
@@ -91,6 +91,7 @@ export class LiquidatorClient {
 
     async placeBid(params: PlaceBidParams) {
         const bid = await this.findBidAccount(params.market, params.bidder);
+        console.log(bid.address.toString());
         const bid_escrow = await this.findEscrowAccount(params.market, params.bidder);
         const bid_escrow_authority = await this.findBidEscrowAuthorityAccount(bid_escrow.address);
         const market_authority = await this.findMarketAuthority(params.market);
@@ -161,9 +162,80 @@ export class LiquidatorClient {
         return tx;
     }
 
-    async revokeBid(params: RevokeBidParams) {
-        console.log({ params });
+    async increaseBid(params: IncreaseBidParams) {
+        const bid = await this.findBidAccount(params.market, params.bidder);
+        console.log(bid.address.toString());
+        const bid_escrow = await this.findEscrowAccount(params.market, params.bidder);
+        const bid_escrow_authority = await this.findBidEscrowAuthorityAccount(bid_escrow.address);
+        const market_authority = await this.findMarketAuthority(params.market);
 
+        const bumps = {
+            bid: bid.bumpSeed,
+            bidEscrow: bid_escrow.bumpSeed,
+            bidEscrowAuthority: bid_escrow_authority.bumpSeed
+        }
+
+        const amount = params.bid_increase * 1e9; /* Wrapped SOL's decimals is 9 */
+        const amountBN = new anchor.BN(amount);
+
+        const bidder = params.bidder;
+
+        // wSOL deposit
+        const depositSource = Keypair.generate();
+        const tx = new Transaction().add(
+            // create token account
+            SystemProgram.createAccount({
+                fromPubkey: bidder,
+                newAccountPubkey: depositSource.publicKey,
+                space: TokenAccountLayout.span,
+                lamports:
+                    (await Token.getMinBalanceRentForExemptAccount(this.program.provider.connection)) + amount, // rent + amount
+                programId: TOKEN_PROGRAM_ID,
+            }),
+            // init token account
+            Token.createInitAccountInstruction(
+                TOKEN_PROGRAM_ID,
+                NATIVE_MINT,
+                depositSource.publicKey,
+                bidder
+            ),
+        );
+
+        const ix = await this.program.instruction.increaseLiquidateBid(
+            bumps,
+            amountBN,
+            {
+                accounts: {
+                    market: params.market,
+                    marketAuthority: market_authority.address,
+                    bid: bid.address,
+                    bidder: params.bidder,
+                    depositSource: depositSource.publicKey,
+                    bidMint: params.bid_mint,
+                    bidEscrow: bid_escrow.address,
+                    bidEscrowAuthority: bid_escrow_authority.address,
+
+                    // system accounts 
+                    tokenProgram: TOKEN_PROGRAM_ID,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                    systemProgram: anchor.web3.SystemProgram.programId,
+                },
+            },
+        );
+        tx.add(ix);
+        tx.add(Token.createCloseAccountInstruction(
+            TOKEN_PROGRAM_ID,
+            depositSource.publicKey,
+            bidder,
+            bidder,
+            []));
+
+        const result = await this.program.provider.send(tx, [depositSource], { skipPreflight: true });
+        console.log(result);
+        return tx;
+    }
+
+    async revokeBid(params: RevokeBidParams) {
         const bid = await this.findBidAccount(params.market, params.bidder);
         const bid_escrow = await this.findEscrowAccount(params.market, params.bidder);
         const bid_escrow_authority = await this.findBidEscrowAuthorityAccount(bid_escrow.address);
@@ -236,39 +308,95 @@ export class LiquidatorClient {
         return tx;
     }
 
-    async executeBid(params: ExecuteBidParams) {
+    /**
+     * Execute a liquidation bid.
+     * @param params 
+     * @returns 
+     */
+    async executeBid(reserves: HoneyReserve[], params: ExecuteBidParams) {
         const bid = await this.findBidAccount(params.market, params.bidder);
         const bid_escrow = await this.findEscrowAccount(params.market, params.bidder);
         const bid_escrow_authority = await this.findBidEscrowAuthorityAccount(bid_escrow.address);
         const market_authority = await this.findMarketAuthority(params.market);
 
-        const tx = await this.program.rpc.executeLiquidateBid(
+        const bumps = {
+            bid: bid.bumpSeed,
+            bidEscrow: bid_escrow.bumpSeed,
+            bidEscrowAuthority: bid_escrow_authority.bumpSeed
+        }
+
+        const market = await this.program.account.market.fetch(params.market);
+        const reserve = await this.program.account.reserve.fetch(params.reserve);
+        const obligation = await this.program.account.obligation.fetch(params.obligation);
+        const bidData = await this.program.account.bid.fetch(bid.address);
+        const amount = Amount.tokens(bidData.bidLimit);
+
+        // pay for these should be ther person getting liquidated
+        const loanNoteAddress = await this.findLoanNoteAddress(params.reserve, params.obligation, params.payer);
+        const loanNoteMint = await this.findLoanNoteMintAddress(params.reserve, reserve.tokenMint)
+        // const collateralAddress = await this.findCollateralAddress(params.reserve, params.obligation, params.payer);
+        const vault = await this.findVaultAddress(params.market, params.reserve);
+
+        // find the registered nft to liqudiate
+        const vaultedNFTMint = obligation.collateralNftMint[0];
+        const vaultedNFT: PublicKey = await Token.getAssociatedTokenAddress(
+            ASSOCIATED_TOKEN_PROGRAM_ID,
+            TOKEN_PROGRAM_ID,
+            vaultedNFTMint,
+            market_authority.address,
+            true
+        );
+
+        const receiverAccount: PublicKey = await Token.getAssociatedTokenAddress(
+            ASSOCIATED_TOKEN_PROGRAM_ID,
+            TOKEN_PROGRAM_ID,
+            params.nftMint,
+            bidData.bidder,
+        );
+
+        const liquidationFeeReceiver = await Token.getAssociatedTokenAddress(
+            ASSOCIATED_TOKEN_PROGRAM_ID,
+            TOKEN_PROGRAM_ID,
+            bidData.bidMint,
+            params.payer,
+        )
+
+        console.log(liquidationFeeReceiver.toString());
+
+        const leftoversReceiver = await Token.getAssociatedTokenAddress(
+            ASSOCIATED_TOKEN_PROGRAM_ID,
+            TOKEN_PROGRAM_ID,
+            bidData.bidMint,
+            bidData.bidder,
+        )
+        console.log(leftoversReceiver.toString());
+
+        const refreshIx = await reserves[0].makeRefreshIx();
+        const tx = new Transaction().add(refreshIx);
+        const ix = await this.program.instruction.executeLiquidateBid(
+            bumps,
+            amount,
             {
                 accounts: {
                     market: params.market,
                     marketAuthority: market_authority.address,
                     obligation: params.obligation,
                     reserve: params.reserve,
-                    loanNoteMint: params.loanNoteMint,
-                    loanReserveVault: params.loanReserveVault,
-                    collateralReserve: params.collateralReserve,
-                    collateralAccount: params.collateralAccount,
-                    loanAccount: params.loanAccount,
-                    vault: params.vault,
-
-                    // nft liquidation
-                    nftEscrow: params.nftEscrow,
-                    nftMint: params.nftMint,
-                    nftTokenAccount: params.nftTokenAccount,
-
+                    vault: vault.address,
+                    loanNoteMint: loanNoteMint.address,
+                    loanAccount: loanNoteAddress.address,
+                    collateralAccount: vaultedNFT,
                     bid: bid.address,
-                    bidder: params.bidder,
-                    bidEscrow: bid_escrow.address,
+                    bidder: bidData.bidder,
+                    bidMint: bidData.bidMint,
+                    bidEscrow: bidData.bidEscrow,
                     bidEscrowAuthority: bid_escrow_authority.address,
-
-                    // account to pay down debt
-                    payerAccount: params.payerAccount,
-
+                    payerAccount: bidData.bidEscrow,
+                    nftMint: params.nftMint,
+                    receiverAccount: receiverAccount,
+                    liquidationFeeReceiver,
+                    leftoversReceiver,
+                    payer: params.payer,
                     // system accounts 
                     tokenProgram: TOKEN_PROGRAM_ID,
                     associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -277,23 +405,76 @@ export class LiquidatorClient {
                 },
             },
         );
+        tx.add(ix);
 
+        const result = await this.program.provider.send(tx, [], { skipPreflight: true });
+        console.log(result);
         return tx;
     }
 
-    async findBidAccount(market: PublicKey, bidder: PublicKey) {
+    async findBidAccount(market: PublicKey, bidder: PublicKey): Promise<DerivedAccount> {
         return await this.findDerivedAccount(["bid", market, bidder]);
     }
 
-    async findEscrowAccount(market: PublicKey, bidder: PublicKey) {
+    async findEscrowAccount(market: PublicKey, bidder: PublicKey): Promise<DerivedAccount> {
         return await this.findDerivedAccount(["escrow", market, bidder]);
     }
 
-    async findBidEscrowAuthorityAccount(bid_escrow_authority: PublicKey) {
+    async findBidEscrowAuthorityAccount(bid_escrow_authority: PublicKey): Promise<DerivedAccount> {
         return await this.findDerivedAccount([bid_escrow_authority]);
     }
 
-    async findMarketAuthority(market: PublicKey) {
+    async findMarketAuthority(market: PublicKey): Promise<DerivedAccount> {
         return await this.findDerivedAccount([market]);
     }
+
+    /** Find reserve deposit note account for wallet */
+    private async findDepositNoteAddress(
+        reserve: PublicKey,
+        wallet: PublicKey,
+    ): Promise<DerivedAccount> {
+        return await this.findDerivedAccount(['deposits', reserve, wallet]);
+    }
+
+    /** Find loan note token account for the reserve, obligation and wallet. */
+    private async findLoanNoteAddress(
+        reserve: PublicKey,
+        obligation: PublicKey,
+        wallet: PublicKey,
+    ): Promise<DerivedAccount> {
+        return await this.findDerivedAccount(['loan', reserve, obligation, wallet]);
+    }
+
+    /** Find collateral account for the reserve, obligation and wallet. */
+    private async findCollateralAddress(
+        reserve: PublicKey,
+        obligation: PublicKey,
+        wallet: PublicKey,
+    ): Promise<DerivedAccount> {
+        return await this.findDerivedAccount(['collateral', reserve, obligation, wallet]);
+    }
+
+    /** Find reserve deposit note mint. */
+    private async findDepositNoteMintAddress(
+        reserve: PublicKey,
+        reserveTokenMint: PublicKey,
+    ): Promise<DerivedAccount> {
+        return await this.findDerivedAccount(['deposits', reserve, reserveTokenMint]);
+    };
+
+    /** Find reserve loan note mint. */
+    private async findLoanNoteMintAddress(
+        reserve: PublicKey,
+        reserveTokenMint: PublicKey,
+    ): Promise<DerivedAccount> {
+        return await this.findDerivedAccount(['loans', reserve, reserveTokenMint]);
+    };
+
+    /** Find reserve vault token account. */
+    private async findVaultAddress(
+        market: PublicKey,
+        reserve: PublicKey,
+    ): Promise<DerivedAccount> {
+        return await this.findDerivedAccount(['vault', reserve]);
+    };
 }
