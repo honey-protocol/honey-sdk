@@ -21,6 +21,14 @@ export interface PlaceBidParams {
   deposit_source?: PublicKey;
 }
 
+export interface IncreaseBidParams {
+  bid_increase: number;
+  market: PublicKey;
+  bidder: PublicKey;
+  bid_mint: PublicKey;
+  deposit_source?: PublicKey;
+}
+
 export interface RevokeBidParams {
   market: PublicKey;
   bidder: PublicKey;
