@@ -160,58 +160,48 @@ export class HoneyMarket implements HoneyMarketData {
     );
     console.log(`Init reserve account tx ${initTx}`);
 
-    console.log('accounts', {
-      market: this.address.toBase58(),
-      marketAuthority: this.marketAuthority.toBase58(),
-      reserve: account.publicKey.toBase58(),
-      vault: derivedAccounts.vault.address.toBase58(),
-      nftDropletMint: params.nftDropletMint.toBase58(),
-      nftDropletVault: nftDropletAccount.toBase58(),
+    // console.log('accounts', {
+    //   market: this.address.toBase58(),
+    //   marketAuthority: this.marketAuthority.toBase58(),
+    //   reserve: account.publicKey.toBase58(),
+    //   vault: derivedAccounts.vault.address.toBase58(),
+    //   nftDropletMint: params.nftDropletMint.toBase58(),
+    //   nftDropletVault: nftDropletAccount.toBase58(),
 
-      feeNoteVault: derivedAccounts.feeNoteVault.address.toBase58(),
-      protocolFeeNoteVault: derivedAccounts.protocolFeeNoteVault.address.toBase58(),
+    //   feeNoteVault: derivedAccounts.feeNoteVault.address.toBase58(),
+    //   protocolFeeNoteVault: derivedAccounts.protocolFeeNoteVault.address.toBase58(),
 
-      feeAccount: feeAccount.toBase58(),
-      protocolFeeAccount: protocolFeeAccount.toBase58(),
+    //   feeAccount: feeAccount.toBase58(),
+    //   protocolFeeAccount: protocolFeeAccount.toBase58(),
 
-      dexSwapTokens: derivedAccounts.dexSwapTokens.address.toBase58(),
-      dexOpenOrdersA: derivedAccounts.dexOpenOrdersA.address.toBase58(),
-      dexOpenOrdersB: derivedAccounts.dexOpenOrdersB.address.toBase58(),
-      dexMarketA: params.dexMarketA.toBase58(),
-      dexMarketB: params.dexMarketB.toBase58(),
-      dexProgram: DEX_PID.toBase58(),
-      loanNoteMint: derivedAccounts.loanNoteMint.address.toBase58(),
-      depositNoteMint: derivedAccounts.depositNoteMint.address.toBase58(),
+    //   dexSwapTokens: derivedAccounts.dexSwapTokens.address.toBase58(),
+    //   dexOpenOrdersA: derivedAccounts.dexOpenOrdersA.address.toBase58(),
+    //   dexOpenOrdersB: derivedAccounts.dexOpenOrdersB.address.toBase58(),
+    //   dexMarketA: params.dexMarketA.toBase58(),
+    //   dexMarketB: params.dexMarketB.toBase58(),
+    //   dexProgram: DEX_PID.toBase58(),
+    //   loanNoteMint: derivedAccounts.loanNoteMint.address.toBase58(),
+    //   depositNoteMint: derivedAccounts.depositNoteMint.address.toBase58(),
 
-      oraclePrice: params.switchboardOracle.toBase58(),
-      quoteTokenMint: this.quoteTokenMint.toBase58(),
-      tokenMint: params.tokenMint.toBase58(),
-      owner: this.owner.toBase58(),
-    });
+    //   oraclePrice: params.switchboardOracle.toBase58(),
+    //   quoteTokenMint: this.quoteTokenMint.toBase58(),
+    //   tokenMint: params.tokenMint.toBase58(),
+    //   owner: this.owner.toBase58(),
+    // });
 
     const txid = await this.client.program.rpc.initReserve(bumpSeeds, params.config, {
       accounts: {
         market: this.address,
         marketAuthority: this.marketAuthority,
         reserve: account.publicKey,
-
         vault: derivedAccounts.vault.address,
         nftDropletMint: params.nftDropletMint,
         nftDropletVault: nftDropletAccount,
-
         feeNoteVault: feeAccount,
         protocolFeeNoteVault: protocolFeeAccount,
-
-        // dexSwapTokens: derivedAccounts.dexSwapTokens.address,
-
-        // dexOpenOrdersA: derivedAccounts.dexOpenOrdersA.address,
-        // dexOpenOrdersB: derivedAccounts.dexOpenOrdersB.address,
-        // dexMarketA: params.dexMarketA,
-        // dexMarketB: params.dexMarketB,
         dexProgram: DEX_PID,
         loanNoteMint: derivedAccounts.loanNoteMint.address,
         depositNoteMint: derivedAccounts.depositNoteMint.address,
-
         oraclePrice: params.switchboardOracle,
         quoteTokenMint: this.quoteTokenMint,
         tokenMint: params.tokenMint,

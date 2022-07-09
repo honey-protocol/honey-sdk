@@ -108,27 +108,6 @@ export class HoneyUser implements User {
     return parsed;
   }
 
-  async liquidate(
-    loanReserve: HoneyReserve,
-    collateralReserve: HoneyReserve,
-    payerAccount: PublicKey,
-    receiverAccount: PublicKey,
-    amount: Amount,
-  ): Promise<string> {
-    const tx = await this.makeLiquidateTx(loanReserve, collateralReserve, payerAccount, receiverAccount, amount);
-    return await this.client.program.provider.send(tx);
-  }
-
-  async makeLiquidateTx(
-    _loanReserve: HoneyReserve,
-    _collateralReserve: HoneyReserve,
-    _payerAccount: PublicKey,
-    _receiverAccount: PublicKey,
-    _amount: Amount,
-  ): Promise<Transaction> {
-    throw new Error('not yet implemented');
-  }
-
   async repay(reserve: HoneyReserve, tokenAccount: PublicKey, amount: Amount): Promise<TxResponse> {
     const ixs = await this.makeRepayTx(reserve, tokenAccount, amount);
     try {
@@ -307,10 +286,8 @@ export class HoneyUser implements User {
             market: this.market.address,
             marketAuthority: this.market.marketAuthority,
             obligation: obligationAddress,
-
             borrower: this.address,
             tokenProgram: TOKEN_PROGRAM_ID,
-
             systemProgram: anchor.web3.SystemProgram.programId,
           },
         });
