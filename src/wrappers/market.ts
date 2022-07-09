@@ -231,7 +231,7 @@ export class HoneyMarket implements HoneyMarketData {
       // instructions: [createReserveAccount],
     });
     console.log('initReserve tx', txid);
-    return HoneyReserve.load(this.client, account.publicKey, this);
+    return await HoneyReserve.load(this.client, account.publicKey, this);
   }
 }
 

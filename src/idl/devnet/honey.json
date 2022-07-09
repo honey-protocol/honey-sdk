@@ -1040,237 +1040,11 @@
       ]
     },
     {
-      "name": "placeLiquidateBid",
+      "name": "liquidateSolvent",
       "accounts": [
         {
           "name": "market",
           "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "marketAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "bid",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "bidder",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "depositSource",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "bidMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "bidEscrow",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "bidEscrowAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "bump",
-          "type": {
-            "defined": "PlaceLiquidateBidBumps"
-          }
-        },
-        {
-          "name": "bidLimit",
-          "type": "u64"
-        }
-      ]
-    },
-    {
-      "name": "increaseLiquidateBid",
-      "accounts": [
-        {
-          "name": "market",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "marketAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "bid",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "bidder",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "depositSource",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "bidMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "bidEscrow",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "bidEscrowAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "bump",
-          "type": {
-            "defined": "IncreaseLiquidateBidBumps"
-          }
-        },
-        {
-          "name": "bidIncrease",
-          "type": "u64"
-        }
-      ]
-    },
-    {
-      "name": "revokeLiquidateBid",
-      "accounts": [
-        {
-          "name": "market",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "marketAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "bid",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "bidder",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "withdrawDestination",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "bidMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "bidEscrow",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "bidEscrowAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "bump",
-          "type": {
-            "defined": "RevokeLiquidateBidBumps"
-          }
-        },
-        {
-          "name": "withdrawAmount",
-          "type": "u64"
-        }
-      ]
-    },
-    {
-      "name": "executeLiquidateBid",
-      "accounts": [
-        {
-          "name": "market",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "marketAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "obligation",
-          "isMut": true,
           "isSigner": false
         },
         {
@@ -1280,6 +1054,11 @@
         },
         {
           "name": "vault",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "obligation",
           "isMut": true,
           "isSigner": false
         },
@@ -1294,27 +1073,7 @@
           "isSigner": false
         },
         {
-          "name": "bid",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "bidder",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "bidMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "bidEscrow",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "bidEscrowAuthority",
+          "name": "marketAuthority",
           "isMut": false,
           "isSigner": false
         },
@@ -1329,58 +1088,71 @@
           "isSigner": false
         },
         {
-          "name": "receiverAccount",
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "withdrawNftSolvent",
+      "accounts": [
+        {
+          "name": "market",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "liquidationFeeReceiver",
+          "name": "marketAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "obligation",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "leftoversReceiver",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "payer",
+          "name": "withdrawer",
           "isMut": false,
           "isSigner": true
         },
         {
+          "name": "depositTo",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "nftCollectionCreator",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "metadata",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "depositNftMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "collateralAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "associatedTokenProgram",
           "isMut": false,
           "isSigner": false
         }
       ],
       "args": [
         {
-          "name": "bump",
-          "type": {
-            "defined": "ExecuteLiquidateBidBumps"
-          }
-        },
-        {
-          "name": "amount",
-          "type": {
-            "defined": "Amount"
-          }
+          "name": "metadataBump",
+          "type": "u8"
         }
       ]
     },
@@ -1618,51 +1390,6 @@
     }
   ],
   "accounts": [
-    {
-      "name": "Bid",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "market",
-            "type": "publicKey"
-          },
-          {
-            "name": "bidEscrow",
-            "type": "publicKey"
-          },
-          {
-            "name": "bidEscrowAuthority",
-            "type": "publicKey"
-          },
-          {
-            "name": "bidMint",
-            "type": "publicKey"
-          },
-          {
-            "name": "authorityBumpSeed",
-            "type": {
-              "array": [
-                "u8",
-                1
-              ]
-            }
-          },
-          {
-            "name": "authoritySeed",
-            "type": "publicKey"
-          },
-          {
-            "name": "bidder",
-            "type": "publicKey"
-          },
-          {
-            "name": "bidLimit",
-            "type": "u64"
-          }
-        ]
-      }
-    },
     {
       "name": "Market",
       "type": {
@@ -1947,46 +1674,6 @@
       }
     },
     {
-      "name": "ExecuteLiquidateBidBumps",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "bid",
-            "type": "u8"
-          },
-          {
-            "name": "bidEscrow",
-            "type": "u8"
-          },
-          {
-            "name": "bidEscrowAuthority",
-            "type": "u8"
-          }
-        ]
-      }
-    },
-    {
-      "name": "IncreaseLiquidateBidBumps",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "bid",
-            "type": "u8"
-          },
-          {
-            "name": "bidEscrow",
-            "type": "u8"
-          },
-          {
-            "name": "bidEscrowAuthority",
-            "type": "u8"
-          }
-        ]
-      }
-    },
-    {
       "name": "InitReserveBumpSeeds",
       "type": {
         "kind": "struct",
@@ -2021,26 +1708,6 @@
           },
           {
             "name": "loanNoteMint",
-            "type": "u8"
-          }
-        ]
-      }
-    },
-    {
-      "name": "PlaceLiquidateBidBumps",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "bid",
-            "type": "u8"
-          },
-          {
-            "name": "bidEscrow",
-            "type": "u8"
-          },
-          {
-            "name": "bidEscrowAuthority",
             "type": "u8"
           }
         ]
@@ -2115,26 +1782,6 @@
                 24
               ]
             }
-          }
-        ]
-      }
-    },
-    {
-      "name": "RevokeLiquidateBidBumps",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "bid",
-            "type": "u8"
-          },
-          {
-            "name": "bidEscrow",
-            "type": "u8"
-          },
-          {
-            "name": "bidEscrowAuthority",
-            "type": "u8"
           }
         ]
       }
@@ -2298,36 +1945,6 @@
       ]
     },
     {
-      "name": "ExecuteLiquidateEvent",
-      "fields": [
-        {
-          "name": "bid",
-          "type": "publicKey",
-          "index": false
-        }
-      ]
-    },
-    {
-      "name": "IncreaseBidEvent",
-      "fields": [
-        {
-          "name": "bid",
-          "type": "publicKey",
-          "index": false
-        },
-        {
-          "name": "bidder",
-          "type": "publicKey",
-          "index": false
-        },
-        {
-          "name": "bidIncrease",
-          "type": "u64",
-          "index": false
-        }
-      ]
-    },
-    {
       "name": "LiquidateEvent",
       "fields": [
         {
@@ -2360,26 +1977,6 @@
       ]
     },
     {
-      "name": "PlaceBidEvent",
-      "fields": [
-        {
-          "name": "bid",
-          "type": "publicKey",
-          "index": false
-        },
-        {
-          "name": "bidder",
-          "type": "publicKey",
-          "index": false
-        },
-        {
-          "name": "bidLimit",
-          "type": "u64",
-          "index": false
-        }
-      ]
-    },
-    {
       "name": "RepayEvent",
       "fields": [
         {
@@ -2402,30 +1999,30 @@
       ]
     },
     {
-      "name": "RevokeBidEvent",
+      "name": "WithdrawCollateralEvent",
       "fields": [
         {
-          "name": "bid",
+          "name": "depositor",
           "type": "publicKey",
           "index": false
         },
         {
-          "name": "bidder",
+          "name": "market",
           "type": "publicKey",
           "index": false
         },
         {
-          "name": "bidLimit",
+          "name": "amount",
           "type": "u64",
           "index": false
         }
       ]
     },
     {
-      "name": "WithdrawCollateralEvent",
+      "name": "SolventWithdrawEvent",
       "fields": [
         {
-          "name": "depositor",
+          "name": "withdrawer",
           "type": "publicKey",
           "index": false
         },
@@ -2587,11 +2184,9 @@
       "code": 6028,
       "name": "AccountNotEmptyError",
       "msg": "the collateral/loan account is not empty"
-    },
-    {
-      "code": 6029,
-      "name": "BidMintMismatch",
-      "msg": "the liquidation bid's token account doesn't match the reserve"
     }
-  ]
+  ],
+  "metadata": {
+    "address": "BmdNpm85xLcZCY9nAT6YB9reeFYRDaAUQorr4hEXh8ZL"
+  }
 }
