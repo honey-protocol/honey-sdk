@@ -43,7 +43,7 @@ export interface CreateReserveParams {
   /**
    * The Serum market for the reserve.
    */
-  dexMarket: PublicKey;
+  dexMarket?: PublicKey;
 
   /**
    * The mint for the token to be stored in the reserve.
@@ -63,17 +63,17 @@ export interface CreateReserveParams {
   /**
    * token mint for the solvent droplets
    */
-  nftDropletMint: PublicKey;
+  nftDropletMint?: PublicKey;
 
   /**
    * Dex market A
    */
-  dexMarketA: PublicKey;
+  dexMarketA?: PublicKey;
 
   /**
    * dex market B
    */
-  dexMarketB: PublicKey;
+  dexMarketB?: PublicKey;
 
   /**
    * The account to use for the reserve data.

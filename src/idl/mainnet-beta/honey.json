@@ -1,5 +1,5 @@
 {
-  "version": "0.0.0",
+  "version": "0.1.0",
   "name": "honey",
   "instructions": [
     {
@@ -84,12 +84,7 @@
           "isSigner": false
         },
         {
-          "name": "dexProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "oraclePrice",
+          "name": "switchboardPriceAggregator",
           "isMut": false,
           "isSigner": false
         },
@@ -105,7 +100,7 @@
         },
         {
           "name": "owner",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -479,6 +474,11 @@
         {
           "name": "depositSource",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "honeyProgram",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -1030,192 +1030,6 @@
       ]
     },
     {
-      "name": "mockLiquidateDex",
-      "accounts": [
-        {
-          "name": "sourceMarket",
-          "accounts": [
-            {
-              "name": "market",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "openOrders",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "requestQueue",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "eventQueue",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "bids",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "asks",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "coinVault",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "pcVault",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "vaultSigner",
-              "isMut": false,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "targetMarket",
-          "accounts": [
-            {
-              "name": "market",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "openOrders",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "requestQueue",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "eventQueue",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "bids",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "asks",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "coinVault",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "pcVault",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "vaultSigner",
-              "isMut": false,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "toLiquidate",
-          "accounts": [
-            {
-              "name": "market",
-              "isMut": false,
-              "isSigner": false
-            },
-            {
-              "name": "marketAuthority",
-              "isMut": false,
-              "isSigner": false
-            },
-            {
-              "name": "obligation",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "loanReserve",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "loanReserveVault",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "loanNoteMint",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "loanAccount",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "collateralReserve",
-              "isMut": false,
-              "isSigner": false
-            },
-            {
-              "name": "collateralReserveVault",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "depositNoteMint",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "collateralAccount",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "dexSwapTokens",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "dexProgram",
-              "isMut": false,
-              "isSigner": false
-            },
-            {
-              "name": "tokenProgram",
-              "isMut": false,
-              "isSigner": false
-            },
-            {
-              "name": "rent",
-              "isMut": false,
-              "isSigner": false
-            }
-          ]
-        }
-      ],
-      "args": []
-    },
-    {
       "name": "refreshReserve",
       "accounts": [
         {
@@ -1249,7 +1063,7 @@
           "isSigner": false
         },
         {
-          "name": "swithchboardPriceAggregator",
+          "name": "switchboardPriceAggregator",
           "isMut": false,
           "isSigner": false
         },
@@ -1443,7 +1257,7 @@
             "type": "publicKey"
           },
           {
-            "name": "swithchboardPriceAggregator",
+            "name": "switchboardPriceAggregator",
             "type": "publicKey"
           },
           {
@@ -1509,18 +1323,6 @@
   ],
   "types": [
     {
-      "name": "BorrowBumpSeeds",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "loanAccount",
-            "type": "u8"
-          }
-        ]
-      }
-    },
-    {
       "name": "Amount",
       "type": {
         "kind": "struct",
@@ -1534,6 +1336,18 @@
           {
             "name": "value",
             "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BorrowBumpSeeds",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "loanAccount",
+            "type": "u8"
           }
         ]
       }
@@ -1652,35 +1466,6 @@
       }
     },
     {
-      "name": "CacheInvalidError",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "Expired",
-            "fields": [
-              {
-                "name": "msg",
-                "type": "string"
-              }
-            ]
-          },
-          {
-            "name": "TooNew",
-            "fields": [
-              {
-                "name": "msg",
-                "type": "string"
-              }
-            ]
-          },
-          {
-            "name": "Invalidated"
-          }
-        ]
-      }
-    },
-    {
       "name": "AmountUnits",
       "type": {
         "kind": "enum",
@@ -1712,29 +1497,30 @@
       }
     },
     {
-      "name": "DexSide",
+      "name": "CacheInvalidError",
       "type": {
         "kind": "enum",
         "variants": [
           {
-            "name": "Bid"
+            "name": "Expired",
+            "fields": [
+              {
+                "name": "msg",
+                "type": "string"
+              }
+            ]
           },
           {
-            "name": "Ask"
-          }
-        ]
-      }
-    },
-    {
-      "name": "SwapKind",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "Buy"
+            "name": "TooNew",
+            "fields": [
+              {
+                "name": "msg",
+                "type": "string"
+              }
+            ]
           },
           {
-            "name": "Sell"
+            "name": "Invalidated"
           }
         ]
       }
@@ -1886,147 +1672,147 @@
   ],
   "errors": [
     {
-      "code": 300,
+      "code": 6000,
       "name": "ArithmeticError",
       "msg": "failed to perform some math operation safely"
     },
     {
-      "code": 301,
+      "code": 6001,
       "name": "VerifiedCreatorMismatch",
       "msg": "vaerified creator doesn't match with the current market"
     },
     {
-      "code": 302,
+      "code": 6002,
       "name": "InvalidOracle",
       "msg": "oracle account provided is not valid"
     },
     {
-      "code": 303,
+      "code": 6003,
       "name": "NoFreeReserves",
       "msg": "no free space left to add a new reserve in the market"
     },
     {
-      "code": 304,
+      "code": 6004,
       "name": "NoFreeObligation",
       "msg": "no free space left to add the new loan or collateral in an obligation"
     },
     {
-      "code": 305,
+      "code": 6005,
       "name": "UnregisteredPosition",
       "msg": "the obligation account doesn't have any record of the loan or collateral account"
     },
     {
-      "code": 306,
+      "code": 6006,
       "name": "UnregisteredNFTPosition",
       "msg": "the nft collateral mint does not exist"
     },
     {
-      "code": 307,
+      "code": 6007,
       "name": "InvalidOraclePrice",
       "msg": "the oracle price account has an invalid price value"
     },
     {
-      "code": 308,
+      "code": 6008,
       "name": "InsufficientCollateral",
       "msg": "there is not enough collateral deposited to borrow against"
     },
     {
-      "code": 309,
+      "code": 6009,
       "name": "SimultaneousDepositAndBorrow",
       "msg": "cannot both deposit collateral to and borrow from the same reserve"
     },
     {
-      "code": 310,
+      "code": 6010,
       "name": "ObligationHealthy",
       "msg": "cannot liquidate a healthy position"
     },
     {
-      "code": 311,
+      "code": 6011,
       "name": "ObligationUnhealthy",
       "msg": "cannot perform an action that would leave the obligation unhealthy"
     },
     {
-      "code": 312,
+      "code": 6012,
       "name": "ExceptionalReserveState",
       "msg": "reserve requires special action; call refresh_reserve until up to date"
     },
     {
-      "code": 313,
+      "code": 6013,
       "name": "InvalidAmountUnits",
       "msg": "the units provided in the amount are not valid for the instruction"
     },
     {
-      "code": 314,
+      "code": 6014,
       "name": "InvalidDexMarketMints",
       "msg": "the tokens in the DEX market don't match the reserve and lending market quote token"
     },
     {
-      "code": 315,
+      "code": 6015,
       "name": "InvalidMarketAuthority",
       "msg": "the market authority provided doesn't match the market account"
     },
     {
-      "code": 316,
+      "code": 6016,
       "name": "InvalidLiquidationQuoteTokenAccount",
       "msg": "the quote token account provided cannot be used for liquidations"
     },
     {
-      "code": 317,
+      "code": 6017,
       "name": "ObligationAccountMismatch",
       "msg": "the obligation account doesn't have the collateral/loan registered"
     },
     {
-      "code": 318,
+      "code": 6018,
       "name": "UnknownInstruction",
       "msg": "unknown instruction"
     },
     {
-      "code": 319,
+      "code": 6019,
       "name": "Disallowed",
       "msg": "current conditions prevent an action from being performed"
     },
     {
-      "code": 320,
+      "code": 6020,
       "name": "LiquidationSwapSlipped",
       "msg": "the actual slipped amount on the DEX trade exceeded the threshold configured"
     },
     {
-      "code": 321,
+      "code": 6021,
       "name": "CollateralValueTooSmall",
       "msg": "the collateral value is too small for a DEX trade"
     },
     {
-      "code": 322,
+      "code": 6022,
       "name": "LiquidationLowCollateral",
       "msg": "the collateral returned by the liquidation is smaller than requested"
     },
     {
-      "code": 323,
+      "code": 6023,
       "name": "NotSupported",
       "msg": "this action is currently not supported by this version of the program"
     },
     {
-      "code": 324,
+      "code": 6024,
       "name": "MarketHalted",
       "msg": "the market has currently halted this kind of operation"
     },
     {
-      "code": 325,
+      "code": 6025,
       "name": "InvalidParameter",
       "msg": "a given parameter is not valid"
     },
     {
-      "code": 326,
+      "code": 6026,
       "name": "PositionNotEmpty",
       "msg": "the obligation account still holds position in the loan or collateral account"
     },
     {
-      "code": 327,
+      "code": 6027,
       "name": "ObligationPositionNotFound",
       "msg": "position not found in an obligation"
     },
     {
-      "code": 328,
+      "code": 6028,
       "name": "AccountNotEmptyError",
       "msg": "the collateral/loan account is not empty"
     }
