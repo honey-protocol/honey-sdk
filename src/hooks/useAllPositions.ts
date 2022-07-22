@@ -1,13 +1,12 @@
 import { Metadata } from '@metaplex-foundation/mpl-token-metadata';
-import { Connection, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
+import { Connection, PublicKey } from '@solana/web3.js';
 import { useEffect, useState } from 'react';
-import {  HoneyClient, HoneyUser, ObligationPositionStruct, PositionInfoList } from '..';
+import {  HoneyClient,  ObligationPositionStruct, PositionInfoList } from '..';
 import { useHoney } from '../contexts/honey';
 import { ConnectedWallet } from '../helpers/walletType';
 import { useMarket } from './useMarket';
 import * as anchor from '@project-serum/anchor';
 import { BN } from '@project-serum/anchor';
-import { parseObligationAccount } from '../helpers/programUtil'
 
 export const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
 
@@ -17,7 +16,13 @@ export interface NftPosition {
     ltv: number;
     is_healthy: boolean;
     highest_bid: number;
-  }
+}
+
+export interface Bid {
+    bid: PublicKey;
+    bidder: PublicKey;
+    bidLimit: number;
+}
 
 export const useAllPositions = (
     connection: Connection,
@@ -28,6 +33,7 @@ export const useAllPositions = (
     const [status, setStatus] = useState<{
         loading: boolean;
         positions?: NftPosition[];
+        bids?: Bid[];
         error?: Error;
       }>({ loading: false });
 
@@ -37,9 +43,9 @@ export const useAllPositions = (
     const fetchPositions = async() => {
         console.log('fetching bids...');
         const resBids = await fetch('https://honey-nft-api.herokuapp.com/bids', {mode:'cors'});
-        const bids = await resBids.json();
+        const arrBids = await resBids.json();
 
-        const highestBid = Math.max.apply(Math, bids.map(function(o) { return JSON.parse(o).bidLimit; }))
+        const highestBid = Math.max.apply(Math, arrBids.map(function(o) { return JSON.parse(o).bidLimit; }))
         console.log('fetching positions...');
         const provider = new anchor.Provider(connection, wallet, anchor.Provider.defaultOptions());
         const client: HoneyClient = await HoneyClient.connect(provider, honeyId, true);
@@ -87,7 +93,7 @@ export const useAllPositions = (
               }
             }));
           }));
-          setStatus({loading: false, positions: arrPositions});
+          setStatus({loading: false, positions: arrPositions, bids: arrBids});
         }
     }
 
