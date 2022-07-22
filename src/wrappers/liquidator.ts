@@ -1,6 +1,6 @@
 import * as anchor from '@project-serum/anchor';
 import { Keypair, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
-import { HasPublicKey, ToBytes } from '../helpers';
+import { HasPublicKey, ToBytes, TxnResponse } from '../helpers';
 import devnetIdl from '../idl/devnet/honey.json';
 import mainnetBetaIdl from '../idl/mainnet-beta/honey.json';
 import { DerivedAccount } from './derived-account';
@@ -12,6 +12,7 @@ import {
     Token
 } from "@solana/spl-token";
 import { Amount, HoneyReserve } from '.';
+import { TxResponse } from '../actions';
 
 export interface PlaceBidParams {
     bid_limit: number;
@@ -89,80 +90,86 @@ export class LiquidatorClient {
         return new DerivedAccount(address, bumpSeed);
     }
 
-    async placeBid(params: PlaceBidParams) {
-        const bid = await this.findBidAccount(params.market, params.bidder);
-        console.log(bid.address.toString());
-        const bid_escrow = await this.findEscrowAccount(params.market, params.bidder);
-        const bid_escrow_authority = await this.findBidEscrowAuthorityAccount(bid_escrow.address);
-        const market_authority = await this.findMarketAuthority(params.market);
+    async placeBid(params: PlaceBidParams): Promise<TxResponse> {
 
-        const bumps = {
-            bid: bid.bumpSeed,
-            bidEscrow: bid_escrow.bumpSeed,
-            bidEscrowAuthority: bid_escrow_authority.bumpSeed
+            const bid = await this.findBidAccount(params.market, params.bidder);
+            console.log(bid.address.toString());
+            const bid_escrow = await this.findEscrowAccount(params.market, params.bidder);
+            const bid_escrow_authority = await this.findBidEscrowAuthorityAccount(bid_escrow.address);
+            const market_authority = await this.findMarketAuthority(params.market);
+
+            const bumps = {
+                bid: bid.bumpSeed,
+                bidEscrow: bid_escrow.bumpSeed,
+                bidEscrowAuthority: bid_escrow_authority.bumpSeed
+            }
+
+            const amount = params.bid_limit * 1e9; /* Wrapped SOL's decimals is 9 */
+            const amountBN = new anchor.BN(amount);
+
+            const bidder = params.bidder;
+
+            // wSOL deposit
+            const depositSource = Keypair.generate();
+            const tx = new Transaction().add(
+                // create token account
+                SystemProgram.createAccount({
+                    fromPubkey: bidder,
+                    newAccountPubkey: depositSource.publicKey,
+                    space: TokenAccountLayout.span,
+                    lamports:
+                        (await Token.getMinBalanceRentForExemptAccount(this.program.provider.connection)) + amount, // rent + amount
+                    programId: TOKEN_PROGRAM_ID,
+                }),
+                // init token account
+                Token.createInitAccountInstruction(
+                    TOKEN_PROGRAM_ID,
+                    NATIVE_MINT,
+                    depositSource.publicKey,
+                    bidder
+                ),
+            );
+
+            const ix = await this.program.instruction.placeLiquidateBid(
+                bumps,
+                amountBN,
+                {
+                    accounts: {
+                        market: params.market,
+                        marketAuthority: market_authority.address,
+                        bid: bid.address,
+                        bidder: params.bidder,
+                        depositSource: depositSource.publicKey,
+                        bidMint: params.bid_mint,
+                        bidEscrow: bid_escrow.address,
+                        bidEscrowAuthority: bid_escrow_authority.address,
+
+                        // system accounts
+                        tokenProgram: TOKEN_PROGRAM_ID,
+                        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                        systemProgram: anchor.web3.SystemProgram.programId,
+                    },
+                },
+            );
+            tx.add(ix);
+            tx.add(Token.createCloseAccountInstruction(
+                TOKEN_PROGRAM_ID,
+                depositSource.publicKey,
+                bidder,
+                bidder,
+                []));
+        try {
+            const result = await this.program.provider.send(tx, [depositSource], { skipPreflight: true });
+            console.log(result);
+            return [TxnResponse.Success, [result]];
+        } catch(err) {
+            console.error(`Error placing bid: ${err}`);
+            return [TxnResponse.Failed, []];
         }
 
-        const amount = params.bid_limit * 1e9; /* Wrapped SOL's decimals is 9 */
-        const amountBN = new anchor.BN(amount);
-
-        const bidder = params.bidder;
-
-        // wSOL deposit
-        const depositSource = Keypair.generate();
-        const tx = new Transaction().add(
-            // create token account
-            SystemProgram.createAccount({
-                fromPubkey: bidder,
-                newAccountPubkey: depositSource.publicKey,
-                space: TokenAccountLayout.span,
-                lamports:
-                    (await Token.getMinBalanceRentForExemptAccount(this.program.provider.connection)) + amount, // rent + amount
-                programId: TOKEN_PROGRAM_ID,
-            }),
-            // init token account
-            Token.createInitAccountInstruction(
-                TOKEN_PROGRAM_ID,
-                NATIVE_MINT,
-                depositSource.publicKey,
-                bidder
-            ),
-        );
-
-        const ix = await this.program.instruction.placeLiquidateBid(
-            bumps,
-            amountBN,
-            {
-                accounts: {
-                    market: params.market,
-                    marketAuthority: market_authority.address,
-                    bid: bid.address,
-                    bidder: params.bidder,
-                    depositSource: depositSource.publicKey,
-                    bidMint: params.bid_mint,
-                    bidEscrow: bid_escrow.address,
-                    bidEscrowAuthority: bid_escrow_authority.address,
-
-                    // system accounts 
-                    tokenProgram: TOKEN_PROGRAM_ID,
-                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-                    systemProgram: anchor.web3.SystemProgram.programId,
-                },
-            },
-        );
-        tx.add(ix);
-        tx.add(Token.createCloseAccountInstruction(
-            TOKEN_PROGRAM_ID,
-            depositSource.publicKey,
-            bidder,
-            bidder,
-            []));
-
-        const result = await this.program.provider.send(tx, [depositSource], { skipPreflight: true });
-        console.log(result);
-        return tx;
     }
 
-    async increaseBid(params: IncreaseBidParams) {
+    async increaseBid(params: IncreaseBidParams): Promise<TxResponse> {
         const bid = await this.findBidAccount(params.market, params.bidder);
         console.log(bid.address.toString());
         const bid_escrow = await this.findEscrowAccount(params.market, params.bidder);
@@ -215,7 +222,7 @@ export class LiquidatorClient {
                     bidEscrow: bid_escrow.address,
                     bidEscrowAuthority: bid_escrow_authority.address,
 
-                    // system accounts 
+                    // system accounts
                     tokenProgram: TOKEN_PROGRAM_ID,
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
                     systemProgram: anchor.web3.SystemProgram.programId,
@@ -230,12 +237,17 @@ export class LiquidatorClient {
             bidder,
             []));
 
-        const result = await this.program.provider.send(tx, [depositSource], { skipPreflight: true });
-        console.log(result);
-        return tx;
+        try {
+            const result = await this.program.provider.send(tx, [depositSource], { skipPreflight: true });
+            console.log(result);
+            return [TxnResponse.Success, [result]];
+        } catch(err) {
+            return [TxnResponse.Failed, []];
+        }
+
     }
 
-    async revokeBid(params: RevokeBidParams) {
+    async revokeBid(params: RevokeBidParams): Promise<TxResponse> {
         const bid = await this.findBidAccount(params.market, params.bidder);
         const bid_escrow = await this.findEscrowAccount(params.market, params.bidder);
         const bid_escrow_authority = await this.findBidEscrowAuthorityAccount(bid_escrow.address);
@@ -286,7 +298,7 @@ export class LiquidatorClient {
                     bidMint: params.bid_mint,
                     withdrawDestination: withdrawDestination.publicKey,
 
-                    // system accounts 
+                    // system accounts
                     tokenProgram: TOKEN_PROGRAM_ID,
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
                     systemProgram: anchor.web3.SystemProgram.programId,
@@ -303,15 +315,20 @@ export class LiquidatorClient {
             [])
         );
 
-        const result = await this.program.provider.send(tx, [withdrawDestination], { skipPreflight: true });
-        console.log(result);
-        return tx;
+        try {
+            const result = await this.program.provider.send(tx, [withdrawDestination], { skipPreflight: true });
+            console.log(result);
+            return [TxnResponse.Success, [result]];
+        } catch(err) {
+            return [TxnResponse.Failed, []];
+        }
+
     }
 
     /**
      * Execute a liquidation bid.
-     * @param params 
-     * @returns 
+     * @param params
+     * @returns
      */
     async executeBid(reserves: HoneyReserve[], params: ExecuteBidParams) {
         const bid = await this.findBidAccount(params.market, params.bidder);
@@ -397,7 +414,7 @@ export class LiquidatorClient {
                     liquidationFeeReceiver,
                     leftoversReceiver,
                     payer: params.payer,
-                    // system accounts 
+                    // system accounts
                     tokenProgram: TOKEN_PROGRAM_ID,
                     associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,

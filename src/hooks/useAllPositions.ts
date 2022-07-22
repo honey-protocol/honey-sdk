@@ -82,6 +82,7 @@ export const useAllPositions = (
                     is_healthy: false,
                     highest_bid: highestBid
                 };
+                console.log('nft.toString()', nft.toString());
                 arrPositions.push(position);
               }
             }));
