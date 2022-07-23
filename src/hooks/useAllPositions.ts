@@ -94,8 +94,6 @@ export const useAllPositions = (
               }
             }));
           }));
-          console.log('parsedBids', parsedBids);
-          console.log('positions', arrPositions);
           setStatus({loading: false, positions: arrPositions, bids: parsedBids});
         }
     }
