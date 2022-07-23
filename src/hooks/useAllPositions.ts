@@ -19,8 +19,8 @@ export interface NftPosition {
 }
 
 export interface Bid {
-    bid: PublicKey;
-    bidder: PublicKey;
+    bid: string;
+    bidder: string;
     bidLimit: number;
 }
 
@@ -44,8 +44,9 @@ export const useAllPositions = (
         console.log('fetching bids...');
         const resBids = await fetch('https://honey-nft-api.herokuapp.com/bids', {mode:'cors'});
         const arrBids = await resBids.json();
+        const parsedBids = arrBids.map((str) => JSON.parse(str));
 
-        const highestBid = Math.max.apply(Math, arrBids.map(function(o) { return JSON.parse(o).bidLimit; }))
+        const highestBid = Math.max.apply(Math, parsedBids.map(function(o) { return o.bidLimit; }))
         console.log('fetching positions...');
         const provider = new anchor.Provider(connection, wallet, anchor.Provider.defaultOptions());
         const client: HoneyClient = await HoneyClient.connect(provider, honeyId, true);
@@ -93,7 +94,9 @@ export const useAllPositions = (
               }
             }));
           }));
-          setStatus({loading: false, positions: arrPositions, bids: arrBids});
+          console.log('parsedBids', parsedBids);
+          console.log('positions', arrPositions);
+          setStatus({loading: false, positions: arrPositions, bids: parsedBids});
         }
     }
 
