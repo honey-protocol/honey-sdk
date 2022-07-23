@@ -191,6 +191,8 @@ export class HoneyReserve {
       this.client.program.programId,
     );
 
+    console.log(this.data);
+
     return this.client.program.instruction.refreshReserve({
       accounts: {
         market: this.market.address,
@@ -199,7 +201,7 @@ export class HoneyReserve {
         feeNoteVault: feeAccount,
         protocolFeeNoteVault: protocolFeeAccount,
         depositNoteMint: this.data.depositNoteMint,
-        swithchboardPriceAggregator: this.data.swithchboardPriceAggregator,
+        switchboardPriceAggregator: this.data.switchboardPriceAggregator,
         tokenProgram: TOKEN_PROGRAM_ID,
       },
     });

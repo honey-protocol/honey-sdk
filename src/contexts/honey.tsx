@@ -64,7 +64,7 @@ export interface IReserve {
   nftDropletMint: PublicKey;
   nftDropletVault: PublicKey;
   protocolFeeNoteVault: PublicKey;
-  swithchboardPriceAggregator: PublicKey;
+  switchboardPriceAggregator: PublicKey;
   reserved0: number[];
   reserved1: number[];
   state: number[];
