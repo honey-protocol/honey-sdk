@@ -31,6 +31,7 @@ export interface IncreaseBidParams {
 }
 
 export interface RevokeBidParams {
+    amount: number;
     market: PublicKey;
     bidder: PublicKey;
     bid_mint: PublicKey;
@@ -259,7 +260,7 @@ export class LiquidatorClient {
             bidEscrowAuthority: bid_escrow_authority.bumpSeed
         }
 
-        const amount = 5 * 1e9; /* Wrapped SOL's decimals is 9 */
+        const amount = params.amount * 1e9; /* Wrapped SOL's decimals is 9 */
         const amountBN = new anchor.BN(amount);
         const bidder = params.bidder;
 
