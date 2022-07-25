@@ -1040,6 +1040,123 @@
       ]
     },
     {
+      "name": "liquidateSolvent",
+      "accounts": [
+        {
+          "name": "market",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "reserve",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vault",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "obligation",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "loanNoteMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "loanAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "marketAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "nftMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "collateralAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "withdrawNftSolvent",
+      "accounts": [
+        {
+          "name": "market",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "marketAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "obligation",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "withdrawer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "depositTo",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "nftCollectionCreator",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "metadata",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "depositNftMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "collateralAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "metadataBump",
+          "type": "u8"
+        }
+      ]
+    },
+    {
       "name": "placeLiquidateBid",
       "accounts": [
         {
@@ -2426,6 +2543,26 @@
       "fields": [
         {
           "name": "depositor",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "market",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "amount",
+          "type": "u64",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "SolventWithdrawEvent",
+      "fields": [
+        {
+          "name": "withdrawer",
           "type": "publicKey",
           "index": false
         },
