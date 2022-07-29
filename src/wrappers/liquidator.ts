@@ -92,73 +92,75 @@ export class LiquidatorClient {
     }
 
     async placeBid(params: PlaceBidParams): Promise<TxResponse> {
+        if(params.bid_limit <= 0)
+            return [TxnResponse.Failed, ["Bid limit should be greater than 0"]];
 
-            const bid = await this.findBidAccount(params.market, params.bidder);
-            console.log(bid.address.toString());
-            const bid_escrow = await this.findEscrowAccount(params.market, params.bidder);
-            const bid_escrow_authority = await this.findBidEscrowAuthorityAccount(bid_escrow.address);
-            const market_authority = await this.findMarketAuthority(params.market);
+        const bid = await this.findBidAccount(params.market, params.bidder);
+        console.log(bid.address.toString());
+        const bid_escrow = await this.findEscrowAccount(params.market, params.bidder);
+        const bid_escrow_authority = await this.findBidEscrowAuthorityAccount(bid_escrow.address);
+        const market_authority = await this.findMarketAuthority(params.market);
 
-            const bumps = {
-                bid: bid.bumpSeed,
-                bidEscrow: bid_escrow.bumpSeed,
-                bidEscrowAuthority: bid_escrow_authority.bumpSeed
-            }
+        const bumps = {
+            bid: bid.bumpSeed,
+            bidEscrow: bid_escrow.bumpSeed,
+            bidEscrowAuthority: bid_escrow_authority.bumpSeed
+        }
 
-            const amount = params.bid_limit * 1e9; /* Wrapped SOL's decimals is 9 */
-            const amountBN = new anchor.BN(amount);
+        const amount = params.bid_limit * 1e9; /* Wrapped SOL's decimals is 9 */
+        const amountBN = new anchor.BN(amount);
 
-            const bidder = params.bidder;
+        const bidder = params.bidder;
 
-            // wSOL deposit
-            const depositSource = Keypair.generate();
-            const tx = new Transaction().add(
-                // create token account
-                SystemProgram.createAccount({
-                    fromPubkey: bidder,
-                    newAccountPubkey: depositSource.publicKey,
-                    space: TokenAccountLayout.span,
-                    lamports:
-                        (await Token.getMinBalanceRentForExemptAccount(this.program.provider.connection)) + amount, // rent + amount
-                    programId: TOKEN_PROGRAM_ID,
-                }),
-                // init token account
-                Token.createInitAccountInstruction(
-                    TOKEN_PROGRAM_ID,
-                    NATIVE_MINT,
-                    depositSource.publicKey,
-                    bidder
-                ),
-            );
-
-            const ix = await this.program.instruction.placeLiquidateBid(
-                bumps,
-                amountBN,
-                {
-                    accounts: {
-                        market: params.market,
-                        marketAuthority: market_authority.address,
-                        bid: bid.address,
-                        bidder: params.bidder,
-                        depositSource: depositSource.publicKey,
-                        bidMint: params.bid_mint,
-                        bidEscrow: bid_escrow.address,
-                        bidEscrowAuthority: bid_escrow_authority.address,
-
-                        // system accounts
-                        tokenProgram: TOKEN_PROGRAM_ID,
-                        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-                        systemProgram: anchor.web3.SystemProgram.programId,
-                    },
-                },
-            );
-            tx.add(ix);
-            tx.add(Token.createCloseAccountInstruction(
+        // wSOL deposit
+        const depositSource = Keypair.generate();
+        const tx = new Transaction().add(
+            // create token account
+            SystemProgram.createAccount({
+                fromPubkey: bidder,
+                newAccountPubkey: depositSource.publicKey,
+                space: TokenAccountLayout.span,
+                lamports:
+                    (await Token.getMinBalanceRentForExemptAccount(this.program.provider.connection)) + amount, // rent + amount
+                programId: TOKEN_PROGRAM_ID,
+            }),
+            // init token account
+            Token.createInitAccountInstruction(
                 TOKEN_PROGRAM_ID,
+                NATIVE_MINT,
                 depositSource.publicKey,
-                bidder,
-                bidder,
-                []));
+                bidder
+            ),
+        );
+
+        const ix = await this.program.instruction.placeLiquidateBid(
+            bumps,
+            amountBN,
+            {
+                accounts: {
+                    market: params.market,
+                    marketAuthority: market_authority.address,
+                    bid: bid.address,
+                    bidder: params.bidder,
+                    depositSource: depositSource.publicKey,
+                    bidMint: params.bid_mint,
+                    bidEscrow: bid_escrow.address,
+                    bidEscrowAuthority: bid_escrow_authority.address,
+
+                    // system accounts
+                    tokenProgram: TOKEN_PROGRAM_ID,
+                    rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+                    systemProgram: anchor.web3.SystemProgram.programId,
+                },
+            },
+        );
+        tx.add(ix);
+        tx.add(Token.createCloseAccountInstruction(
+            TOKEN_PROGRAM_ID,
+            depositSource.publicKey,
+            bidder,
+            bidder,
+            []));
         try {
             const result = await this.program.provider.send(tx, [depositSource], { skipPreflight: true });
             console.log(result);
@@ -171,6 +173,8 @@ export class LiquidatorClient {
     }
 
     async increaseBid(params: IncreaseBidParams): Promise<TxResponse> {
+        if(params.bid_increase <= 0)
+            return [TxnResponse.Failed, ["Bid increase amount should be greater than 0"]];
         const bid = await this.findBidAccount(params.market, params.bidder);
         console.log(bid.address.toString());
         const bid_escrow = await this.findEscrowAccount(params.market, params.bidder);

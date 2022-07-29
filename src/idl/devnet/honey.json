@@ -1088,12 +1088,24 @@
           "isSigner": false
         },
         {
+          "name": "executor",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "amount",
+          "type": {
+            "defined": "Amount"
+          }
+        }
+      ]
     },
     {
       "name": "withdrawNftSolvent",
@@ -2438,6 +2450,11 @@
           "index": false
         },
         {
+          "name": "bidLimit",
+          "type": "u64",
+          "index": false
+        },
+        {
           "name": "bidIncrease",
           "type": "u64",
           "index": false
@@ -2730,5 +2747,8 @@
       "name": "BidMintMismatch",
       "msg": "the liquidation bid's token account doesn't match the reserve"
     }
-  ]
+  ],
+  "metadata": {
+    "address": "BmdNpm85xLcZCY9nAT6YB9reeFYRDaAUQorr4hEXh8ZL"
+  }
 }
