@@ -9,12 +9,16 @@ import * as anchor from '@project-serum/anchor';
 import { BN } from '@project-serum/anchor';
 
 export const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
+export const LTV_MAX = 40;
+export const LTV_MEDIUM = 30;
+export const LTV_LOW = 20;
+
 
 export interface NftPosition {
     debt: number;
     address: PublicKey;
     ltv: number;
-    is_healthy: boolean;
+    is_healthy: string;
     highest_bid: number;
 }
 
@@ -22,6 +26,19 @@ export interface Bid {
     bid: string;
     bidder: string;
     bidLimit: number;
+}
+
+const getHealthStatus = (debt: number, collaterl: number): string => {
+    const ltv = debt * 100 / collaterl;
+
+    if(ltv < 20)
+        return "LOW";
+    else if(ltv < 30)
+        return "MEDIUM";
+    else if(ltv == 40)
+        return "HIGH";
+    else
+        return "RISKY";
 }
 
 export const useAllPositions = (
@@ -85,17 +102,14 @@ export const useAllPositions = (
                 let position: NftPosition = {
                     debt: totalDebt,
                     address: new PublicKey(nft),
-                    ltv: 60,
-                    is_healthy: false,
+                    ltv: 40,
+                    is_healthy: getHealthStatus(totalDebt, 2),
                     highest_bid: highestBid
                 };
-                console.log('nft.toString()', nft.toString());
                 arrPositions.push(position);
               }
             }));
           }));
-          console.log('parsedBids', parsedBids);
-          console.log('positions', arrPositions);
           setStatus({loading: false, positions: arrPositions, bids: parsedBids});
         }
     }
