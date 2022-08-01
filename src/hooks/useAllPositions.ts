@@ -61,8 +61,8 @@ export const useAllPositions = (
     const fetchPositions = async() => {
         console.log('fetching bids...');
         const resBids = await fetch(
-            // 'https://honey-nft-api.herokuapp.com/bids',
-            'http://localhost:3001/bids',
+            'https://honey-nft-api.herokuapp.com/bids',
+            // 'http://localhost:3001/bids',
             {mode:'cors'});
         const arrBids = await resBids.json();
         const parsedBids = arrBids.map((str) => JSON.parse(str));
