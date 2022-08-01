@@ -7,39 +7,17 @@ import { ConnectedWallet } from '../helpers/walletType';
 import { useMarket } from './useMarket';
 import * as anchor from '@project-serum/anchor';
 import { BN } from '@project-serum/anchor';
+import { getHealthStatus, NftPosition } from '../helpers';
 
 export const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
 export const LTV_MAX = 40;
 export const LTV_MEDIUM = 30;
 export const LTV_LOW = 20;
 
-
-export interface NftPosition {
-    obligation: string,
-    debt: number;
-    address: PublicKey;
-    ltv: number;
-    is_healthy: string;
-    highest_bid: number;
-}
-
 export interface Bid {
     bid: string;
     bidder: string;
     bidLimit: number;
-}
-
-export const getHealthStatus = (debt: number, collaterl: number): string => {
-    const ltv = debt * 100 / collaterl;
-
-    if(ltv < 20)
-        return "LOW";
-    else if(ltv < 30)
-        return "MEDIUM";
-    else if(ltv == 40)
-        return "HIGH";
-    else
-        return "RISKY";
 }
 
 export const useAllPositions = (
