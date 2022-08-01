@@ -354,7 +354,7 @@ export class LiquidatorClient {
         const amount = Amount.tokens(bidData.bidLimit);
 
         // pay for these should be ther person getting liquidated
-        const loanNoteAddress = await this.findLoanNoteAddress(params.reserve, params.obligation, params.payer);
+        const loanNoteAddress = await this.findLoanNoteAddress(params.reserve, params.obligation, obligation.owner);
         const loanNoteMint = await this.findLoanNoteMintAddress(params.reserve, reserve.tokenMint)
         // const collateralAddress = await this.findCollateralAddress(params.reserve, params.obligation, params.payer);
         const vault = await this.findVaultAddress(params.market, params.reserve);
@@ -383,7 +383,7 @@ export class LiquidatorClient {
             params.payer,
         )
 
-        console.log(liquidationFeeReceiver.toString());
+        console.log('liquidationFeeReceiver', liquidationFeeReceiver.toString());
 
         const leftoversReceiver = await Token.getAssociatedTokenAddress(
             ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -391,8 +391,9 @@ export class LiquidatorClient {
             bidData.bidMint,
             bidData.bidder,
         )
-        console.log(leftoversReceiver.toString());
-
+        console.log('leftoversReceiver', leftoversReceiver.toString());
+        console.log('bid', bid.address.toString());
+        console.log('bidData.bidder', bidData.bidder.toString());
         const refreshIx = await reserves[0].makeRefreshIx();
         const tx = new Transaction().add(refreshIx);
         const ix = await this.program.instruction.executeLiquidateBid(

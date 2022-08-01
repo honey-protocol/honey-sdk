@@ -9,12 +9,17 @@ import * as anchor from '@project-serum/anchor';
 import { BN } from '@project-serum/anchor';
 
 export const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
+export const LTV_MAX = 40;
+export const LTV_MEDIUM = 30;
+export const LTV_LOW = 20;
+
 
 export interface NftPosition {
+    obligation: string,
     debt: number;
     address: PublicKey;
     ltv: number;
-    is_healthy: boolean;
+    is_healthy: string;
     highest_bid: number;
 }
 
@@ -22,6 +27,19 @@ export interface Bid {
     bid: string;
     bidder: string;
     bidLimit: number;
+}
+
+const getHealthStatus = (debt: number, collaterl: number): string => {
+    const ltv = debt * 100 / collaterl;
+
+    if(ltv < 20)
+        return "LOW";
+    else if(ltv < 30)
+        return "MEDIUM";
+    else if(ltv == 40)
+        return "HIGH";
+    else
+        return "RISKY";
 }
 
 export const useAllPositions = (
@@ -42,7 +60,10 @@ export const useAllPositions = (
 
     const fetchPositions = async() => {
         console.log('fetching bids...');
-        const resBids = await fetch('https://honey-nft-api.herokuapp.com/bids', {mode:'cors'});
+        const resBids = await fetch(
+            // 'https://honey-nft-api.herokuapp.com/bids',
+            'http://localhost:3001/bids',
+            {mode:'cors'});
         const arrBids = await resBids.json();
         const parsedBids = arrBids.map((str) => JSON.parse(str));
 
@@ -73,7 +94,6 @@ export const useAllPositions = (
                 parsePosition,
             );
             item.account.loans = PositionInfoList.decode(Buffer.from(item.account.loans as any as number[])).map(parsePosition);
-
             await Promise.all(nftMints.map(async (nft) => {
               if(nft.toString() != '11111111111111111111111111111111') {
 
@@ -83,13 +103,13 @@ export const useAllPositions = (
                     .div(new BN(10 ** 6))//!!
                     .div(new BN(10 ** 5)).toNumber() / (10 ** 4);//dividing lamport
                 let position: NftPosition = {
+                    obligation: item.publicKey.toString(),
                     debt: totalDebt,
                     address: new PublicKey(nft),
-                    ltv: 60,
-                    is_healthy: false,
+                    ltv: 40,
+                    is_healthy: getHealthStatus(totalDebt, 2),
                     highest_bid: highestBid
                 };
-                console.log('nft.toString()', nft.toString());
                 arrPositions.push(position);
               }
             }));

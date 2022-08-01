@@ -127,6 +127,8 @@ export const HoneyProvider: FC<HoneyProps> = ({
       if (reserve.reserve.equals(PublicKey.default)) {
         continue;
       };
+      console.log('reserve', reserve.reserve.toString());
+
       const { data, state } = await HoneyReserve.decodeReserve(honeyClient, reserve.reserve);
       reservesList.push(data);
     }
