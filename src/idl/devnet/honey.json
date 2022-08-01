@@ -1429,7 +1429,7 @@
         },
         {
           "name": "bidder",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -2747,8 +2747,5 @@
       "name": "BidMintMismatch",
       "msg": "the liquidation bid's token account doesn't match the reserve"
     }
-  ],
-  "metadata": {
-    "address": "BmdNpm85xLcZCY9nAT6YB9reeFYRDaAUQorr4hEXh8ZL"
-  }
+  ]
 }
