@@ -29,7 +29,7 @@ export interface Bid {
     bidLimit: number;
 }
 
-const getHealthStatus = (debt: number, collaterl: number): string => {
+export const getHealthStatus = (debt: number, collaterl: number): string => {
     const ltv = debt * 100 / collaterl;
 
     if(ltv < 20)
