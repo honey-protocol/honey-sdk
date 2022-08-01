@@ -7,7 +7,8 @@ import { ConnectedWallet } from '../helpers/walletType';
 import { useMarket } from './useMarket';
 import * as anchor from '@project-serum/anchor';
 import { BN } from '@project-serum/anchor';
-import { getHealthStatus, NftPosition } from '../helpers';
+import { NftPosition } from '../helpers/types';
+import { getHealthStatus } from '../helpers/util'
 
 export const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
 export const LTV_MAX = 40;
