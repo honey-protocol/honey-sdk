@@ -45,6 +45,7 @@ export const useBorrowPositions = (
 
   const { honeyUser } = useMarket(connection, wallet, honeyId, honeyMarketId);
 
+
   const fetchData = async () => {
     setStatus({ loading: true });
 

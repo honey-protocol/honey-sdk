@@ -252,10 +252,11 @@ export class HoneyUser implements User {
     }
   }
 
-  async withdrawNFTSolvent(tokenAccount: PublicKey, tokenMint: PublicKey, updateAuthority: PublicKey): Promise<TxResponse> {
-    const tx = await this.makeNFTWithdrawSolventTx(tokenAccount, tokenMint, updateAuthority);
+  async withdrawNFTSolvent(tokenAccount: PublicKey, tokenMint: PublicKey, depositor: PublicKey, updateAuthority: PublicKey): Promise<TxResponse> {
+    const tx = await this.makeNFTWithdrawSolventTx(tokenAccount, tokenMint, depositor, updateAuthority);
     try {
       const txid = await this.client.program.provider.send(tx, [], { skipPreflight: true });
+      console.log('txid', txid);
       return [TxnResponse.Success, [txid]];
     } catch (err) {
       console.error(`Withdraw NFT for Solvent liquidation error: ${err}`);
@@ -266,12 +267,13 @@ export class HoneyUser implements User {
   async makeNFTWithdrawSolventTx(
     tokenAccount: PublicKey,
     tokenMint: PublicKey,
+    depositor: PublicKey,
     nftCollectionCreator: PublicKey,
   ): Promise<Transaction> {
     const tx = new Transaction();
 
     const [obligationAddress, obligationBump] = await PublicKey.findProgramAddress(
-      [Buffer.from('obligation'), this.market.address.toBuffer(), this.address.toBuffer()],
+      [Buffer.from('obligation'), this.market.address.toBuffer(), depositor.toBuffer()],
       this.client.program.programId,
     );
 
@@ -293,7 +295,6 @@ export class HoneyUser implements User {
         if (!reserve.address.equals(PublicKey.default)) tx.add(await reserve.makeRefreshIx());
       }),
     );
-
     tx.add(
       await this.client.program.instruction.withdrawNftSolvent(metadataBump, {
         accounts: {

@@ -261,3 +261,16 @@ export class TokenAmount {
     return new TokenAmount(amount, this.decimals);
   }
 }
+
+export const getHealthStatus = (debt: number, collaterl: number): string => {
+  const ltv = debt * 100 / collaterl;
+
+  if(ltv < 20)
+      return "LOW";
+  else if(ltv < 30)
+      return "MEDIUM";
+  else if(ltv == 40)
+      return "HIGH";
+  else
+      return "RISKY";
+}

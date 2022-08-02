@@ -41,4 +41,13 @@ export type TPool = {
   collateralEvaluation: number;
 };
 
+export interface NftPosition {
+  obligation: string,
+  debt: number;
+  address: PublicKey;
+  ltv: number;
+  is_healthy: string;
+  highest_bid: number;
+}
+
 export type SupportedWallet = Wallet | SolongWallet | null;

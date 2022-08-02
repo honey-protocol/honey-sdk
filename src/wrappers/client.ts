@@ -1,4 +1,4 @@
-import { PublicKey, Keypair } from '@solana/web3.js';
+import { PublicKey, Keypair, Connection } from '@solana/web3.js';
 import * as anchor from '@project-serum/anchor';
 import { CreateMarketParams, HoneyMarket } from './market';
 import { DerivedAccount } from './derived-account';
