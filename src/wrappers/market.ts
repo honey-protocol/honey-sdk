@@ -204,7 +204,7 @@ export class HoneyMarket implements HoneyMarketData {
         dexProgram: DEX_PID,
         loanNoteMint: derivedAccounts.loanNoteMint.address,
         depositNoteMint: derivedAccounts.depositNoteMint.address,
-        oraclePrice: params.switchboardOracle,
+        switchboardPriceAggregator: params.switchboardOracle,
         quoteTokenMint: this.quoteTokenMint,
         tokenMint: params.tokenMint,
         tokenProgram: TOKEN_PROGRAM_ID,
