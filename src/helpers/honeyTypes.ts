@@ -143,8 +143,7 @@ export interface ReserveAccount {
   index: number;
   exponent: number;
   market: PublicKey;
-  oraclePrice: PublicKey;
-  oracleProduct: PublicKey;
+  swithchboardPriceAggregator: PublicKey;
   tokenMint: PublicKey;
   depositNoteMint: PublicKey;
   loanNoteMint: PublicKey;
@@ -207,10 +206,7 @@ export interface ReserveMetadata {
     faucet?: PublicKey;
     depositNoteMint: PublicKey;
     loanNoteMint: PublicKey;
-    pythPrice: PublicKey;
-    pythProduct: PublicKey;
-    pythOraclePrice: PublicKey;
-    pythOracleProduct: PublicKey;
+    swithchboardPriceAggregator: PublicKey;
     dexMarket: PublicKey;
     dexSwapTokens: PublicKey;
     dexOpenOrders: PublicKey;

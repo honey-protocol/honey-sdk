@@ -68,7 +68,6 @@ export class HoneyClient {
         accounts: {
           market: account.publicKey,
           oraclePrice: params.nftOraclePrice,
-          oracleProduct: params.nftOracleProduct,
         },
         signers: [account],
         instructions: [await this.program.account.market.createInstruction(account)],

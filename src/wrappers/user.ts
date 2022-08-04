@@ -391,10 +391,8 @@ export class HoneyUser implements User {
             market: this.market.address,
             marketAuthority: this.market.marketAuthority,
             obligation: obligationAddress,
-
             borrower: this.address,
             tokenProgram: TOKEN_PROGRAM_ID,
-
             systemProgram: anchor.web3.SystemProgram.programId,
           },
         });
@@ -724,6 +722,7 @@ export class HoneyUser implements User {
           vault: reserve.data.vault,
           depositNoteMint: reserve.data.depositNoteMint,
 
+          honeyProgram: this.client.program.programId,
           tokenProgram: TOKEN_PROGRAM_ID,
         },
       }),
@@ -879,7 +878,7 @@ export class HoneyUser implements User {
         loanAccount: loanAccountPK,
         tokenMint: reserve.data.tokenMint,
         receiverAccount,
-        nftPythOraclePrice: this.market.nftPythOraclePrice,
+        nftSwithchboardPriceAggregator: this.market.nftSwithchboardPriceAggregator,
         tokenProgram: TOKEN_PROGRAM_ID,
       },
     });

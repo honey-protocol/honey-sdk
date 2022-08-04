@@ -39,8 +39,7 @@ export interface HoneyMarketData {
   owner: PublicKey;
 
   reserves: HoneyMarketReserveInfo[];
-  nftPythOraclePrice: PublicKey;
-  nftPythOracleProduct: PublicKey;
+  nftSwithchboardPriceAggregator: PublicKey;
   updateAuthority: PublicKey;
 }
 
@@ -53,8 +52,7 @@ export class HoneyMarket implements HoneyMarketData {
     public marketAuthority: PublicKey,
     public owner: PublicKey,
     public reserves: HoneyMarketReserveInfo[],
-    public nftPythOraclePrice: PublicKey,
-    public nftPythOracleProduct: PublicKey,
+    public nftSwithchboardPriceAggregator: PublicKey,
     public updateAuthority: PublicKey,
   ) {}
 
@@ -86,8 +84,7 @@ export class HoneyMarket implements HoneyMarketData {
       data.marketAuthority,
       data.owner,
       reserveInfoList,
-      data.nftPythOraclePrice,
-      data.nftPythOracleProduct,
+      data.nftSwithchboardPriceAggregator,
       data.updateAuthority,
     );
   }
@@ -103,8 +100,7 @@ export class HoneyMarket implements HoneyMarketData {
     this.marketAuthority = data.marketAuthority;
     this.quoteCurrency = data.quoteCurrency;
     this.quoteTokenMint = data.quoteTokenMint;
-    this.nftPythOraclePrice = data.nftPythOraclePrice;
-    this.nftPythOracleProduct = data.nftPythOracleProduct;
+    this.nftSwithchboardPriceAggregator = data.nftSwithchboardPriceAggregator;
     this.updateAuthority = data.updateAuthority;
   }
 
@@ -166,61 +162,49 @@ export class HoneyMarket implements HoneyMarketData {
     );
     console.log(`Init reserve account tx ${initTx}`);
 
-    console.log('accounts', {
-      market: this.address.toBase58(),
-      marketAuthority: this.marketAuthority.toBase58(),
-      reserve: account.publicKey.toBase58(),
-      vault: derivedAccounts.vault.address.toBase58(),
-      nftDropletMint: params.nftDropletMint.toBase58(),
-      nftDropletVault: nftDropletAccount.toBase58(),
+    // console.log('accounts', {
+    //   market: this.address.toBase58(),
+    //   marketAuthority: this.marketAuthority.toBase58(),
+    //   reserve: account.publicKey.toBase58(),
+    //   vault: derivedAccounts.vault.address.toBase58(),
+    //   nftDropletMint: params.nftDropletMint.toBase58(),
+    //   nftDropletVault: nftDropletAccount.toBase58(),
 
-      feeNoteVault: derivedAccounts.feeNoteVault.address.toBase58(),
-      protocolFeeNoteVault: derivedAccounts.protocolFeeNoteVault.address.toBase58(),
+    //   feeNoteVault: derivedAccounts.feeNoteVault.address.toBase58(),
+    //   protocolFeeNoteVault: derivedAccounts.protocolFeeNoteVault.address.toBase58(),
 
-      feeAccount: feeAccount.toBase58(),
-      protocolFeeAccount: protocolFeeAccount.toBase58(),
+    //   feeAccount: feeAccount.toBase58(),
+    //   protocolFeeAccount: protocolFeeAccount.toBase58(),
 
-      dexSwapTokens: derivedAccounts.dexSwapTokens.address.toBase58(),
-      dexOpenOrdersA: derivedAccounts.dexOpenOrdersA.address.toBase58(),
-      dexOpenOrdersB: derivedAccounts.dexOpenOrdersB.address.toBase58(),
-      dexMarketA: params.dexMarketA.toBase58(),
-      dexMarketB: params.dexMarketB.toBase58(),
-      dexProgram: DEX_PID.toBase58(),
-      loanNoteMint: derivedAccounts.loanNoteMint.address.toBase58(),
-      depositNoteMint: derivedAccounts.depositNoteMint.address.toBase58(),
+    //   dexSwapTokens: derivedAccounts.dexSwapTokens.address.toBase58(),
+    //   dexOpenOrdersA: derivedAccounts.dexOpenOrdersA.address.toBase58(),
+    //   dexOpenOrdersB: derivedAccounts.dexOpenOrdersB.address.toBase58(),
+    //   dexMarketA: params.dexMarketA.toBase58(),
+    //   dexMarketB: params.dexMarketB.toBase58(),
+    //   dexProgram: DEX_PID.toBase58(),
+    //   loanNoteMint: derivedAccounts.loanNoteMint.address.toBase58(),
+    //   depositNoteMint: derivedAccounts.depositNoteMint.address.toBase58(),
 
-      oracleProduct: params.pythOracleProduct.toBase58(),
-      oraclePrice: params.pythOraclePrice.toBase58(),
-      quoteTokenMint: this.quoteTokenMint.toBase58(),
-      tokenMint: params.tokenMint.toBase58(),
-      owner: this.owner.toBase58(),
-    });
+    //   oraclePrice: params.switchboardOracle.toBase58(),
+    //   quoteTokenMint: this.quoteTokenMint.toBase58(),
+    //   tokenMint: params.tokenMint.toBase58(),
+    //   owner: this.owner.toBase58(),
+    // });
 
     const txid = await this.client.program.rpc.initReserve(bumpSeeds, params.config, {
       accounts: {
         market: this.address,
         marketAuthority: this.marketAuthority,
         reserve: account.publicKey,
-
         vault: derivedAccounts.vault.address,
         nftDropletMint: params.nftDropletMint,
         nftDropletVault: nftDropletAccount,
-
         feeNoteVault: feeAccount,
         protocolFeeNoteVault: protocolFeeAccount,
-
-        // dexSwapTokens: derivedAccounts.dexSwapTokens.address,
-
-        // dexOpenOrdersA: derivedAccounts.dexOpenOrdersA.address,
-        // dexOpenOrdersB: derivedAccounts.dexOpenOrdersB.address,
-        // dexMarketA: params.dexMarketA,
-        // dexMarketB: params.dexMarketB,
         dexProgram: DEX_PID,
         loanNoteMint: derivedAccounts.loanNoteMint.address,
         depositNoteMint: derivedAccounts.depositNoteMint.address,
-
-        oracleProduct: params.pythOracleProduct,
-        oraclePrice: params.pythOraclePrice,
+        oraclePrice: params.switchboardOracle,
         quoteTokenMint: this.quoteTokenMint,
         tokenMint: params.tokenMint,
         tokenProgram: TOKEN_PROGRAM_ID,
@@ -252,7 +236,7 @@ export interface CreateMarketParams {
 
   /**
    * The name of the currency used for quotes, this has to match the
-   * name specified in any Pyth/oracle accounts.
+   * name specified in any Switchboard/oracle accounts.
    */
   quoteCurrencyName: string;
 
@@ -262,14 +246,9 @@ export interface CreateMarketParams {
   nftCollectionCreator: PublicKey;
 
   /**
-   *  price oracles modeled after pyth
+   *  price oracles modeled from switchboard
    */
   nftOraclePrice: PublicKey;
-
-  /**
-   *  product for partnered price oracle
-   */
-  nftOracleProduct: PublicKey;
 
   /**
    * The account to use for the market data.

@@ -44,7 +44,7 @@ export interface CreateReserveParams {
   /**
    * The Serum market for the reserve.
    */
-  dexMarket: PublicKey;
+  dexMarket?: PublicKey;
 
   /**
    * The mint for the token to be stored in the reserve.
@@ -52,14 +52,9 @@ export interface CreateReserveParams {
   tokenMint: PublicKey;
 
   /**
-   * The Pyth account containing the price information for the reserve token.
+   * The Switchboard account containing the price information for the reserve token.
    */
-  pythOraclePrice: PublicKey;
-
-  /**
-   * The Pyth account containing the metadata about the reserve token.
-   */
-  pythOracleProduct: PublicKey;
+  switchboardOracle: PublicKey;
 
   /**
    * The initial configuration for the reserve
@@ -69,17 +64,17 @@ export interface CreateReserveParams {
   /**
    * token mint for the solvent droplets
    */
-  nftDropletMint: PublicKey;
+  nftDropletMint?: PublicKey;
 
   /**
    * Dex market A
    */
-  dexMarketA: PublicKey;
+  dexMarketA?: PublicKey;
 
   /**
    * dex market B
    */
-  dexMarketB: PublicKey;
+  dexMarketB?: PublicKey;
 
   /**
    * The account to use for the reserve data.
@@ -92,10 +87,7 @@ export interface CreateReserveParams {
 export interface ReserveData {
   // index: number;
   market: PublicKey;
-  pythPrice: PublicKey;
-  pythProduct: PublicKey;
-  pythOraclePrice?: PublicKey;
-  pythOracleProduct?: PublicKey;
+  switchBoardOracle: PublicKey;
   tokenMint: PublicKey;
   depositNoteMint: PublicKey;
   loanNoteMint: PublicKey;
@@ -200,6 +192,8 @@ export class HoneyReserve {
       this.client.program.programId,
     );
 
+    console.log(this.data);
+
     return this.client.program.instruction.refreshReserve({
       accounts: {
         market: this.market.address,
@@ -208,7 +202,7 @@ export class HoneyReserve {
         feeNoteVault: feeAccount,
         protocolFeeNoteVault: protocolFeeAccount,
         depositNoteMint: this.data.depositNoteMint,
-        pythOraclePrice: this.data.pythOraclePrice,
+        switchboardPriceAggregator: this.data.switchboardPriceAggregator,
         tokenProgram: TOKEN_PROGRAM_ID,
       },
     });
