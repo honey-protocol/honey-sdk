@@ -43,30 +43,31 @@ export const AnchorProvider: FC<AnchorProviderProps> = ({
   const [coder, setAnchorCoder] = useState<anchor.Coder>({} as anchor.Coder);
   const [isConfigured, setIsConfigured] = useState<boolean>(false);
 
-  useEffect(() => {      
+  useEffect(() => {
     // setup coder for anchor operations
     const setup = async () => {
       const idl: any = network === 'devnet' ? devnetIdl : mainnetBetaIdl;
       setAnchorCoder(new anchor.Coder(idl));
       // init program
       const HONEY_PROGRAM_ID = new PublicKey(honeyProgram);
+
       const provider = new anchor.Provider(connection, wallet, anchor.Provider.defaultOptions());
       const anchorProgram: Program = new anchor.Program(idl as any, HONEY_PROGRAM_ID, provider);
       setProgram(anchorProgram);
       setIsConfigured(true);
     };
-    
+
     if (connection && wallet)
       setup();
   }, [connection, wallet])
-  
+
   return (
     <AnchorContext.Provider
       value={{
         program,
         coder,
         isConfigured
-      }}> 
+      }}>
       {children}
     </AnchorContext.Provider>
   )

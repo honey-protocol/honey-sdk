@@ -43,8 +43,8 @@ export const useBorrowPositions = (
     error?: Error;
   }>({ loading: false });
 
-  const { market, marketReserveInfo, parsedReserves } = useHoney();
   const { honeyUser } = useMarket(connection, wallet, honeyId, honeyMarketId);
+
 
   const fetchData = async () => {
     setStatus({ loading: true });
@@ -89,7 +89,7 @@ export const useBorrowPositions = (
     obligation.loans.map((loan: any) => {
       if (loan.account.equals(PublicKey.default)) return;
       loanPositions.push({
-        amount: loan.amount.toNumber() / LAMPORTS_PER_SOL,
+        amount: loan.amount.toNumber() / 10 ** 15,
         tokenAccount: loan.account,
       });
     });
@@ -98,12 +98,16 @@ export const useBorrowPositions = (
     obligation.collateral.map((collateral: any) => {
       if (collateral.account.equals(PublicKey.default)) return;
       fungibleCollateralPosition.push({
-        amount: collateral.amount.toNumber() / LAMPORTS_PER_SOL,
+        amount: collateral.amount.toNumber() / 10 ** 15,
         tokenAccount: collateral.account,
       });
     });
 
     setStatus({ loading: false, collateralNFTPositions, loanPositions, fungibleCollateralPosition });
+  };
+
+  const refreshPositions = async () => {
+    await fetchData();
   };
 
   // build borrow positions
@@ -115,5 +119,5 @@ export const useBorrowPositions = (
     fetchData();
   }, [honeyUser]);
 
-  return { ...status };
+  return { ...status, refreshPositions };
 };

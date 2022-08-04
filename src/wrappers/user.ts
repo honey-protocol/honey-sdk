@@ -108,6 +108,48 @@ export class HoneyUser implements User {
     return parsed;
   }
 
+  async liquidate(
+    loanReserve: HoneyReserve,
+    collateralReserve: HoneyReserve,
+    payerAccount: PublicKey,
+    receiverAccount: PublicKey,
+    amount: Amount,
+  ): Promise<string> {
+    const tx = await this.makeLiquidateTx(loanReserve, collateralReserve, payerAccount, receiverAccount, amount);
+    return await this.client.program.provider.send(tx);
+  }
+
+  async makeLiquidateTx(
+    _loanReserve: HoneyReserve,
+    _collateralReserve: HoneyReserve,
+    _payerAccount: PublicKey,
+    _receiverAccount: PublicKey,
+    _amount: Amount,
+  ): Promise<Transaction> {
+    throw new Error('not yet implemented');
+  }
+
+  async liquidateSolvent(
+    loanReserve: HoneyReserve,
+    collateralReserve: HoneyReserve,
+    payerAccount: PublicKey,
+    receiverAccount: PublicKey,
+    amount: Amount,
+  ): Promise<string> {
+    const tx = await this.makeLiquidateSolventTx(loanReserve, collateralReserve, payerAccount, receiverAccount, amount);
+    return await this.client.program.provider.send(tx);
+  }
+
+  async makeLiquidateSolventTx(
+    _loanReserve: HoneyReserve,
+    _collateralReserve: HoneyReserve,
+    _payerAccount: PublicKey,
+    _receiverAccount: PublicKey,
+    _amount: Amount,
+  ): Promise<Transaction> {
+    throw new Error('not yet implemented');
+  }
+
   async repay(reserve: HoneyReserve, tokenAccount: PublicKey, amount: Amount): Promise<TxResponse> {
     const ixs = await this.makeRepayTx(reserve, tokenAccount, amount);
     try {
@@ -208,6 +250,69 @@ export class HoneyUser implements User {
       console.error(`Withdraw NFT error: ${err}`);
       return [TxnResponse.Failed, []];
     }
+  }
+
+  async withdrawNFTSolvent(tokenAccount: PublicKey, tokenMint: PublicKey, depositor: PublicKey, updateAuthority: PublicKey): Promise<TxResponse> {
+    const tx = await this.makeNFTWithdrawSolventTx(tokenAccount, tokenMint, depositor, updateAuthority);
+    try {
+      const txid = await this.client.program.provider.send(tx, [], { skipPreflight: true });
+      console.log('txid', txid);
+      return [TxnResponse.Success, [txid]];
+    } catch (err) {
+      console.error(`Withdraw NFT for Solvent liquidation error: ${err}`);
+      return [TxnResponse.Failed, []];
+    }
+  }
+
+  async makeNFTWithdrawSolventTx(
+    tokenAccount: PublicKey,
+    tokenMint: PublicKey,
+    depositor: PublicKey,
+    nftCollectionCreator: PublicKey,
+  ): Promise<Transaction> {
+    const tx = new Transaction();
+
+    const [obligationAddress, obligationBump] = await PublicKey.findProgramAddress(
+      [Buffer.from('obligation'), this.market.address.toBuffer(), depositor.toBuffer()],
+      this.client.program.programId,
+    );
+
+    const collateralAddress = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      tokenMint,
+      this.market.marketAuthority,
+      true,
+    );
+
+    const [nftMetadata, metadataBump] = await PublicKey.findProgramAddress(
+      [Buffer.from('metadata'), METADATA_PROGRAM_ID.toBuffer(), tokenMint.toBuffer()],
+      METADATA_PROGRAM_ID,
+    );
+
+    await Promise.all(
+      this.reserves.map(async (reserve) => {
+        if (!reserve.address.equals(PublicKey.default)) tx.add(await reserve.makeRefreshIx());
+      }),
+    );
+    tx.add(
+      await this.client.program.instruction.withdrawNftSolvent(metadataBump, {
+        accounts: {
+          market: this.market.address,
+          marketAuthority: this.market.marketAuthority,
+          obligation: obligationAddress,
+          withdrawer: this.address,
+          depositTo: tokenAccount,
+          nftCollectionCreator,
+          metadata: nftMetadata,
+          depositNftMint: tokenMint,
+          collateralAccount: collateralAddress,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        },
+      }),
+    );
+
+    return tx;
   }
 
   async makeNFTWithdrawTx(
@@ -680,7 +785,7 @@ export class HoneyUser implements User {
 
   async borrow(reserve: HoneyReserve, receiver: PublicKey, amount: Amount): Promise<TxResponse> {
     const ixs = await this.makeBorrowTx(reserve, receiver, amount);
-    return await sendAllTransactions(this.client.program.provider, ixs, true);
+    return await sendAllTransactions(this.client.program.provider, ixs);
   }
 
   async makeBorrowTx(reserve: HoneyReserve, receiver: PublicKey, amount: Amount): Promise<InstructionAndSigner[]> {

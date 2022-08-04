@@ -9,7 +9,8 @@ import * as util from './util';
 import { BN } from '@project-serum/anchor';
 import { DerivedAccount } from './derived-account';
 import { IReserve } from '../contexts';
-import { ReserveStateLayout, ReserveStateStruct } from '../helpers';
+import { ReserveStateLayout } from '../helpers';
+import { CacheStruct, ReserveStateStruct } from '../contexts';
 
 export interface ReserveConfig {
   utilizationRate1: number;
