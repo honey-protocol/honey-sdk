@@ -44,7 +44,8 @@ export type TPool = {
 export interface NftPosition {
   obligation: string,
   debt: number;
-  address: PublicKey;
+  nft_mint: PublicKey;
+  owner: PublicKey;
   ltv: number;
   is_healthy: string;
   highest_bid: number;

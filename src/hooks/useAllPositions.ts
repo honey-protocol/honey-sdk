@@ -84,7 +84,8 @@ export const useAllPositions = (
                 let position: NftPosition = {
                     obligation: item.publicKey.toString(),
                     debt: totalDebt,
-                    address: new PublicKey(nft),
+                    nft_mint: new PublicKey(nft),
+                    owner: item.account.owner,
                     ltv: 40,
                     is_healthy: getHealthStatus(totalDebt, 2),
                     highest_bid: highestBid
