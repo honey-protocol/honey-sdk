@@ -56,6 +56,14 @@ export class HoneyMarket implements HoneyMarketData {
     public updateAuthority: PublicKey,
   ) {}
 
+  async fetchObligations(): Promise<any[]> {
+    let obligations = await this.client.program.account.obligation?.all();
+    obligations = obligations.filter((item) => {
+      return item.account.market.toString() == this.address.toString() && item.account.collateralNftMint[0].toString() != PublicKey.default.toString()
+    });
+    return obligations;
+  }
+
   public static async fetchData(client: HoneyClient, address: PublicKey): Promise<[any, HoneyMarketReserveInfo[]]> {
 
     const data: any = await client.program.account.market.fetch(address);

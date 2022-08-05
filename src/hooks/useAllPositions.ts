@@ -52,7 +52,7 @@ export const useAllPositions = (
         const client: HoneyClient = await HoneyClient.connect(provider, honeyId, true);
         let arrPositions: NftPosition[] = [];
 
-        let obligations = await client.program.account.obligation?.all();
+        let obligations = await honeyMarket.fetchObligations();
         if (obligations && marketReserveInfo) {
 
           await Promise.all(obligations.map(async (item) => {
