@@ -12,7 +12,7 @@ import {
     Token
 } from "@solana/spl-token";
 import { Amount, HoneyReserve } from '.';
-import { TxResponse } from '../actions';
+import { deposit, TxResponse } from '../actions';
 
 export interface PlaceBidParams {
     bid_limit: number;
@@ -63,6 +63,7 @@ export class LiquidatorClient {
         * @returns The client
     */
     static async connect(provider: anchor.AnchorProvider, honeyPubKey: string, devnet?: boolean): Promise<LiquidatorClient> {
+        console.log('provider in liquidator', typeof provider)
         const idl = devnet ? devnetIdl : mainnetBetaIdl;
         const HONEY_PROGRAM_ID = new PublicKey(honeyPubKey);
         const program = new anchor.Program(idl as any, HONEY_PROGRAM_ID, provider);
@@ -133,11 +134,10 @@ export class LiquidatorClient {
             ),
         );
 
-        const ix = await this.program.instruction.placeLiquidateBid(
-            bumps,
-            amountBN,
-            {
-                accounts: {
+        try {
+            const result = await this.program.methods.placeLiquidateBid(bumps, amountBN)
+            .accounts(
+                {
                     market: params.market,
                     marketAuthority: market_authority.address,
                     bid: bid.address,
@@ -151,24 +151,54 @@ export class LiquidatorClient {
                     tokenProgram: TOKEN_PROGRAM_ID,
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
                     systemProgram: anchor.web3.SystemProgram.programId,
-                },
-            },
-        );
-        tx.add(ix);
-        tx.add(Token.createCloseAccountInstruction(
-            TOKEN_PROGRAM_ID,
-            depositSource.publicKey,
-            bidder,
-            bidder,
-            []));
-        try {
-            const result = await this.program.provider.send(tx, [depositSource], { skipPreflight: true });
+                }
+            ).preInstructions(
+                [SystemProgram.createAccount({
+                    fromPubkey: bidder,
+                    newAccountPubkey: depositSource.publicKey,
+                    space: TokenAccountLayout.span,
+                    lamports:
+                        (await Token.getMinBalanceRentForExemptAccount(this.program.provider.connection)) + amount, // rent + amount
+                    programId: TOKEN_PROGRAM_ID,
+                }),
+                // init token account
+                Token.createInitAccountInstruction(
+                    TOKEN_PROGRAM_ID,
+                    NATIVE_MINT,
+                    depositSource.publicKey,
+                    bidder
+                )]
+            ).postInstructions(
+                [Token.createCloseAccountInstruction(
+                    TOKEN_PROGRAM_ID,
+                    depositSource.publicKey,
+                    bidder,
+                    bidder,
+                    [])]
+            )
+            .signers([depositSource])
+            .rpc();
             console.log(result);
             return [TxnResponse.Success, [result]];
         } catch(err) {
             console.error(`Error placing bid: ${err}`);
             return [TxnResponse.Failed, []];
         }
+        // tx.add(ix);
+        // tx.add(Token.createCloseAccountInstruction(
+        //     TOKEN_PROGRAM_ID,
+        //     depositSource.publicKey,
+        //     bidder,
+        //     bidder,
+        //     []));
+        // try {
+        //     const result = await this.program.provider.send(tx, [depositSource], { skipPreflight: true });
+        //     console.log(result);
+        //     return [TxnResponse.Success, [result]];
+        // } catch(err) {
+        //     console.error(`Error placing bid: ${err}`);
+        //     return [TxnResponse.Failed, []];
+        // }
 
     }
 
@@ -194,30 +224,29 @@ export class LiquidatorClient {
 
         // wSOL deposit
         const depositSource = Keypair.generate();
-        const tx = new Transaction().add(
-            // create token account
-            SystemProgram.createAccount({
-                fromPubkey: bidder,
-                newAccountPubkey: depositSource.publicKey,
-                space: TokenAccountLayout.span,
-                lamports:
-                    (await Token.getMinBalanceRentForExemptAccount(this.program.provider.connection)) + amount, // rent + amount
-                programId: TOKEN_PROGRAM_ID,
-            }),
-            // init token account
-            Token.createInitAccountInstruction(
-                TOKEN_PROGRAM_ID,
-                NATIVE_MINT,
-                depositSource.publicKey,
-                bidder
-            ),
-        );
+        // const tx = new Transaction().add(
+        //     // create token account
+        //     SystemProgram.createAccount({
+        //         fromPubkey: bidder,
+        //         newAccountPubkey: depositSource.publicKey,
+        //         space: TokenAccountLayout.span,
+        //         lamports:
+        //             (await Token.getMinBalanceRentForExemptAccount(this.program.provider.connection)) + amount, // rent + amount
+        //         programId: TOKEN_PROGRAM_ID,
+        //     }),
+        //     // init token account
+        //     Token.createInitAccountInstruction(
+        //         TOKEN_PROGRAM_ID,
+        //         NATIVE_MINT,
+        //         depositSource.publicKey,
+        //         bidder
+        //     ),
+        // );
 
-        const ix = await this.program.instruction.increaseLiquidateBid(
-            bumps,
-            amountBN,
-            {
-                accounts: {
+        try {
+            const result = await this.program.methods.increaseLiquidateBid(bumps, amountBN)
+            .accounts(
+                {
                     market: params.market,
                     marketAuthority: market_authority.address,
                     bid: bid.address,
@@ -231,24 +260,55 @@ export class LiquidatorClient {
                     tokenProgram: TOKEN_PROGRAM_ID,
                     rent: anchor.web3.SYSVAR_RENT_PUBKEY,
                     systemProgram: anchor.web3.SystemProgram.programId,
-                },
-            },
-        );
-        tx.add(ix);
-        tx.add(Token.createCloseAccountInstruction(
-            TOKEN_PROGRAM_ID,
-            depositSource.publicKey,
-            bidder,
-            bidder,
-            []));
-
-        try {
-            const result = await this.program.provider.send(tx, [depositSource], { skipPreflight: true });
+                })
+            .preInstructions(
+                [SystemProgram.createAccount({
+                    fromPubkey: bidder,
+                    newAccountPubkey: depositSource.publicKey,
+                    space: TokenAccountLayout.span,
+                    lamports:
+                        (await Token.getMinBalanceRentForExemptAccount(this.program.provider.connection)) + amount, // rent + amount
+                    programId: TOKEN_PROGRAM_ID,
+                }),
+                // init token account
+                Token.createInitAccountInstruction(
+                    TOKEN_PROGRAM_ID,
+                    NATIVE_MINT,
+                    depositSource.publicKey,
+                    bidder
+                )]
+            )
+            .postInstructions([Token.createCloseAccountInstruction(
+                TOKEN_PROGRAM_ID,
+                depositSource.publicKey,
+                bidder,
+                bidder,
+                [])])
+            .signers([depositSource])
+            .rpc();
+            // const result = await this.program.provider.sendAndConfirm(tx, [depositSource], { skipPreflight: true });
             console.log(result);
             return [TxnResponse.Success, [result]];
         } catch(err) {
             return [TxnResponse.Failed, []];
         }
+
+
+        // tx.add(ix);
+        // tx.add(Token.createCloseAccountInstruction(
+        //     TOKEN_PROGRAM_ID,
+        //     depositSource.publicKey,
+        //     bidder,
+        //     bidder,
+        //     []));
+
+        // try {
+        //     const result = await this.program.provider.sendAndConfirm(tx, [depositSource], { skipPreflight: true });
+        //     console.log(result);
+        //     return [TxnResponse.Success, [result]];
+        // } catch(err) {
+        //     return [TxnResponse.Failed, []];
+        // }
 
     }
 
@@ -321,7 +381,7 @@ export class LiquidatorClient {
         );
 
         try {
-            const result = await this.program.provider.send(tx, [withdrawDestination], { skipPreflight: true });
+            const result = await this.program.provider.sendAndConfirm(tx, [withdrawDestination], { skipPreflight: true });
             console.log(result);
             return [TxnResponse.Success, [result]];
         } catch(err) {
@@ -430,7 +490,7 @@ export class LiquidatorClient {
         );
         tx.add(ix);
 
-        const result = await this.program.provider.send(tx, [], { skipPreflight: true });
+        const result = await this.program.provider.sendAndConfirm(tx, [], { skipPreflight: true });
         console.log(result);
         return tx;
     }

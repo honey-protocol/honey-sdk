@@ -22,7 +22,7 @@
     "dependencies": {
         "@honey-finance/sdk": "^1.0.59",
         "@metaplex-foundation/mpl-token-metadata": "^1.2.0",
-        "@project-serum/anchor": "^0.24.2",
+        "@project-serum/anchor": "^0.25.0",
         "@project-serum/serum": "^0.13.61",
         "@pythnetwork/client": "^2.5.3",
         "@rollup/plugin-commonjs": "^21.1.0",

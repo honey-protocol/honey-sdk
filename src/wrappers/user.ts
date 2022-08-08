@@ -116,7 +116,7 @@ export class HoneyUser implements User {
     amount: Amount,
   ): Promise<string> {
     const tx = await this.makeLiquidateTx(loanReserve, collateralReserve, payerAccount, receiverAccount, amount);
-    return await this.client.program.provider.send(tx);
+    return await this.client.program.provider.sendAndConfirm(tx);
   }
 
   async makeLiquidateTx(
@@ -137,7 +137,7 @@ export class HoneyUser implements User {
     amount: Amount,
   ): Promise<string> {
     const tx = await this.makeLiquidateSolventTx(loanReserve, collateralReserve, payerAccount, receiverAccount, amount);
-    return await this.client.program.provider.send(tx);
+    return await this.client.program.provider.sendAndConfirm(tx);
   }
 
   async makeLiquidateSolventTx(
@@ -153,7 +153,7 @@ export class HoneyUser implements User {
   async repay(reserve: HoneyReserve, tokenAccount: PublicKey, amount: Amount): Promise<TxResponse> {
     const ixs = await this.makeRepayTx(reserve, tokenAccount, amount);
     try {
-      return await sendAllTransactions(this.client.program.provider, ixs);
+      return await sendAllTransactions(this.client.program.provider as anchor.AnchorProvider, ixs);
     } catch (err) {
       console.error(`Repay error: ${err}`);
       return [TxnResponse.Failed, []];
@@ -244,7 +244,7 @@ export class HoneyUser implements User {
   async withdrawNFT(tokenAccount: PublicKey, tokenMint: PublicKey, updateAuthority: PublicKey): Promise<TxResponse> {
     const tx = await this.makeNFTWithdrawTx(tokenAccount, tokenMint, updateAuthority);
     try {
-      const txid = await this.client.program.provider.send(tx, [], { skipPreflight: true });
+      const txid = await this.client.program.provider.sendAndConfirm(tx, [], { skipPreflight: true });
       return [TxnResponse.Success, [txid]];
     } catch (err) {
       console.error(`Withdraw NFT error: ${err}`);
@@ -255,7 +255,7 @@ export class HoneyUser implements User {
   async withdrawNFTSolvent(tokenAccount: PublicKey, tokenMint: PublicKey, depositor: PublicKey, updateAuthority: PublicKey): Promise<TxResponse> {
     const tx = await this.makeNFTWithdrawSolventTx(tokenAccount, tokenMint, depositor, updateAuthority);
     try {
-      const txid = await this.client.program.provider.send(tx, [], { skipPreflight: true });
+      const txid = await this.client.program.provider.sendAndConfirm(tx, [], { skipPreflight: true });
       console.log('txid', txid);
       return [TxnResponse.Success, [txid]];
     } catch (err) {
@@ -397,7 +397,7 @@ export class HoneyUser implements User {
           },
         });
         obligationTx.add(ix);
-        const txid = await this.client.program.provider.send(obligationTx, [], { skipPreflight: true });
+        const txid = await this.client.program.provider.sendAndConfirm(obligationTx, [], { skipPreflight: true });
         txids.push(txid);
         console.log('added obligation account', txid);
       } catch (err) {
@@ -450,7 +450,7 @@ export class HoneyUser implements User {
       });
       collateralTx.add(ix);
       try {
-        const txid = await this.client.program.provider.send(collateralTx, [], { skipPreflight: true });
+        const txid = await this.client.program.provider.sendAndConfirm(collateralTx, [], { skipPreflight: true });
         txids.push(txid);
       } catch (err) {
         console.error(`Collateral account: ${err}`);
@@ -475,7 +475,7 @@ export class HoneyUser implements User {
     });
     tx.add(depositNFTIx);
     try {
-      const txid = await this.client.program.provider.send(tx, [], { skipPreflight: true });
+      const txid = await this.client.program.provider.sendAndConfirm(tx, [], { skipPreflight: true });
       txids.push(txid);
       return [TxnResponse.Success, txids];
     } catch (err) {
@@ -486,7 +486,7 @@ export class HoneyUser implements User {
 
   async withdrawCollateral(reserve: HoneyReserve, amount: Amount): Promise<TxResponse> {
     const ixs = await this.makeWithdrawCollateralTx(reserve, amount);
-    return await sendAllTransactions(this.client.program.provider, ixs);
+    return await sendAllTransactions(this.client.program.provider as anchor.AnchorProvider, ixs);
   }
 
   async makeWithdrawCollateralTx(reserve: HoneyReserve, amount: Amount): Promise<InstructionAndSigner[]> {
@@ -590,7 +590,7 @@ export class HoneyUser implements User {
     const txids: string[] = [];
     if (supplementalTx && signer) {
       try {
-        const txid = await this.client.program.provider.send(supplementalTx, signer);
+        const txid = await this.client.program.provider.sendAndConfirm(supplementalTx, signer);
         txids.push(txid);
       } catch (err) {
         console.error(`Ata or wSOL account creation error: ${err}`);
@@ -628,7 +628,7 @@ export class HoneyUser implements User {
       tx.add(closeWsolIx);
     }
     try {
-      const txid = await this.client.program.provider.send(tx);
+      const txid = await this.client.program.provider.sendAndConfirm(tx);
       txids.push(txid);
       return [TxnResponse.Success, txids];
     } catch (err) {
@@ -640,7 +640,7 @@ export class HoneyUser implements User {
   async deposit(reserve: HoneyReserve, tokenAccount: PublicKey, amount: Amount): Promise<TxResponse> {
     const [transaction, signers] = await this.makeDepositTx(reserve, tokenAccount, amount);
     try {
-      const txid = await this.client.program.provider.send(transaction, signers, { skipPreflight: true });
+      const txid = await this.client.program.provider.sendAndConfirm(transaction, signers, { skipPreflight: true });
       return [TxnResponse.Success, [txid]];
     } catch (err) {
       console.error(`Deposit error: ${err}`);
@@ -737,7 +737,7 @@ export class HoneyUser implements User {
   async depositCollateral(reserve: HoneyReserve, amount: Amount): Promise<TxResponse> {
     const tx = await this.makeDepositCollateralTx(reserve, amount);
     try {
-      const txid = await this.client.program.provider.send(tx);
+      const txid = await this.client.program.provider.sendAndConfirm(tx);
       return [TxnResponse.Success, [txid]];
     } catch (err) {
       return [TxnResponse.Failed, []];
@@ -785,7 +785,7 @@ export class HoneyUser implements User {
 
   async borrow(reserve: HoneyReserve, receiver: PublicKey, amount: Amount): Promise<TxResponse> {
     const ixs = await this.makeBorrowTx(reserve, receiver, amount);
-    return await sendAllTransactions(this.client.program.provider, ixs);
+    return await sendAllTransactions(this.client.program.provider as anchor.AnchorProvider, ixs);
   }
 
   async makeBorrowTx(reserve: HoneyReserve, receiver: PublicKey, amount: Amount): Promise<InstructionAndSigner[]> {
