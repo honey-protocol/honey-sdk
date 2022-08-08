@@ -22,7 +22,7 @@ export const useMarket = (
     const fetchHoneyClient = async () => {
       if (!wallet) return;
 
-      const provider = new anchor.Provider(connection, wallet, anchor.Provider.defaultOptions());
+      const provider = new anchor.AnchorProvider(connection, wallet, anchor.AnchorProvider.defaultOptions());
       const client: HoneyClient = await HoneyClient.connect(provider, honeyProgramId, true);
       setHoneyClient(client);
 

@@ -47,11 +47,11 @@ export const AnchorProvider: FC<AnchorProviderProps> = ({
     // setup coder for anchor operations
     const setup = async () => {
       const idl: any = network === 'devnet' ? devnetIdl : mainnetBetaIdl;
-      setAnchorCoder(new anchor.Coder(idl));
+      setAnchorCoder(new anchor.BorshCoder(idl));
       // init program
       const HONEY_PROGRAM_ID = new PublicKey(honeyProgram);
 
-      const provider = new anchor.Provider(connection, wallet, anchor.Provider.defaultOptions());
+      const provider = new anchor.AnchorProvider(connection, wallet, anchor.AnchorProvider.defaultOptions());
       const anchorProgram: Program = new anchor.Program(idl as any, HONEY_PROGRAM_ID, provider);
       setProgram(anchorProgram);
       setIsConfigured(true);

@@ -306,7 +306,7 @@ export const getAccountInfoAndSubscribe = async function (
 };
 
 export const sendTransaction = async (
-  provider: anchor.Provider,
+  provider: anchor.AnchorProvider,
   instructions: TransactionInstruction[],
   signers?: Signer[],
   skipConfirmation?: boolean,
@@ -422,7 +422,7 @@ export interface InstructionAndSigner {
 }
 
 export const simulateAllTransactions = async (
-  provider: anchor.Provider,
+  provider: anchor.AnchorProvider,
   transactions: InstructionAndSigner[],
   skipConfirmation?: boolean,
 ): Promise<[res: TxnResponse, txids: string[]]> => {
@@ -491,7 +491,7 @@ export const simulateAllTransactions = async (
 };
 
 export const sendAllTransactions = async (
-  provider: anchor.Provider,
+  provider: anchor.AnchorProvider,
   transactions: InstructionAndSigner[],
   skipConfirmation?: boolean,
 ): Promise<[res: TxnResponse, txids: string[]]> => {
