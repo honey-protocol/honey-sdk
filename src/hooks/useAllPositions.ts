@@ -44,9 +44,9 @@ export const useAllPositions = (
             // 'http://localhost:3001/bids',
             {mode:'cors'});
         const arrBids = await resBids.json();
-        const parsedBids = arrBids.map((str) => JSON.parse(str));
+        // const parsedBids = arrBids.map((str) => JSON.parse(str));
 
-        const highestBid = Math.max.apply(Math, parsedBids.map(function(o) { return o.bidLimit; }))
+        const highestBid = Math.max.apply(Math, arrBids.map(function(o) { return o.bidLimit; }))
         console.log('fetching positions...');
         const provider = new anchor.Provider(connection, wallet, anchor.Provider.defaultOptions());
         const client: HoneyClient = await HoneyClient.connect(provider, honeyId, true);
@@ -94,7 +94,7 @@ export const useAllPositions = (
               }
             }));
           }));
-          setStatus({loading: false, positions: arrPositions, bids: parsedBids});
+          setStatus({loading: false, positions: arrPositions, bids: arrBids});
         }
     }
 
