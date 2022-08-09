@@ -23,7 +23,7 @@ export class HoneyClient {
    * @param provider The provider with wallet/network access that can be used to send transactions.
    * @returns The client
    */
-  static async connect(provider: anchor.Provider, honeyPubKey: string, devnet?: boolean): Promise<HoneyClient> {
+  static async connect(provider: anchor.AnchorProvider, honeyPubKey: string, devnet?: boolean): Promise<HoneyClient> {
     const idl = devnet ? devnetIdl : mainnetBetaIdl;
     const HONEY_PROGRAM_ID = new PublicKey(honeyPubKey);
     const program = new anchor.Program(idl as any, HONEY_PROGRAM_ID, provider);

@@ -164,7 +164,7 @@ export class HoneyReserve {
 
   async sendRefreshTx(): Promise<string> {
     const tx = new Transaction().add(await this.makeRefreshIx());
-    return await this.client.program.provider.send(tx);
+    return await this.client.program.provider.sendAndConfirm(tx);
   }
 
   async refreshOldReserves(): Promise<void> {

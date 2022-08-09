@@ -48,7 +48,7 @@ export const useAllPositions = (
 
         const highestBid = Math.max.apply(Math, arrBids.map(function(o) { return o.bidLimit; }))
         console.log('fetching positions...');
-        const provider = new anchor.Provider(connection, wallet, anchor.Provider.defaultOptions());
+        const provider = new anchor.AnchorProvider(connection, wallet, anchor.AnchorProvider.defaultOptions());
         const client: HoneyClient = await HoneyClient.connect(provider, honeyId, true);
         let arrPositions: NftPosition[] = [];
 
