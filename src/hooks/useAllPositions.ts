@@ -8,7 +8,7 @@ import { useMarket } from './useMarket';
 import * as anchor from '@project-serum/anchor';
 import { BN } from '@project-serum/anchor';
 import { NftPosition } from '../helpers/types';
-import { getHealthStatus } from '../helpers/util'
+import { getHealthStatus, getOraclePrice } from '../helpers/util'
 
 export const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
 export const LTV_MAX = 40;
@@ -52,6 +52,10 @@ export const useAllPositions = (
         const client: HoneyClient = await HoneyClient.connect(provider, honeyId, true);
         let arrPositions: NftPosition[] = [];
 
+        const solPriceUsd = await getOraclePrice("devnet", connection, honeyReserves[0].data.switchboardPriceAggregator);
+        const nftPriceUsd = await getOraclePrice("devnet", connection, honeyMarket.nftSwithchboardPriceAggregator);
+        const nftPrice = nftPriceUsd / solPriceUsd;
+
         let obligations = await honeyMarket.fetchObligations();
         if (obligations && marketReserveInfo) {
 
@@ -87,7 +91,7 @@ export const useAllPositions = (
                     nft_mint: new PublicKey(nft),
                     owner: item.account.owner,
                     ltv: 40,
-                    is_healthy: getHealthStatus(totalDebt, 2),
+                    is_healthy: getHealthStatus(totalDebt, nftPrice),
                     highest_bid: highestBid
                 };
                 arrPositions.push(position);
