@@ -62,7 +62,7 @@ export class LiquidatorClient {
         * @param provider The provider with wallet/network access that can be used to send transactions.
         * @returns The client
     */
-    static async connect(provider: anchor.AnchorProvider, honeyPubKey: string, devnet?: boolean): Promise<LiquidatorClient> {
+    static async connect(provider: anchor.AnchorProvider | anchor.Provider, honeyPubKey: string, devnet?: boolean): Promise<LiquidatorClient> {
         console.log('provider in liquidator', typeof provider)
         const idl = devnet ? devnetIdl : mainnetBetaIdl;
         const HONEY_PROGRAM_ID = new PublicKey(honeyPubKey);
