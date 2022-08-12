@@ -39,7 +39,7 @@ export interface HoneyMarketData {
   owner: PublicKey;
 
   reserves: HoneyMarketReserveInfo[];
-  nftSwithchboardPriceAggregator: PublicKey;
+  nftSwitchboardPriceAggregator: PublicKey;
   updateAuthority: PublicKey;
 }
 
@@ -52,22 +52,23 @@ export class HoneyMarket implements HoneyMarketData {
     public marketAuthority: PublicKey,
     public owner: PublicKey,
     public reserves: HoneyMarketReserveInfo[],
-    public nftSwithchboardPriceAggregator: PublicKey,
+    public nftSwitchboardPriceAggregator: PublicKey,
     public updateAuthority: PublicKey,
   ) {}
 
   async fetchObligations(): Promise<any[]> {
     let obligations = await this.client.program.account.obligation?.all();
     obligations = obligations.filter((item) => {
-      return item.account.market.toString() == this.address.toString() && item.account.collateralNftMint[0].toString() != PublicKey.default.toString()
+      return (
+        item.account.market.toString() == this.address.toString() &&
+        item.account.collateralNftMint[0].toString() != PublicKey.default.toString()
+      );
     });
     return obligations;
   }
 
   public static async fetchData(client: HoneyClient, address: PublicKey): Promise<[any, HoneyMarketReserveInfo[]]> {
-
     const data: any = await client.program.account.market.fetch(address);
-    console.log(address.toString());
 
     const reserveInfoData = new Uint8Array(data.reserves);
     const reserveInfoList = MarketReserveInfoList.decode(reserveInfoData) as HoneyMarketReserveInfo[];
@@ -92,7 +93,7 @@ export class HoneyMarket implements HoneyMarketData {
       data.marketAuthority,
       data.owner,
       reserveInfoList,
-      data.nftSwithchboardPriceAggregator,
+      data.nftSwitchboardPriceAggregator,
       data.updateAuthority,
     );
   }
@@ -108,7 +109,7 @@ export class HoneyMarket implements HoneyMarketData {
     this.marketAuthority = data.marketAuthority;
     this.quoteCurrency = data.quoteCurrency;
     this.quoteTokenMint = data.quoteTokenMint;
-    this.nftSwithchboardPriceAggregator = data.nftSwithchboardPriceAggregator;
+    this.nftSwitchboardPriceAggregator = data.nftSwitchboardPriceAggregator;
     this.updateAuthority = data.updateAuthority;
   }
 
@@ -162,12 +163,7 @@ export class HoneyMarket implements HoneyMarketData {
     const createReserveAccount = await this.client.program.account.reserve.createInstruction(account);
     const transaction = new Transaction();
     transaction.add(createReserveAccount);
-    const initTx = await sendAndConfirmTransaction(
-      this.client.program.provider.connection,
-      transaction,
-      [(this.client.program.provider.wallet as any).payer, account],
-      { skipPreflight: true },
-    );
+    const initTx = await this.client.program.provider.sendAndConfirm(transaction, [account], { skipPreflight: true });
     console.log(`Init reserve account tx ${initTx}`);
 
     // console.log('accounts', {

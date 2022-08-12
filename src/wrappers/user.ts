@@ -252,7 +252,12 @@ export class HoneyUser implements User {
     }
   }
 
-  async withdrawNFTSolvent(tokenAccount: PublicKey, tokenMint: PublicKey, depositor: PublicKey, updateAuthority: PublicKey): Promise<TxResponse> {
+  async withdrawNFTSolvent(
+    tokenAccount: PublicKey,
+    tokenMint: PublicKey,
+    depositor: PublicKey,
+    updateAuthority: PublicKey,
+  ): Promise<TxResponse> {
     const tx = await this.makeNFTWithdrawSolventTx(tokenAccount, tokenMint, depositor, updateAuthority);
     try {
       const txid = await this.client.program.provider.sendAndConfirm(tx, [], { skipPreflight: true });
@@ -878,7 +883,7 @@ export class HoneyUser implements User {
         loanAccount: loanAccountPK,
         tokenMint: reserve.data.tokenMint,
         receiverAccount,
-        nftSwithchboardPriceAggregator: this.market.nftSwithchboardPriceAggregator,
+        nftSwitchboardPriceAggregator: this.market.nftSwitchboardPriceAggregator,
         tokenProgram: TOKEN_PROGRAM_ID,
       },
     });
