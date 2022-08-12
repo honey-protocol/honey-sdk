@@ -182,17 +182,15 @@ export class HoneyReserve {
   async makeRefreshIx(): Promise<TransactionInstruction> {
     if (!this.data) return;
 
-    const [feeAccount, feeAccountBump] = await PublicKey.findProgramAddress(
+    const [feeAccount, _feeAccountBump] = await PublicKey.findProgramAddress(
       [Buffer.from('fee-vault'), this.address.toBuffer()],
       this.client.program.programId,
     );
 
-    const [protocolFeeAccount, protocolFeeAccountBump] = await PublicKey.findProgramAddress(
+    const [protocolFeeAccount, _protocolFeeAccountBump] = await PublicKey.findProgramAddress(
       [Buffer.from('protocol-fee-vault'), this.address.toBuffer()],
       this.client.program.programId,
     );
-
-    console.log(this.data);
 
     return this.client.program.instruction.refreshReserve({
       accounts: {
@@ -203,6 +201,7 @@ export class HoneyReserve {
         protocolFeeNoteVault: protocolFeeAccount,
         depositNoteMint: this.data.depositNoteMint,
         switchboardPriceAggregator: this.data.switchboardPriceAggregator,
+        nftSwitchboardPriceAggregator: this.market.nftSwitchboardPriceAggregator,
         tokenProgram: TOKEN_PROGRAM_ID,
       },
     });
