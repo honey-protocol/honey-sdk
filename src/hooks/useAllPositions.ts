@@ -110,5 +110,5 @@ export const useAllPositions = (
         }
         fetchPositions();
     }, [honeyUser, marketReserveInfo]);
-    return { ...status };
+    return { ...status, fetchPositions };
 }
