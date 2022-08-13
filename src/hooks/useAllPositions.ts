@@ -53,7 +53,7 @@ export const useAllPositions = (
         let arrPositions: NftPosition[] = [];
 
         const solPriceUsd = await getOraclePrice("devnet", connection, honeyReserves[0].data.switchboardPriceAggregator);
-        const nftPriceUsd = await getOraclePrice("devnet", connection, honeyMarket.nftSwithchboardPriceAggregator);
+        const nftPriceUsd = await getOraclePrice("devnet", connection, honeyMarket.switchboardPriceAggregator);
         const nftPrice = nftPriceUsd / solPriceUsd;
 
         let obligations = await honeyMarket.fetchObligations();
