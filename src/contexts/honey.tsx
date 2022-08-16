@@ -114,7 +114,7 @@ export const HoneyProvider: FC<HoneyProps> = ({
   const fetchMarket = async () => {
     // market info
     const marketValue = await program.account.market.fetch(honeyMarket.address);
-    setMarket(marketValue as IMarket);
+    setMarket(marketValue as any as IMarket);
 
     // reserve info
     const reserveInfoData = new Uint8Array(marketValue.reserves as any as number[]);

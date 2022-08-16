@@ -155,7 +155,7 @@ export class HoneyReserve {
   }
 
   static async decodeReserve(client: HoneyClient, address: PublicKey) {
-    const reserveData = (await client.program.account.reserve.fetch(address)) as IReserve;
+    const reserveData = (await client.program.account.reserve.fetch(address)) as any as IReserve;
     const reserveState = ReserveStateLayout.decode(Buffer.from(reserveData.state)) as ReserveStateStruct;
     reserveData.reserveState = reserveState;
 
