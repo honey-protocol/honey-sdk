@@ -1,5 +1,5 @@
 import { PublicKey } from '@solana/web3.js';
-import { SolongWallet, Wallet } from './honeyTypes';
+import { ReserveStateStruct } from './honeyTypes';
 
 export type TAsset = {
   name: String;
@@ -51,4 +51,46 @@ export interface NftPosition {
   highest_bid: number;
 }
 
-export type SupportedWallet = Wallet | SolongWallet | null;
+
+export interface TMarket {
+  version: 0,
+  quoteExponent: number,
+  quoteCurrency: number[],
+  authorityBumpSeed: number[],
+  authoritySeed: PublicKey,
+  marketAuthority: PublicKey,
+  owner: PublicKey,
+  quoteTokenMint: PublicKey,
+  nftSwitchboardPriceAggregator: PublicKey,
+  nftCollectionCreator: PublicKey,
+  flags: number,
+  marketOracleState: number[],
+  reserved: number[],
+  reserves: number[]
+}
+
+export interface TReserve {
+  version: number;
+  index: number;
+  exponent: number;
+  market: PublicKey;
+  switchboardPriceAggregator: PublicKey;
+  tokenMint: PublicKey;
+  depositNoteMint: PublicKey;
+  loanNoteMint: PublicKey;
+  vault: PublicKey;
+  feeNoteVault: PublicKey;
+  protocolFeeNoteVault: PublicKey;
+  // dexMarketA: PublicKey;
+  // dexMarketB: PublicKey;
+  // dexOpenOrdersA: PublicKey;
+  // dexOpenOrdersB: PublicKey;
+  // dexSwapTokens: PublicKey;
+  config: any;
+  // nftDropletMint: PublicKey;
+  // nftDropletVault: PublicKey;
+  reserved0: number[];
+  reserved1: number[];
+  state: number[];
+  reserveState: ReserveStateStruct;
+}

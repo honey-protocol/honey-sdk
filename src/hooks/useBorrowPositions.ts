@@ -2,9 +2,7 @@ import { Metadata } from '@metaplex-foundation/mpl-token-metadata';
 import { Connection, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
 import { useEffect, useState } from 'react';
 import { getNFTAssociatedMetadata } from '..';
-import { useHoney } from '../contexts/honey';
 import { ObligationAccount } from '../helpers/honeyTypes';
-import { SupportedWallet, TBorrowPosition } from '../helpers/types';
 import { ConnectedWallet } from '../helpers/walletType';
 import { useMarket } from './useMarket';
 

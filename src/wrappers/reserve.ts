@@ -8,9 +8,7 @@ import { HoneyMarket } from './market';
 import * as util from './util';
 import { BN } from '@project-serum/anchor';
 import { DerivedAccount } from './derived-account';
-import { IReserve } from '../contexts';
-import { ReserveStateLayout } from '../helpers';
-import { CacheStruct, ReserveStateStruct } from '../contexts';
+import { ReserveStateLayout, ReserveStateStruct, TReserve } from '../helpers';
 
 export interface ReserveConfig {
   utilizationRate1: number;
@@ -141,7 +139,7 @@ export class HoneyReserve {
     private client: HoneyClient,
     private market: HoneyMarket,
     public address: PublicKey,
-    public data?: IReserve,
+    public data?: TReserve,
     public state?: ReserveStateStruct,
   ) {
     this.conn = this.client.program.provider.connection;
@@ -155,7 +153,7 @@ export class HoneyReserve {
   }
 
   static async decodeReserve(client: HoneyClient, address: PublicKey) {
-    const reserveData = (await client.program.account.reserve.fetch(address)) as any as IReserve;
+    const reserveData = (await client.program.account.reserve.fetch(address)) as any as TReserve;
     const reserveState = ReserveStateLayout.decode(Buffer.from(reserveData.state)) as ReserveStateStruct;
     reserveData.reserveState = reserveState;
 
@@ -243,13 +241,3 @@ export class HoneyReserve {
     };
   }
 }
-
-const ReserveStateStruct = BL.struct([
-  util.u64Field('accruedUntil'),
-  util.numberField('outstandingDebt'),
-  util.numberField('uncollectedFees'),
-  util.u64Field('totalDeposits'),
-  util.u64Field('totalDepositNotes'),
-  util.u64Field('totalLoanNotes'),
-  BL.blob(416 + 16, '_RESERVED_'),
-]);
