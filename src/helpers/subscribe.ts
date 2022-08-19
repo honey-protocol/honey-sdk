@@ -2,7 +2,6 @@
 // Todo: keep subscription IDs and unsubscribe at end of lifetime
 import type * as anchor from '@project-serum/anchor';
 import { BN } from '@project-serum/anchor';
-import type { Market, Reserve } from './honeyTypes';
 import { getCcRate, getBorrowRate, getDepositRate } from './programUtil';
 
 // Derive market reserve and user asset values, update global objects
