@@ -122,7 +122,6 @@
           "isMut": false,
           "isSigner": false,
           "docs": [
-            "The program for interacting with the DEX",
             "The account containing the price information for the token."
           ]
         },
@@ -338,10 +337,7 @@
         {
           "name": "metadata",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "metadata"
-          ]
+          "isSigner": false
         },
         {
           "name": "owner",
@@ -1000,17 +996,14 @@
         {
           "name": "metadata",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "metadata"
-          ]
+          "isSigner": false
         },
         {
           "name": "collateralAccount",
           "isMut": true,
           "isSigner": false,
           "docs": [
-            "The account that will store the deposit notes as collateral"
+            "The account that will store the deposit nft as collateral"
           ]
         },
         {
@@ -1085,10 +1078,7 @@
         {
           "name": "metadata",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "metadata"
-          ]
+          "isSigner": false
         },
         {
           "name": "depositNftMint",
@@ -1210,7 +1200,10 @@
         {
           "name": "nftSwitchboardPriceAggregator",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "-- MIGHT NOT NEED THIS IF WE REQUIRE REFRESH RESERVE"
+          ]
         }
       ],
       "args": [
@@ -1454,6 +1447,11 @@
           "isSigner": false
         },
         {
+          "name": "marketAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "reserve",
           "isMut": true,
           "isSigner": false
@@ -1480,6 +1478,11 @@
           ]
         },
         {
+          "name": "collateralAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "loanAccount",
           "isMut": true,
           "isSigner": false,
@@ -1488,18 +1491,8 @@
           ]
         },
         {
-          "name": "marketAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "nftMint",
           "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collateralAccount",
-          "isMut": true,
           "isSigner": false
         },
         {
@@ -1584,10 +1577,7 @@
         {
           "name": "metadata",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "metadata"
-          ]
+          "isSigner": false
         },
         {
           "name": "depositNftMint",
@@ -1710,7 +1700,7 @@
         },
         {
           "name": "bidder",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true
         },
         {
@@ -2064,7 +2054,8 @@
           "isMut": false,
           "isSigner": false,
           "docs": [
-            "the account containing the price information for the nfts in this collection"
+            "the account containing the price information for the nfts in this collection",
+            "CHECK market must have a nft_switchboard_price_aggregator account"
           ]
         },
         {
@@ -3096,136 +3087,146 @@
     },
     {
       "code": 6005,
+      "name": "CollateralExists",
+      "msg": "collateral position already exists"
+    },
+    {
+      "code": 6006,
       "name": "UnregisteredPosition",
       "msg": "the obligation account doesn't have any record of the loan or collateral account"
     },
     {
-      "code": 6006,
+      "code": 6007,
       "name": "UnregisteredNFTPosition",
       "msg": "the nft collateral mint does not exist"
     },
     {
-      "code": 6007,
+      "code": 6008,
       "name": "InvalidOraclePrice",
       "msg": "the oracle price account has an invalid price value"
     },
     {
-      "code": 6008,
+      "code": 6009,
       "name": "InsufficientCollateral",
       "msg": "there is not enough collateral deposited to borrow against"
     },
     {
-      "code": 6009,
+      "code": 6010,
       "name": "SimultaneousDepositAndBorrow",
       "msg": "cannot both deposit collateral to and borrow from the same reserve"
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "ObligationHealthy",
       "msg": "cannot liquidate a healthy position"
     },
     {
-      "code": 6011,
+      "code": 6012,
       "name": "ObligationUnhealthy",
       "msg": "cannot perform an action that would leave the obligation unhealthy"
     },
     {
-      "code": 6012,
+      "code": 6013,
       "name": "ExceptionalReserveState",
       "msg": "reserve requires special action; call refresh_reserve until up to date"
     },
     {
-      "code": 6013,
+      "code": 6014,
       "name": "InvalidAmountUnits",
       "msg": "the units provided in the amount are not valid for the instruction"
     },
     {
-      "code": 6014,
+      "code": 6015,
       "name": "InvalidDexMarketMints",
       "msg": "the tokens in the DEX market don't match the reserve and lending market quote token"
     },
     {
-      "code": 6015,
+      "code": 6016,
       "name": "InvalidMarketAuthority",
       "msg": "the market authority provided doesn't match the market account"
     },
     {
-      "code": 6016,
+      "code": 6017,
       "name": "InvalidLiquidationQuoteTokenAccount",
       "msg": "the quote token account provided cannot be used for liquidations"
     },
     {
-      "code": 6017,
+      "code": 6018,
       "name": "ObligationAccountMismatch",
       "msg": "the obligation account doesn't have the collateral/loan registered"
     },
     {
-      "code": 6018,
+      "code": 6019,
       "name": "UnknownInstruction",
       "msg": "unknown instruction"
     },
     {
-      "code": 6019,
+      "code": 6020,
       "name": "Disallowed",
       "msg": "current conditions prevent an action from being performed"
     },
     {
-      "code": 6020,
+      "code": 6021,
       "name": "LiquidationSwapSlipped",
       "msg": "the actual slipped amount on the DEX trade exceeded the threshold configured"
     },
     {
-      "code": 6021,
+      "code": 6022,
       "name": "CollateralValueTooSmall",
       "msg": "the collateral value is too small for a DEX trade"
     },
     {
-      "code": 6022,
+      "code": 6023,
       "name": "LiquidationLowCollateral",
       "msg": "the collateral returned by the liquidation is smaller than requested"
     },
     {
-      "code": 6023,
+      "code": 6024,
       "name": "NotSupported",
       "msg": "this action is currently not supported by this version of the program"
     },
     {
-      "code": 6024,
+      "code": 6025,
       "name": "MarketHalted",
       "msg": "the market has currently halted this kind of operation"
     },
     {
-      "code": 6025,
+      "code": 6026,
       "name": "InvalidParameter",
       "msg": "a given parameter is not valid"
     },
     {
-      "code": 6026,
+      "code": 6027,
       "name": "PositionNotEmpty",
       "msg": "the obligation account still holds position in the loan or collateral account"
     },
     {
-      "code": 6027,
+      "code": 6028,
       "name": "ObligationPositionNotFound",
       "msg": "position not found in an obligation"
     },
     {
-      "code": 6028,
+      "code": 6029,
       "name": "AccountNotEmptyError",
       "msg": "the collateral/loan account is not empty"
     },
     {
-      "code": 6029,
+      "code": 6030,
       "name": "InvalidMetadata",
       "msg": "invalid metadata "
     },
     {
-      "code": 6030,
+      "code": 6031,
       "name": "BidMintMismatch",
       "msg": "the liquidation bid's token account doesn't match the reserve"
+    },
+    {
+      "code": 6032,
+      "name": "InvalidAuthority",
+      "msg": "Invalid authority given to place a bid"
     }
   ],
   "metadata": {
-    "address": "BmdNpm85xLcZCY9nAT6YB9reeFYRDaAUQorr4hEXh8ZL"
+    "address": "AxQJW7h5Zmbq3wMwsRpEb3LsfwWhpaMWpDoTgyA4oSd"
   }
 }
