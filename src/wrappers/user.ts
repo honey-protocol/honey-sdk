@@ -608,14 +608,12 @@ export class HoneyUser implements User {
         accounts: {
           market: this.market.address,
           marketAuthority: this.market.marketAuthority,
-          withdrawAccount,
-          depositAccount: accounts.deposits.address,
-          depositor: this.address,
-
           reserve: reserve.address,
           vault: reserve.data.vault,
           depositNoteMint: reserve.data.depositNoteMint,
-
+          depositor: this.address,
+          depositAccount: accounts.deposits.address,
+          withdrawAccount,
           honeyProgram: this.client.program.programId,
           tokenProgram: TOKEN_PROGRAM_ID,
         },
