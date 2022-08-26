@@ -138,7 +138,7 @@ export class HoneyReserve {
   constructor(
     private client: HoneyClient,
     private market: HoneyMarket,
-    public address: PublicKey,
+    public reserve: PublicKey,
     public data?: TReserve,
     public state?: ReserveStateStruct,
   ) {
@@ -147,7 +147,7 @@ export class HoneyReserve {
 
   async refresh(): Promise<void> {
     await this.market.refresh();
-    const { data, state } = await HoneyReserve.decodeReserve(this.client, this.address);
+    const { data, state } = await HoneyReserve.decodeReserve(this.client, this.reserve);
     this.data = data;
     this.state = state;
   }
@@ -181,12 +181,12 @@ export class HoneyReserve {
     if (!this.data) return;
 
     const [feeAccount, _feeAccountBump] = await PublicKey.findProgramAddress(
-      [Buffer.from('fee-vault'), this.address.toBuffer()],
+      [Buffer.from('fee-vault'), this.reserve.toBuffer()],
       this.client.program.programId,
     );
 
     const [protocolFeeAccount, _protocolFeeAccountBump] = await PublicKey.findProgramAddress(
-      [Buffer.from('protocol-fee-vault'), this.address.toBuffer()],
+      [Buffer.from('protocol-fee-vault'), this.reserve.toBuffer()],
       this.client.program.programId,
     );
 
@@ -194,7 +194,7 @@ export class HoneyReserve {
       accounts: {
         market: this.market.address,
         marketAuthority: this.market.marketAuthority,
-        reserve: this.address,
+        reserve: this.reserve,
         feeNoteVault: feeAccount,
         protocolFeeNoteVault: protocolFeeAccount,
         depositNoteMint: this.data.depositNoteMint,

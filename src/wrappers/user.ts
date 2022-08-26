@@ -11,7 +11,7 @@ import {
 import * as anchor from '@project-serum/anchor';
 import { Amount, DerivedAccount } from '.';
 import { HoneyClient } from './client';
-import { HoneyMarket, HoneyMarketReserveInfo } from './market';
+import { HoneyMarket } from './market';
 import {
   AccountLayout as TokenAccountLayout,
   AccountInfo as TokenAccount,
@@ -25,7 +25,7 @@ import { InstructionAndSigner, parseObligationAccount, sendAllTransactions } fro
 import * as util from './util';
 import * as BL from '@solana/buffer-layout';
 import { TxResponse } from '../actions/types';
-import { ObligationAccount, TxnResponse } from '../helpers/honeyTypes';
+import { HoneyMarketReserveInfo, ObligationAccount, TxnResponse } from '../helpers/honeyTypes';
 import { TokenAmount } from './token-amount';
 
 export const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
@@ -218,7 +218,7 @@ export class HoneyUser implements User {
 
         payer: this.address,
 
-        reserve: reserve.address,
+        reserve: reserve.reserve,
         vault: reserve.data.vault,
         obligation: this.obligation.address,
         loanNoteMint: reserve.data.loanNoteMint,
@@ -297,7 +297,7 @@ export class HoneyUser implements User {
 
     await Promise.all(
       this.reserves.map(async (reserve) => {
-        if (!reserve.address.equals(PublicKey.default)) tx.add(await reserve.makeRefreshIx());
+        if (!reserve.reserve.equals(PublicKey.default)) tx.add(await reserve.makeRefreshIx());
       }),
     );
     tx.add(
@@ -347,7 +347,7 @@ export class HoneyUser implements User {
 
     await Promise.all(
       this.reserves.map(async (reserve) => {
-        if (!reserve.address.equals(PublicKey.default)) tx.add(await reserve.makeRefreshIx());
+        if (!reserve.reserve.equals(PublicKey.default)) tx.add(await reserve.makeRefreshIx());
       }),
     );
 
@@ -514,7 +514,7 @@ export class HoneyUser implements User {
         owner: this.address,
         obligation: this.obligation.address,
 
-        reserve: reserve.address,
+        reserve: reserve.reserve,
         collateralAccount: accounts.collateral.address,
         depositAccount: accounts.deposits.address,
 
@@ -608,7 +608,7 @@ export class HoneyUser implements User {
         accounts: {
           market: this.market.address,
           marketAuthority: this.market.marketAuthority,
-          reserve: reserve.address,
+          reserve: reserve.reserve,
           vault: reserve.data.vault,
           depositNoteMint: reserve.data.depositNoteMint,
           depositor: this.address,
@@ -721,7 +721,7 @@ export class HoneyUser implements User {
           depositAccount: accounts.deposits.address,
           depositor: this.address,
 
-          reserve: reserve.address,
+          reserve: reserve.reserve,
           vault: reserve.data.vault,
           depositNoteMint: reserve.data.depositNoteMint,
 
@@ -775,7 +775,7 @@ export class HoneyUser implements User {
           collateralAccount: accounts.collateral.address,
           owner: this.address,
 
-          reserve: reserve.address,
+          reserve: reserve.reserve,
           noteMint: reserve.data.depositNoteMint,
 
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -860,7 +860,7 @@ export class HoneyUser implements User {
     // );
 
     const [loanAccountPK, loanAccountBump] = await PublicKey.findProgramAddress(
-      [Buffer.from('loan'), reserve.address.toBuffer(), this.obligation.address.toBuffer(), this.address.toBuffer()],
+      [Buffer.from('loan'), reserve.reserve.toBuffer(), this.obligation.address.toBuffer(), this.address.toBuffer()],
       this.client.program.programId,
     );
 
@@ -874,7 +874,7 @@ export class HoneyUser implements User {
         marketAuthority: this.market.marketAuthority,
 
         obligation: this.obligation.address,
-        reserve: reserve.address,
+        reserve: reserve.reserve,
         vault: reserve.data.vault,
         loanNoteMint: reserve.data.loanNoteMint,
         borrower: this.address,
@@ -915,7 +915,7 @@ export class HoneyUser implements User {
         market: this.market.address,
         marketAuthority: this.market.marketAuthority,
 
-        reserve: reserve.address,
+        reserve: reserve.reserve,
         depositNoteMint: reserve.data.depositNoteMint,
 
         depositor: this.address,
@@ -936,7 +936,7 @@ export class HoneyUser implements User {
         marketAuthority: this.market.marketAuthority,
         obligation: this.obligation.address,
 
-        reserve: reserve.address,
+        reserve: reserve.reserve,
         loanNoteMint: reserve.data.loanNoteMint,
         owner: this.address,
         loanAccount: account.address,
@@ -969,7 +969,7 @@ export class HoneyUser implements User {
     this._collateral = [];
 
     for (const reserve of this.market.reserves) {
-      if (reserve.address.toBase58() === PublicKey.default.toBase58()) {
+      if (reserve.reserve.toBase58() === PublicKey.default.toBase58()) {
         continue;
       }
       await this.refreshReserve(reserve);
@@ -1068,7 +1068,7 @@ export class HoneyUser implements User {
   }
 
   private async findReserveAccounts(reserve: HoneyMarketReserveInfo | HoneyReserve): Promise<UserReserveAccounts> {
-    const reserveAddress = typeof reserve.address === 'string' ? new PublicKey(reserve.address) : reserve.address;
+    const reserveAddress = typeof reserve.reserve === 'string' ? new PublicKey(reserve.reserve) : reserve.reserve;
     const deposits = await this.findDepositNoteAddress(this.client.program, reserveAddress, this.address);
     const loan = await this.findLoanNoteAddress(
       this.client.program,
