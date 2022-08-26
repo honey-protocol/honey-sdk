@@ -6,22 +6,23 @@ import * as BL from '@solana/buffer-layout';
 import { CreateReserveParams, HoneyReserve } from './reserve';
 import * as util from './util';
 import { HoneyClient } from './client';
+import { MarketReserveInfoList } from '../helpers';
 
 const MAX_RESERVES = 32;
 
-const ReserveInfoStruct = BL.struct([
-  util.pubkeyField('address'),
-  BL.blob(80, '_UNUSED_0_'),
-  util.numberField('price'),
-  util.numberField('depositNoteExchangeRate'),
-  util.numberField('loanNoteExchangeRate'),
-  util.numberField('minCollateralRatio'),
-  BL.u16('liquidationBonus'),
-  BL.blob(158, '_UNUSED_1_'),
-  BL.blob(16, '_CACHE_TAIL'),
-]);
+// const ReserveInfoStruct = BL.struct([
+//   util.pubkeyField('address'),
+//   BL.blob(80, '_UNUSED_0_'),
+//   util.numberField('price'),
+//   util.numberField('depositNoteExchangeRate'),
+//   util.numberField('loanNoteExchangeRate'),
+//   util.numberField('minCollateralRatio'),
+//   BL.u16('liquidationBonus'),
+//   BL.blob(158, '_UNUSED_1_'),
+//   BL.blob(16, '_CACHE_TAIL'),
+// ]);
 
-const MarketReserveInfoList = BL.seq(ReserveInfoStruct, MAX_RESERVES);
+// const MarketReserveInfoList = BL.seq(ReserveInfoStruct, MAX_RESERVES);
 export const DEX_PID = new PublicKey('DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY'); // localnet
 export interface HoneyMarketReserveInfo {
   address: PublicKey;

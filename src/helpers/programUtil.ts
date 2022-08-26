@@ -470,7 +470,6 @@ export const sendAllTransactions = async (
   // }
 
   // Sending phase
-  console.log('Transactions', txs);
   let res = TxnResponse.Success;
   const txids: string[] = [];
   for (let i = 0; i < signedTransactions.length; i++) {
