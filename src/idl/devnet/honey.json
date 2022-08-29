@@ -2421,15 +2421,6 @@
           },
           {
             "name": "reserved0",
-            "docs": [
-              "droplet mint",
-              "liquidated droplet vault",
-              "The account for storing quote tokens during a swap",
-              "The account used for trading with the DEX",
-              "The account used for trading with the DEX",
-              "The DEX market account that this reserve can trade in",
-              "The DEX market account that this reserve can trade in"
-            ],
             "type": {
               "array": [
                 "u8",
@@ -3068,7 +3059,7 @@
     {
       "code": 6001,
       "name": "VerifiedCreatorMismatch",
-      "msg": "vaerified creator doesn't match with the current market"
+      "msg": "verified creator doesn't match with the current market"
     },
     {
       "code": 6002,
@@ -3227,6 +3218,6 @@
     }
   ],
   "metadata": {
-    "address": "12e92HoQwhEYqdXZ7RmoKadzCvJHwQJiHLFpnohbeCiq"
+    "address": "DndzMQEvnJEsN3XQfoqdL51nAVpsRJYNsDk788TAgNPK"
   }
 }

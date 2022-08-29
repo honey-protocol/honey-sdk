@@ -39,7 +39,6 @@ export interface RevokeBidParams {
 }
 
 export interface ExecuteBidParams {
-  amount: number;
   market: PublicKey;
   obligation: PublicKey;
   reserve: PublicKey;
