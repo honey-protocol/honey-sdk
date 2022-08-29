@@ -171,21 +171,6 @@ export class LiquidatorClient {
       console.error(`Error placing bid: ${err}`);
       return [TxnResponse.Failed, []];
     }
-    // tx.add(ix);
-    // tx.add(Token.createCloseAccountInstruction(
-    //     TOKEN_PROGRAM_ID,
-    //     depositSource.publicKey,
-    //     bidder,
-    //     bidder,
-    //     []));
-    // try {
-    //     const result = await this.program.provider.send(tx, [depositSource], { skipPreflight: true });
-    //     console.log(result);
-    //     return [TxnResponse.Success, [result]];
-    // } catch(err) {
-    //     console.error(`Error placing bid: ${err}`);
-    //     return [TxnResponse.Failed, []];
-    // }
   }
 
   async increaseBid(params: IncreaseBidParams): Promise<TxResponse> {
@@ -209,24 +194,6 @@ export class LiquidatorClient {
 
     // wSOL deposit
     const depositSource = Keypair.generate();
-    // const tx = new Transaction().add(
-    //     // create token account
-    //     SystemProgram.createAccount({
-    //         fromPubkey: bidder,
-    //         newAccountPubkey: depositSource.publicKey,
-    //         space: TokenAccountLayout.span,
-    //         lamports:
-    //             (await Token.getMinBalanceRentForExemptAccount(this.program.provider.connection)) + amount, // rent + amount
-    //         programId: TOKEN_PROGRAM_ID,
-    //     }),
-    //     // init token account
-    //     Token.createInitAccountInstruction(
-    //         TOKEN_PROGRAM_ID,
-    //         NATIVE_MINT,
-    //         depositSource.publicKey,
-    //         bidder
-    //     ),
-    // );
 
     try {
       const result = await this.program.methods
@@ -262,28 +229,11 @@ export class LiquidatorClient {
         ])
         .signers([depositSource])
         .rpc();
-      // const result = await this.program.provider.sendAndConfirm(tx, [depositSource], { skipPreflight: true });
-      console.log(result);
+      console.log('increase bid tx result', result);
       return [TxnResponse.Success, [result]];
     } catch (err) {
       return [TxnResponse.Failed, []];
     }
-
-    // tx.add(ix);
-    // tx.add(Token.createCloseAccountInstruction(
-    //     TOKEN_PROGRAM_ID,
-    //     depositSource.publicKey,
-    //     bidder,
-    //     bidder,
-    //     []));
-
-    // try {
-    //     const result = await this.program.provider.sendAndConfirm(tx, [depositSource], { skipPreflight: true });
-    //     console.log(result);
-    //     return [TxnResponse.Success, [result]];
-    // } catch(err) {
-    //     return [TxnResponse.Failed, []];
-    // }
   }
 
   async revokeBid(params: RevokeBidParams): Promise<TxResponse> {
@@ -304,21 +254,22 @@ export class LiquidatorClient {
 
     // wSOL withdrawal
     const withdrawDestination = Keypair.generate();
-    const tx = new Transaction().add(
-      // create token account
-      SystemProgram.createAccount({
-        fromPubkey: bidder,
-        newAccountPubkey: withdrawDestination.publicKey,
-        space: TokenAccountLayout.span,
-        lamports: await Token.getMinBalanceRentForExemptAccount(this.program.provider.connection), // rent + amount
-        programId: TOKEN_PROGRAM_ID,
-      }),
-      // init token account
-      Token.createInitAccountInstruction(TOKEN_PROGRAM_ID, NATIVE_MINT, withdrawDestination.publicKey, bidder),
-    );
+    // const tx = new Transaction().add(
+    //   // create token account
+    //   SystemProgram.createAccount({
+    //     fromPubkey: bidder,
+    //     newAccountPubkey: withdrawDestination.publicKey,
+    //     space: TokenAccountLayout.span,
+    //     lamports: await Token.getMinBalanceRentForExemptAccount(this.program.provider.connection), // rent + amount
+    //     programId: TOKEN_PROGRAM_ID,
+    //   }),
+    //   // init token account
+    //   Token.createInitAccountInstruction(TOKEN_PROGRAM_ID, NATIVE_MINT, withdrawDestination.publicKey, bidder),
+    // );
 
-    const ix = await this.program.instruction.revokeLiquidateBid(bumps, amountBN, {
-      accounts: {
+    try {
+      const ix_result = await this.program.methods.revokeLiquidateBid(bumps, amountBN)
+      .accounts({
         market: params.market,
         marketAuthority: market_authority.address,
         bid: bid.address,
@@ -332,19 +283,40 @@ export class LiquidatorClient {
         tokenProgram: TOKEN_PROGRAM_ID,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
         systemProgram: anchor.web3.SystemProgram.programId,
-      },
-    });
+      })
+      .preInstructions([
+        SystemProgram.createAccount({
+          fromPubkey: bidder,
+          newAccountPubkey: withdrawDestination.publicKey,
+          space: TokenAccountLayout.span,
+          lamports: await Token.getMinBalanceRentForExemptAccount(this.program.provider.connection), // rent + amount
+          programId: TOKEN_PROGRAM_ID,
+        }),
+        // init token account
+        Token.createInitAccountInstruction(TOKEN_PROGRAM_ID, NATIVE_MINT, withdrawDestination.publicKey, bidder)
+      ])
+      .postInstructions([
+        Token.createCloseAccountInstruction(TOKEN_PROGRAM_ID, withdrawDestination.publicKey, bidder, bidder, [])
+      ])
+      .signers([withdrawDestination])
+      .rpc();
 
-    tx.add(ix);
-    tx.add(Token.createCloseAccountInstruction(TOKEN_PROGRAM_ID, withdrawDestination.publicKey, bidder, bidder, []));
-
-    try {
-      const result = await this.program.provider.sendAndConfirm(tx, [withdrawDestination], { skipPreflight: true });
-      console.log(result);
-      return [TxnResponse.Success, [result]];
-    } catch (err) {
+      console.log('revoke bid result', ix_result);
+      return [TxnResponse.Success, [ix_result]];
+    } catch(err) {
       return [TxnResponse.Failed, []];
     }
+
+    // tx.add(ix);
+    // tx.add(Token.createCloseAccountInstruction(TOKEN_PROGRAM_ID, withdrawDestination.publicKey, bidder, bidder, []));
+
+    // try {
+    //   const result = await this.program.provider.sendAndConfirm(tx, [withdrawDestination], { skipPreflight: true });
+    //   console.log(result);
+    //   return [TxnResponse.Success, [result]];
+    // } catch (err) {
+    //   return [TxnResponse.Failed, []];
+    // }
   }
 
   /**
@@ -417,11 +389,14 @@ export class LiquidatorClient {
     console.log('leftoversReceiver', leftoversReceiver.toString());
     console.log('bid', bid.address.toString());
     console.log('bidData.bidder', bidData.bidder.toString());
+
     const refreshIx = await reserves[0].makeRefreshIx();
-    const tx = new Transaction().add(refreshIx);
-    // @ts-ignore
-    const ix = await this.program.instruction.executeLiquidateBid(bumps, amount, {
-      accounts: {
+    // const tx = new Transaction().add(refreshIx);
+
+    try {
+      // @ts-ignore
+      const result = await this.program.methods.executeLiquidateBid(bumps, amount)
+      .accounts({
         market: params.market,
         marketAuthority: market_authority.address,
         obligation: params.obligation,
@@ -431,11 +406,11 @@ export class LiquidatorClient {
         loanAccount: loanNoteAddress.address,
         collateralAccount: vaultedNFT,
         bid: bid.address,
-        bidder: bidData.bidder,
-        bidMint: bidData.bidMint,
-        bidEscrow: bidData.bidEscrow,
+        bidder: new PublicKey(bidData.bidder),
+        bidMint: new PublicKey(bidData.bidMint),
+        bidEscrow: new PublicKey(bidData.bidEscrow),
         bidEscrowAuthority: bid_escrow_authority.address,
-        payerAccount: bidData.bidEscrow,
+        payerAccount: new PublicKey(bidData.bidEscrow),
         nftMint: params.nftMint,
         receiverAccount: receiverAccount,
         liquidationFeeReceiver,
@@ -446,13 +421,16 @@ export class LiquidatorClient {
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
         systemProgram: anchor.web3.SystemProgram.programId,
-      },
-    });
-    tx.add(ix);
+      })
+      .preInstructions([refreshIx])
+      .rpc();
 
-    const result = await this.program.provider.sendAndConfirm(tx, [], { skipPreflight: true });
-    console.log(result);
-    return tx;
+      // const result = await this.program.provider.sendAndConfirm(tx, [], { skipPreflight: true });
+      console.log(result);
+      return [TxnResponse.Success, [result]];
+    } catch(err) {
+      return [TxnResponse.Failed, []];
+    }
   }
 
   async findBidAccount(market: PublicKey, bidder: PublicKey): Promise<DerivedAccount> {

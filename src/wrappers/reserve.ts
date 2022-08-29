@@ -190,8 +190,8 @@ export class HoneyReserve {
       this.client.program.programId,
     );
 
-    return this.client.program.instruction.refreshReserve({
-      accounts: {
+    return this.client.program.methods.refreshReserve()
+      .accounts({
         market: this.market.address,
         marketAuthority: this.market.marketAuthority,
         reserve: this.reserve,
@@ -201,8 +201,7 @@ export class HoneyReserve {
         switchboardPriceAggregator: this.data.switchboardPriceAggregator,
         nftSwitchboardPriceAggregator: this.market.nftSwitchboardPriceAggregator,
         tokenProgram: TOKEN_PROGRAM_ID,
-      },
-    });
+      }).instruction();
   }
 
   async updateReserveConfig(params: UpdateReserveConfigParams): Promise<void> {

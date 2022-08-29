@@ -159,37 +159,7 @@ export class HoneyMarket implements HoneyMarketData {
     const initTx = await this.client.program.provider.sendAndConfirm(transaction, [account], { skipPreflight: true });
     console.log(`Init reserve account tx ${initTx}`);
 
-    // console.log('accounts', {
-    //   market: this.address.toBase58(),
-    //   marketAuthority: this.marketAuthority.toBase58(),
-    //   reserve: account.publicKey.toBase58(),
-    //   vault: derivedAccounts.vault.address.toBase58(),
-    //   nftDropletMint: params.nftDropletMint.toBase58(),
-    //   nftDropletVault: nftDropletAccount.toBase58(),
-
-    //   feeNoteVault: derivedAccounts.feeNoteVault.address.toBase58(),
-    //   protocolFeeNoteVault: derivedAccounts.protocolFeeNoteVault.address.toBase58(),
-
-    //   feeAccount: feeAccount.toBase58(),
-    //   protocolFeeAccount: protocolFeeAccount.toBase58(),
-
-    //   dexSwapTokens: derivedAccounts.dexSwapTokens.address.toBase58(),
-    //   dexOpenOrdersA: derivedAccounts.dexOpenOrdersA.address.toBase58(),
-    //   dexOpenOrdersB: derivedAccounts.dexOpenOrdersB.address.toBase58(),
-    //   dexMarketA: params.dexMarketA.toBase58(),
-    //   dexMarketB: params.dexMarketB.toBase58(),
-    //   dexProgram: DEX_PID.toBase58(),
-    //   loanNoteMint: derivedAccounts.loanNoteMint.address.toBase58(),
-    //   depositNoteMint: derivedAccounts.depositNoteMint.address.toBase58(),
-
-    //   oraclePrice: params.switchboardOracle.toBase58(),
-    //   quoteTokenMint: this.quoteTokenMint.toBase58(),
-    //   tokenMint: params.tokenMint.toBase58(),
-    //   owner: this.owner.toBase58(),
-    // });
-
-    const txid = await this.client.program.rpc.initReserve(bumpSeeds, params.config, {
-      accounts: {
+    const txid = await this.client.program.methods.initReserve(bumpSeeds, params.config).accounts({
         market: this.address,
         marketAuthority: this.marketAuthority,
         reserve: account.publicKey,
@@ -209,10 +179,8 @@ export class HoneyMarket implements HoneyMarketData {
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: anchor.web3.SystemProgram.programId,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-      },
-      signers: [],
       // instructions: [createReserveAccount],
-    });
+    }).rpc();
     console.log('initReserve tx', txid);
     return await HoneyReserve.load(this.client, account.publicKey, this);
   }
