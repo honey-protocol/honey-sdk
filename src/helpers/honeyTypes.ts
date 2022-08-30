@@ -148,11 +148,12 @@ export interface ReserveConfigStruct {
   loanOriginationFee: number;
   /** Unused space */
   _reserved0: number;
-  confidenceThreshhold: number;
-  /** Maximum number of tokens to sell in a single DEX trade during liquidation */
-  liquidationDexTradeMax: number;
+  // confidenceThreshhold: number;
+  // /** Maximum number of tokens to sell in a single DEX trade during liquidation */
+  // liquidationDexTradeMax: number;
   /** Unused space */
   _reserved1: number[];
+  _reserved2: number[];
 }
 
 // Obligation

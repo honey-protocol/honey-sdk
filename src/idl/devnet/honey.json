@@ -1315,127 +1315,6 @@
       ]
     },
     {
-      "name": "liquidate",
-      "docs": [
-        "Liquidate an unhealthy loan"
-      ],
-      "accounts": [
-        {
-          "name": "market",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "The relevant market this liquidation is for"
-          ]
-        },
-        {
-          "name": "marketAuthority",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "The market's authority account"
-          ]
-        },
-        {
-          "name": "obligation",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "The obligation with debt to be repaid"
-          ]
-        },
-        {
-          "name": "reserve",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "The reserve that the debt is from"
-          ]
-        },
-        {
-          "name": "collateralReserve",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "The reserve the collateral is from"
-          ]
-        },
-        {
-          "name": "vault",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "The reserve's vault where the payment will be transferred to"
-          ]
-        },
-        {
-          "name": "loanNoteMint",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "The mint for the debt/loan notes"
-          ]
-        },
-        {
-          "name": "loanAccount",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "The account that holds the borrower's debt balance"
-          ]
-        },
-        {
-          "name": "collateralAccount",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "The account that holds the borrower's collateral"
-          ]
-        },
-        {
-          "name": "payerAccount",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "The token account that the payment funds will be transferred from"
-          ]
-        },
-        {
-          "name": "receiverAccount",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "The account that will receive a portion of the borrower's collateral"
-          ]
-        },
-        {
-          "name": "payer",
-          "isMut": false,
-          "isSigner": true,
-          "docs": [
-            "The account paying off the loan"
-          ]
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "amount",
-          "type": {
-            "defined": "Amount"
-          }
-        },
-        {
-          "name": "minCollateral",
-          "type": "u64"
-        }
-      ]
-    },
-    {
       "name": "liquidateSolvent",
       "docs": [
         "liquidate through solvent droplets"
@@ -2548,18 +2427,6 @@
             "type": "u8"
           },
           {
-            "name": "dexOpenOrdersA",
-            "type": "u8"
-          },
-          {
-            "name": "dexOpenOrdersB",
-            "type": "u8"
-          },
-          {
-            "name": "dexSwapTokens",
-            "type": "u8"
-          },
-          {
             "name": "depositNoteMint",
             "type": "u8"
           },
@@ -2712,25 +2579,13 @@
           {
             "name": "reserved0",
             "docs": [
+              "Represented as a percentage of the Price",
+              "confidence values above this will not be accepted",
+              "The maximum token amount to allow in a single DEX trade when",
+              "liquidating assetr from this reserve as collateral.",
               "unused"
             ],
             "type": "u16"
-          },
-          {
-            "name": "confidenceThreshold",
-            "docs": [
-              "Represented as a percentage of the Price",
-              "confidence values above this will not be accepted"
-            ],
-            "type": "u16"
-          },
-          {
-            "name": "liquidationDexTradeMax",
-            "docs": [
-              "The maximum token amount to allow in a single DEX trade when",
-              "liquidating assetr from this reserve as collateral."
-            ],
-            "type": "u64"
           },
           {
             "name": "reserved1",
@@ -2738,6 +2593,15 @@
               "array": [
                 "u8",
                 24
+              ]
+            }
+          },
+          {
+            "name": "reserved2",
+            "type": {
+              "array": [
+                "u8",
+                10
               ]
             }
           }
@@ -2910,38 +2774,6 @@
         },
         {
           "name": "bidIncrease",
-          "type": "u64",
-          "index": false
-        }
-      ]
-    },
-    {
-      "name": "LiquidateEvent",
-      "fields": [
-        {
-          "name": "borrower",
-          "type": "publicKey",
-          "index": false
-        },
-        {
-          "name": "debtReserve",
-          "type": "publicKey",
-          "index": false
-        },
-        {
-          "name": "collateralReserve",
-          "type": "publicKey",
-          "index": false
-        },
-        {
-          "name": "paidAmount",
-          "type": {
-            "defined": "Amount"
-          },
-          "index": false
-        },
-        {
-          "name": "collateralAmount",
           "type": "u64",
           "index": false
         }
