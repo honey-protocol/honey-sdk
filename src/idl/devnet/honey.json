@@ -289,103 +289,9 @@
       ]
     },
     {
-      "name": "initNftAccount",
-      "docs": [
-        "Initialize an account that can be used to store deposit notes as collateral"
-      ],
-      "accounts": [
-        {
-          "name": "market",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "The relevant market this collateral is for"
-          ]
-        },
-        {
-          "name": "marketAuthority",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "The market's authority account"
-          ]
-        },
-        {
-          "name": "obligation",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "The obligation the collateral account is used for"
-          ]
-        },
-        {
-          "name": "depositNftMint",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "The mint for the deposit notes being used as collateral"
-          ]
-        },
-        {
-          "name": "nftCollectionCreator",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "The mint for the deposit notes being used as collateral"
-          ]
-        },
-        {
-          "name": "metadata",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": true,
-          "isSigner": true,
-          "docs": [
-            "The user/authority that owns the collateral"
-          ]
-        },
-        {
-          "name": "collateralAccount",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "The account that will store the deposit notes"
-          ]
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "associatedTokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "metadataBump",
-          "type": "u8"
-        }
-      ]
-    },
-    {
       "name": "initLoanAccount",
       "docs": [
+        "Initialize an account that can be used to store deposit notes as collateral",
         "Initialize an account that can be used to store deposit notes as collateral"
       ],
       "accounts": [
@@ -963,7 +869,7 @@
         },
         {
           "name": "owner",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true,
           "docs": [
             "The user/authority that owns the deposit"
@@ -1008,6 +914,21 @@
         },
         {
           "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
           "isMut": false,
           "isSigner": false
         }
@@ -2193,20 +2114,9 @@
             }
           },
           {
-            "name": "collateral",
-            "docs": [
-              "The storage for the information on positions owed by this obligation"
-            ],
-            "type": {
-              "array": [
-                "u8",
-                2048
-              ]
-            }
-          },
-          {
             "name": "loans",
             "docs": [
+              "The storage for the information on positions owed by this obligation",
               "The storage for the information on positions owed by this obligation"
             ],
             "type": {
@@ -2670,6 +2580,9 @@
           },
           {
             "name": "Invalidated"
+          },
+          {
+            "name": "MathOverflow"
           }
         ]
       }
@@ -3047,6 +2960,11 @@
       "code": 6032,
       "name": "InvalidAuthority",
       "msg": "Invalid authority given to place a bid"
+    },
+    {
+      "code": 6033,
+      "name": "MathOverflow",
+      "msg": "Math overflow error"
     }
   ],
   "metadata": {
