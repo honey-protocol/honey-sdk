@@ -171,7 +171,7 @@ export interface ObligationAccount {
   /** Storage for cached calculations */
   cached: number[];
   /** The storage for the information on collateral owned by this obligation */
-  // collateral: ObligationPositionStruct[];
+  _reserved2: ObligationPositionStruct[];
   /** The storage for the information on positions owed by this obligation */
   loans: ObligationPositionStruct[];
 }

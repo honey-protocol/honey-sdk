@@ -2113,6 +2113,18 @@
             }
           },
           {
+            "name": "reserved2",
+            "docs": [
+              "Unused space"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                2048
+              ]
+            }
+          },
+          {
             "name": "loans",
             "docs": [
               "The storage for the information on positions owed by this obligation"
@@ -2961,5 +2973,8 @@
       "name": "MathOverflow",
       "msg": "Math overflow error"
     }
-  ]
+  ],
+  "metadata": {
+    "address": "DndzMQEvnJEsN3XQfoqdL51nAVpsRJYNsDk788TAgNPK"
+  }
 }
