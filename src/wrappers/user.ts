@@ -37,7 +37,7 @@ export interface User {
 
   deposits(): TokenAmount[];
 
-  collateral(): TokenAmount[];
+  // collateral(): TokenAmount[];
 
   /**
    * Get the loans held by the user
@@ -74,7 +74,7 @@ export const PositionStruct = BL.struct([
 
 export class HoneyUser implements User {
   private _deposits: TokenAmount[] = [];
-  private _collateral: TokenAmount[] = [];
+  // private _collateral: TokenAmount[] = [];
   private _loans: TokenAmount[] = [];
 
   private conn: Connection;
@@ -418,47 +418,47 @@ export class HoneyUser implements User {
     );
 
     const derivedMetadata = await this.findNftMetadata(tokenMint);
-    const collateralData = await this.conn.getAccountInfo(collateralAddress);
-    if (!collateralData) {
-      console.log('adding collateralData', collateralData);
-      console.log('accounts', {
-        market: this.market.address.toString(),
-        marketAuthority: this.market.marketAuthority.toString(),
-        obligation: obligationAddress.toString(),
+    // const collateralData = await this.conn.getAccountInfo(collateralAddress);
+    // if (!collateralData) {
+    //   console.log('adding collateralData', collateralData);
+    //   console.log('accounts', {
+    //     market: this.market.address.toString(),
+    //     marketAuthority: this.market.marketAuthority.toString(),
+    //     obligation: obligationAddress.toString(),
 
-        depositNftMint: tokenMint.toString(),
-        nftCollectionCreator: updateAuthority.toString(), // should make a call to get this info or just do it on the program side
-        metadata: derivedMetadata.address.toString(),
-        owner: this.address.toString(),
-        collateralAccount: collateralAddress.toString(),
-      });
-      const collateralTx = new Transaction();
-      const ix = await this.client.program.methods.initNftAccount(derivedMetadata.bumpSeed)
-        .accounts({
-          market: this.market.address,
-          marketAuthority: this.market.marketAuthority,
-          obligation: obligationAddress,
-          depositNftMint: tokenMint,
+    //     depositNftMint: tokenMint.toString(),
+    //     nftCollectionCreator: updateAuthority.toString(), // should make a call to get this info or just do it on the program side
+    //     metadata: derivedMetadata.address.toString(),
+    //     owner: this.address.toString(),
+    //     collateralAccount: collateralAddress.toString(),
+    //   });
+    //   const collateralTx = new Transaction();
+    //   const ix = await this.client.program.methods.initNftAccount(derivedMetadata.bumpSeed)
+    //     .accounts({
+    //       market: this.market.address,
+    //       marketAuthority: this.market.marketAuthority,
+    //       obligation: obligationAddress,
+    //       depositNftMint: tokenMint,
 
-          nftCollectionCreator: updateAuthority, // should make a call to get this info or just do it on the program side
-          metadata: derivedMetadata.address,
-          owner: this.address,
-          collateralAccount: collateralAddress,
+    //       nftCollectionCreator: updateAuthority, // should make a call to get this info or just do it on the program side
+    //       metadata: derivedMetadata.address,
+    //       owner: this.address,
+    //       collateralAccount: collateralAddress,
 
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        }).instruction();
-      collateralTx.add(ix);
-      try {
-        const txid = await this.client.program.provider.sendAndConfirm(collateralTx, [], { skipPreflight: true });
-        txids.push(txid);
-      } catch (err) {
-        console.error(`Collateral account: ${err}`);
-        return [TxnResponse.Failed, txids];
-      }
-    }
+    //       tokenProgram: TOKEN_PROGRAM_ID,
+    //       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+    //       rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+    //       systemProgram: anchor.web3.SystemProgram.programId,
+    //     }).instruction();
+    //   collateralTx.add(ix);
+    //   try {
+    //     const txid = await this.client.program.provider.sendAndConfirm(collateralTx, [], { skipPreflight: true });
+    //     txids.push(txid);
+    //   } catch (err) {
+    //     console.error(`Collateral account: ${err}`);
+    //     return [TxnResponse.Failed, txids];
+    //   }
+    // }
 
     const tx = new Transaction();
     const depositNFTIx = await this.client.program.methods.depositNft(derivedMetadata.bumpSeed)
@@ -473,6 +473,9 @@ export class HoneyUser implements User {
         owner: this.address,
         collateralAccount: collateralAddress,
         tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: anchor.web3.SystemProgram.programId,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        rent: anchor.web3.SYSVAR_RENT_PUBKEY
       }).instruction();
 
     tx.add(depositNFTIx);
@@ -956,7 +959,7 @@ export class HoneyUser implements User {
   async refresh() {
     this._loans = [];
     this._deposits = [];
-    this._collateral = [];
+    // this._collateral = [];
 
     for (const reserve of this.market.reserves) {
       if (reserve.reserve.toBase58() === PublicKey.default.toBase58()) {
@@ -971,7 +974,7 @@ export class HoneyUser implements User {
 
     await this.refreshAccount(this._deposits, accounts.deposits);
     await this.refreshAccount(this._loans, accounts.loan);
-    await this.refreshAccount(this._collateral, accounts.collateral);
+    // await this.refreshAccount(this._collateral, accounts.collateral);
   }
 
   private async refreshAccount(appendTo: TokenAmount[], account: DerivedAccount) {
@@ -1094,9 +1097,9 @@ export class HoneyUser implements User {
   /**
    * Get all the collateral deposits held by the user.
    */
-  collateral() {
-    return this._collateral;
-  }
+  // collateral() {
+  //   return this._collateral;
+  // }
 
   /**
    * Get the loans held by the user
