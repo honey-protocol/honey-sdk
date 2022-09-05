@@ -347,7 +347,6 @@ export class LiquidatorClient {
     const loanNoteAddress = await this.findLoanNoteAddress(params.reserve, params.obligation, obligation.owner);
     // @ts-ignore
     const loanNoteMint = await this.findLoanNoteMintAddress(params.reserve, reserve.tokenMint);
-    // const collateralAddress = await this.findCollateralAddress(params.reserve, params.obligation, params.payer);
     const vault = await this.findVaultAddress(params.market, params.reserve);
 
     // find the registered nft to liqudiate

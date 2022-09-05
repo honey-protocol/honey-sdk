@@ -539,9 +539,7 @@ export const parseObligationAccount = (account: Buffer, coder: anchor.Coder) => 
     return pos;
   };
 
-  // obligation.collateral = PositionInfoList.decode(Buffer.from(obligation.collateral as any as number[])).map(
-  //   parsePosition,
-  // );
+
   obligation.loans = PositionInfoList.decode(Buffer.from(obligation.loans as any as number[])).map(parsePosition);
 
   return obligation;

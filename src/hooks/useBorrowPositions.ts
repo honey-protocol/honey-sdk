@@ -92,15 +92,6 @@ export const useBorrowPositions = (
       });
     });
 
-    // const fungibleCollateralPosition: FungibleCollateralPosition[] = [];
-    // obligation.collateral.map((collateral: any) => {
-    //   if (collateral.account.equals(PublicKey.default)) return;
-    //   fungibleCollateralPosition.push({
-    //     amount: collateral.amount.toNumber() / 10 ** 15,
-    //     tokenAccount: collateral.account,
-    //   });
-    // });
-
     setStatus({ loading: false, collateralNFTPositions, loanPositions });
   };
 

@@ -37,8 +37,6 @@ export interface User {
 
   deposits(): TokenAmount[];
 
-  // collateral(): TokenAmount[];
-
   /**
    * Get the loans held by the user
    */
@@ -418,47 +416,6 @@ export class HoneyUser implements User {
     );
 
     const derivedMetadata = await this.findNftMetadata(tokenMint);
-    // const collateralData = await this.conn.getAccountInfo(collateralAddress);
-    // if (!collateralData) {
-    //   console.log('adding collateralData', collateralData);
-    //   console.log('accounts', {
-    //     market: this.market.address.toString(),
-    //     marketAuthority: this.market.marketAuthority.toString(),
-    //     obligation: obligationAddress.toString(),
-
-    //     depositNftMint: tokenMint.toString(),
-    //     nftCollectionCreator: updateAuthority.toString(), // should make a call to get this info or just do it on the program side
-    //     metadata: derivedMetadata.address.toString(),
-    //     owner: this.address.toString(),
-    //     collateralAccount: collateralAddress.toString(),
-    //   });
-    //   const collateralTx = new Transaction();
-    //   const ix = await this.client.program.methods.initNftAccount(derivedMetadata.bumpSeed)
-    //     .accounts({
-    //       market: this.market.address,
-    //       marketAuthority: this.market.marketAuthority,
-    //       obligation: obligationAddress,
-    //       depositNftMint: tokenMint,
-
-    //       nftCollectionCreator: updateAuthority, // should make a call to get this info or just do it on the program side
-    //       metadata: derivedMetadata.address,
-    //       owner: this.address,
-    //       collateralAccount: collateralAddress,
-
-    //       tokenProgram: TOKEN_PROGRAM_ID,
-    //       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-    //       rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-    //       systemProgram: anchor.web3.SystemProgram.programId,
-    //     }).instruction();
-    //   collateralTx.add(ix);
-    //   try {
-    //     const txid = await this.client.program.provider.sendAndConfirm(collateralTx, [], { skipPreflight: true });
-    //     txids.push(txid);
-    //   } catch (err) {
-    //     console.error(`Collateral account: ${err}`);
-    //     return [TxnResponse.Failed, txids];
-    //   }
-    // }
 
     const tx = new Transaction();
     const depositNFTIx = await this.client.program.methods.depositNft(derivedMetadata.bumpSeed)
@@ -487,46 +444,6 @@ export class HoneyUser implements User {
       console.error(`Deposit NFT error: ${err}`);
       return [TxnResponse.Failed, txids];
     }
-  }
-
-  async withdrawCollateral(reserve: HoneyReserve, amount: Amount): Promise<TxResponse> {
-    const ixs = await this.makeWithdrawCollateralTx(reserve, amount);
-    return await sendAllTransactions(this.client.program.provider as anchor.AnchorProvider, ixs);
-  }
-
-  async makeWithdrawCollateralTx(reserve: HoneyReserve, amount: Amount): Promise<InstructionAndSigner[]> {
-    const accounts = await this.findReserveAccounts(reserve);
-    const bumpSeeds = {
-      collateralAccount: accounts.collateral.bumpSeed,
-      depositAccount: accounts.deposits.bumpSeed,
-    };
-
-    const refreshReserveIxs: TransactionInstruction[] = [];
-    // need to refresh all reserves in market to withdraw
-    await Promise.all(
-      this.reserves.map(async (honeyReserve) => refreshReserveIxs.push(await honeyReserve.makeRefreshIx())),
-    );
-    const withdrawCollateralIx = await this.client.program.methods.withdrawCollateral(bumpSeeds, amount)
-      .accounts({
-        market: this.market.address,
-        marketAuthority: this.market.marketAuthority,
-
-        owner: this.address,
-        obligation: this.obligation.address,
-
-        reserve: reserve.reserve,
-        collateralAccount: accounts.collateral.address,
-        depositAccount: accounts.deposits.address,
-
-        tokenProgram: TOKEN_PROGRAM_ID,
-      }).instruction();
-
-    const ixs = [
-      {
-        ix: [...refreshReserveIxs, withdrawCollateralIx].filter((ix) => ix) as TransactionInstruction[],
-      },
-    ];
-    return ixs;
   }
 
   async withdraw(reserve: HoneyReserve, tokenAccount: PublicKey, amount: Amount): Promise<TxResponse> {
@@ -734,55 +651,6 @@ export class HoneyUser implements User {
     return [tx, signers];
   }
 
-  async depositCollateral(reserve: HoneyReserve, amount: Amount): Promise<TxResponse> {
-    const tx = await this.makeDepositCollateralTx(reserve, amount);
-    try {
-      const txid = await this.client.program.provider.sendAndConfirm(tx);
-      return [TxnResponse.Success, [txid]];
-    } catch (err) {
-      return [TxnResponse.Failed, []];
-    }
-  }
-
-  async makeDepositCollateralTx(reserve: HoneyReserve, amount: Amount) {
-    const accounts = await this.findReserveAccounts(reserve);
-    const obligationAccountInfo = await this.conn.getAccountInfo(this.obligation.address);
-    const collateralAccountInfo = await this.conn.getAccountInfo(accounts.collateral.address);
-
-    const tx = new Transaction();
-
-    if (obligationAccountInfo == null) {
-      tx.add(await this.makeInitObligationAccountIx());
-    }
-
-    const bumpSeeds = {
-      depositAccount: accounts.deposits.bumpSeed,
-      collateralAccount: accounts.collateral.bumpSeed,
-    };
-
-    tx.add(await reserve.makeRefreshIx());
-    tx.add(
-      await this.client.program.methods.depositCollateral(bumpSeeds, amount)
-        .accounts({
-          market: this.market.address,
-          marketAuthority: this.market.marketAuthority,
-
-          obligation: this.obligation.address,
-          depositAccount: accounts.deposits.address,
-          collateralAccount: accounts.collateral.address,
-          owner: this.address,
-
-          reserve: reserve.reserve,
-          noteMint: reserve.data.depositNoteMint,
-
-          tokenProgram: TOKEN_PROGRAM_ID,
-        })
-      .instruction()
-    );
-
-    return tx;
-  }
-
   async borrow(reserve: HoneyReserve, receiver: PublicKey, amount: Amount): Promise<TxResponse> {
     const ixs = await this.makeBorrowTx(reserve, receiver, amount);
     return await sendAllTransactions(this.client.program.provider as anchor.AnchorProvider, ixs);
@@ -959,7 +827,6 @@ export class HoneyUser implements User {
   async refresh() {
     this._loans = [];
     this._deposits = [];
-    // this._collateral = [];
 
     for (const reserve of this.market.reserves) {
       if (reserve.reserve.toBase58() === PublicKey.default.toBase58()) {
@@ -974,7 +841,6 @@ export class HoneyUser implements User {
 
     await this.refreshAccount(this._deposits, accounts.deposits);
     await this.refreshAccount(this._loans, accounts.loan);
-    // await this.refreshAccount(this._collateral, accounts.collateral);
   }
 
   private async refreshAccount(appendTo: TokenAmount[], account: DerivedAccount) {
@@ -1082,7 +948,6 @@ export class HoneyUser implements User {
     return {
       deposits: dDeposits,
       loan: dLoan,
-      collateral: dCollateral,
     };
   }
 
@@ -1093,13 +958,6 @@ export class HoneyUser implements User {
   deposits() {
     return this._deposits;
   }
-
-  /**
-   * Get all the collateral deposits held by the user.
-   */
-  // collateral() {
-  //   return this._collateral;
-  // }
 
   /**
    * Get the loans held by the user
@@ -1115,5 +973,4 @@ export class HoneyUser implements User {
 interface UserReserveAccounts {
   deposits: DerivedAccount;
   loan: DerivedAccount;
-  collateral: DerivedAccount;
 }

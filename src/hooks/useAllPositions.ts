@@ -79,9 +79,6 @@ export const useAllPositions = (
             return pos;
           };
 
-          item.account.collateral = PositionInfoList.decode(
-            Buffer.from(item.account.collateral as any as number[]),
-          ).map(parsePosition);
           item.account.loans = PositionInfoList.decode(Buffer.from(item.account.loans as any as number[])).map(
             parsePosition,
           );
