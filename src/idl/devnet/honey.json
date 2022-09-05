@@ -2113,18 +2113,6 @@
             }
           },
           {
-            "name": "reserved2",
-            "docs": [
-              "Unused space"
-            ],
-            "type": {
-              "array": [
-                "u8",
-                2048
-              ]
-            }
-          },
-          {
             "name": "loans",
             "docs": [
               "The storage for the information on positions owed by this obligation"
