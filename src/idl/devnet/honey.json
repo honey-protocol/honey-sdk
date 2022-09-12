@@ -471,97 +471,9 @@
       ]
     },
     {
-      "name": "deposit",
-      "docs": [
-        "Deposit tokens into a reserve (balance is managed in a program account)"
-      ],
-      "accounts": [
-        {
-          "name": "market",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "The relevant market this deposit is for"
-          ]
-        },
-        {
-          "name": "marketAuthority",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "The market's authority account"
-          ]
-        },
-        {
-          "name": "reserve",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "The reserve being deposited into"
-          ]
-        },
-        {
-          "name": "vault",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "The reserve's vault where the deposited tokens will be transferred to"
-          ]
-        },
-        {
-          "name": "depositNoteMint",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "The mint for the deposit notes"
-          ]
-        },
-        {
-          "name": "depositor",
-          "isMut": false,
-          "isSigner": true,
-          "docs": [
-            "The user/authority that owns the deposit"
-          ]
-        },
-        {
-          "name": "depositAccount",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "The account that will store the deposit notes"
-          ]
-        },
-        {
-          "name": "depositSource",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "The token account with the tokens to be deposited"
-          ]
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "bump",
-          "type": "u8"
-        },
-        {
-          "name": "amount",
-          "type": {
-            "defined": "Amount"
-          }
-        }
-      ]
-    },
-    {
       "name": "depositTokens",
       "docs": [
+        "Deposit tokens into a reserve (balance is managed in a program account)",
         "Deposit tokens into a reserve (unmanaged)"
       ],
       "accounts": [
@@ -637,96 +549,6 @@
       ],
       "args": [
         {
-          "name": "amount",
-          "type": {
-            "defined": "Amount"
-          }
-        }
-      ]
-    },
-    {
-      "name": "withdraw",
-      "docs": [
-        "Deposit tokens from a reserve (managed)"
-      ],
-      "accounts": [
-        {
-          "name": "market",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "The relevant market this withdraw is for"
-          ]
-        },
-        {
-          "name": "marketAuthority",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "The market's authority account"
-          ]
-        },
-        {
-          "name": "reserve",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "The reserve being withdrawn from"
-          ]
-        },
-        {
-          "name": "vault",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "The reserve's vault where the withdrawn tokens will be transferred from"
-          ]
-        },
-        {
-          "name": "depositNoteMint",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "The mint for the deposit notes"
-          ]
-        },
-        {
-          "name": "depositor",
-          "isMut": false,
-          "isSigner": true,
-          "docs": [
-            "The user/authority that owns the deposit"
-          ]
-        },
-        {
-          "name": "depositAccount",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "The account that stores the deposit notes"
-          ]
-        },
-        {
-          "name": "withdrawAccount",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "The token account where to transfer withdrawn tokens to"
-          ]
-        },
-        {
-          "name": "honeyProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
           "name": "bump",
           "type": "u8"
         },
@@ -741,6 +563,7 @@
     {
       "name": "withdrawTokens",
       "docs": [
+        "Deposit tokens from a reserve (managed)",
         "Withdraw tokens from a reserve (unmanaged)"
       ],
       "accounts": [
@@ -815,6 +638,10 @@
         }
       ],
       "args": [
+        {
+          "name": "bump",
+          "type": "u8"
+        },
         {
           "name": "amount",
           "type": {

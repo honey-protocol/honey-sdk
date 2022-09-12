@@ -520,7 +520,7 @@ export class HoneyUser implements User {
     }
     tx.add(await reserve.makeRefreshIx());
     tx.add(
-      await this.client.program.methods.withdraw(accounts.deposits.bumpSeed, amount)
+      await this.client.program.methods.withdrawTokens(accounts.deposits.bumpSeed, amount)
         .accounts({
           market: this.market.address,
           marketAuthority: this.market.marketAuthority,
@@ -528,9 +528,8 @@ export class HoneyUser implements User {
           vault: reserve.data.vault,
           depositNoteMint: reserve.data.depositNoteMint,
           depositor: this.address,
-          depositAccount: accounts.deposits.address,
+          depositNoteAccount: accounts.deposits.address,
           withdrawAccount,
-          honeyProgram: this.client.program.programId,
           tokenProgram: TOKEN_PROGRAM_ID,
         }).instruction()
     );
