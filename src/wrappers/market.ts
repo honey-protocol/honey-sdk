@@ -171,7 +171,6 @@ export class HoneyMarket implements HoneyMarketData {
         tokenProgram: TOKEN_PROGRAM_ID,
         switchboardPriceAggregator: params.switchboardOracle,
         loanNoteMint: derivedAccounts.loanNoteMint.address,
-        quoteTokenMint: this.quoteTokenMint,
         owner: this.owner,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: anchor.web3.SystemProgram.programId,
