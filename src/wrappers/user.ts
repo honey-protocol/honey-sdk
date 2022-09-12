@@ -519,6 +519,7 @@ export class HoneyUser implements User {
       }
     }
     tx.add(await reserve.makeRefreshIx());
+    console.log('adding withdrawTokens instruction');
     tx.add(
       await this.client.program.methods.withdrawTokens(accounts.deposits.bumpSeed, amount)
         .accounts({
@@ -545,7 +546,7 @@ export class HoneyUser implements User {
       tx.add(closeWsolIx);
     }
     try {
-      const txid = await this.client.program.provider.sendAndConfirm(tx);
+      const txid = await this.client.program.provider.sendAndConfirm(tx, [], { skipPreflight: true });
       txids.push(txid);
       return [TxnResponse.Success, txids];
     } catch (err) {
