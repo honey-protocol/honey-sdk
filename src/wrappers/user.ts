@@ -640,7 +640,6 @@ export class HoneyUser implements User {
           vault: reserve.data.vault,
           depositNoteMint: reserve.data.depositNoteMint,
 
-          honeyProgram: this.client.program.programId,
           tokenProgram: TOKEN_PROGRAM_ID,
         }).instruction()
     );
