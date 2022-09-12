@@ -627,7 +627,7 @@ export class HoneyUser implements User {
 
     tx.add(await reserve.makeRefreshIx());
     tx.add(
-      await this.client.program.methods.deposit(accounts.deposits.bumpSeed, amount)
+      await this.client.program.methods.depositTokens(accounts.deposits.bumpSeed, amount)
         .accounts({
           market: this.market.address,
           marketAuthority: this.market.marketAuthority,
