@@ -9,7 +9,8 @@
     "start": "rollup -c -w",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "tslint -p tsconfig.json",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "generateDocs": "npx typedoc --skipErrorChecking"
   },
   "keywords": [],
   "author": "",
@@ -46,6 +47,7 @@
     "rollup-plugin-typescript2": "^0.31.2",
     "tslint": "^6.1.3",
     "tslint-config-prettier": "^1.18.0",
+    "typedoc": "^0.23.14",
     "typescript": "^4.5.5"
   },
   "peerDependencies": {
