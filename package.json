@@ -10,7 +10,7 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "tslint -p tsconfig.json",
     "prepare": "npm run build",
-    "generateDocs": "npx typedoc --skipErrorChecking"
+    "typedoc": "npx typedoc --skipErrorChecking"
   },
   "keywords": [],
   "author": "",

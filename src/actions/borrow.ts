@@ -22,7 +22,16 @@ export const getNFTAssociatedMetadata = async (connection: Connection, metadataP
   if (!data) return;
   return data;
 };
-
+/**
+ * Deposits NFT into locker.
+ *
+ * @example
+ *```ts
+ * import { depositNFT } from '@honey-finance/sdk';
+ * const metadata = await Metadata.findByMint(sdkConfig.saberHqConnection, mintID);
+ * const tx = await depositNFT(sdkConfig.saberHqConnection, honeyUser, metadata.pubkey);
+ * ```
+ */
 export const depositNFT = async (
   connection: Connection,
   honeyUser: HoneyUser,
@@ -49,7 +58,16 @@ export const depositNFT = async (
     new PublicKey(tokenMetadata.data.data.creators[0].address),
   );
 };
-
+/**
+ * Withdraws NFT from locker.
+ *
+ * @example
+ *```ts
+ * import { withdrawNFT } from '@honey-finance/sdk';
+ * const metadata = await Metadata.findByMint(sdkConfig.saberHqConnection, mintID);
+ * const tx = await withdrawNFT(sdkConfig.saberHqConnection, honeyUser, metadata.pubkey);
+ * ```
+ */
 export const withdrawNFT = async (
   connection: Connection,
   honeyUser: HoneyUser,
@@ -77,6 +95,16 @@ export const withdrawNFT = async (
     new PublicKey(tokenMetadata.data.data.creators[0].address),
   );
 };
+/**
+ * Borrows collateral .
+ *
+ * @example
+ * ```ts
+ * import { borrow } from '@honey-finance/sdk';
+ * const tx = await borrow(honeyUser, val * LAMPORTS_PER_SOL, borrowTokenMint, honeyReserves);
+ * ```
+ *
+ */
 
 export const borrow = async (
   honeyUser: HoneyUser,
@@ -101,6 +129,17 @@ export const borrow = async (
   return borrowTx;
 };
 
+/**
+ * Repays a loan.
+ *
+ * @example
+ * ```ts
+ * import { repay } from '@honey-finance/sdk';
+ * const tx = await repay(honeyUser, val * LAMPORTS_PER_SOL, repayTokenMint, honeyReserves)
+ * ```
+ * [pg-structure](https://www.npmjs.com/package/pg-structure)
+
+ */
 export const repay = async (
   honeyUser: HoneyUser,
   repayAmount: number,

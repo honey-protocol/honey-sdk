@@ -1,4 +1,4 @@
-import React, { FC, ReactNode, useContext, useEffect, useState } from 'react'
+import React, { FC, ReactNode, useContext, useEffect, useState } from 'react';
 import { HoneyMarketReserveInfo } from '../helpers/honeyTypes';
 import { useAnchor } from './anchor';
 import { MarketReserveInfoList } from '../helpers/layout';
@@ -9,44 +9,73 @@ import { HoneyReserve } from '../wrappers';
 import { TMarket, TReserve } from '../helpers';
 
 interface HoneyContext {
-  market: TMarket | null,
-  marketReserveInfo: HoneyMarketReserveInfo[] | null,
+  market: TMarket | null;
+  marketReserveInfo: HoneyMarketReserveInfo[] | null;
   parsedReserves: TReserve[] | null;
-  fetchMarket: Function
+  fetchMarket: Function;
 }
 const HoneyContext = React.createContext<HoneyContext>({
   market: null,
   marketReserveInfo: null,
   parsedReserves: null,
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  fetchMarket: () => null
+  fetchMarket: () => null,
 });
 
+/**
+ * The useHoney hook is accesible throughout the application and provides on-chain data and methods to interact with the honey program.
+ *
+ * @example
+ * ```ts 
+ * import { useHoney } from '@honey-finance/sdk';
+ * const { market, marketReserveInfo, parsedReserves, fetchMarket }  = useHoney();
+ * ```
+ */
 export const useHoney = () => {
   const context = useContext(HoneyContext);
   return context;
 };
 
 export interface HoneyProps {
-  children: ReactNode,
+  children: ReactNode;
   wallet: ConnectedWallet | null;
-  connection: Connection,
+  connection: Connection;
   honeyProgramId: string;
   honeyMarketId: string;
 }
 
-export const HoneyProvider: FC<HoneyProps> = ({
-  children,
-  wallet,
-  connection,
-  honeyProgramId,
-  honeyMarketId
-}) => {
+/**
+ * On-chain context provider for the Honey programs.
+ *
+ * @example
+ * You need to wrap the entrypoint to your frontend application.
+ * For React Applications `src/App.tsx`. n\
+ * For NextJS Applications `pages/_app.tsx`
+ *
+ * ```ts NextJS Example
+ * import { HoneyProvider } from '@honey-finance/sdk';
+ * const wallet = useConnectedWallet();
+ * const connection = useConnection();
+ *
+ * return (
+ *  <HoneyProvider
+ *    wallet={wallet}
+ *    connection={connection}
+ *    honeyMarketId={HONEY_MARKET_ID}
+ *    honeyProgram={HONEY_PROGRAM_ID}>
+ *
+ *    <Component {...pageProps} /> # entrypoint to your application
+ *
+ *  </HoneyProvider>
+ * )
+ * ```
+ */
+export const HoneyProvider: FC<HoneyProps> = ({ children, wallet, connection, honeyProgramId, honeyMarketId }) => {
   const { program, coder } = useAnchor();
-  const { honeyClient, honeyMarket } = useMarket(connection, wallet, honeyProgramId, honeyMarketId)
+  const { honeyClient, honeyMarket } = useMarket(connection, wallet, honeyProgramId, honeyMarketId);
 
   const [market, setMarket] = useState<TMarket | null>(null);
-  const [marketReserveInfo, setMarketReserveInfo] = useState<HoneyMarketReserveInfo[]>()
+  const [marketReserveInfo, setMarketReserveInfo] = useState<HoneyMarketReserveInfo[]>();
   const [parsedReserves, setReserves] = useState<TReserve[] | null>();
 
   const fetchMarket = async () => {
@@ -63,35 +92,27 @@ export const HoneyProvider: FC<HoneyProps> = ({
     for (const reserve of reserveInfoList) {
       if (reserve.reserve.equals(PublicKey.default)) {
         continue;
-      };
+      }
       console.log('reserve', reserve.reserve.toString());
 
       const { data, state } = await HoneyReserve.decodeReserve(honeyClient, reserve.reserve);
       reservesList.push(data);
     }
-    console.log("reserves list", reservesList);
+    console.log('reserves list', reservesList);
     setReserves(reservesList);
-  }
+  };
 
   useEffect(() => {
-    if (!program?.provider?.connection || !coder || !honeyMarket?.address)
-      return
+    if (!program?.provider?.connection || !coder || !honeyMarket?.address) return;
 
     fetchMarket();
-
   }, [honeyMarket, program?.provider?.connection]);
 
   const honeyContext = {
     market,
     marketReserveInfo,
     parsedReserves,
-    fetchMarket
-  }
-  return (
-    <HoneyContext.Provider
-      value={honeyContext}>
-      {children}
-    </HoneyContext.Provider>
-  )
-}
-
+    fetchMarket,
+  };
+  return <HoneyContext.Provider value={honeyContext}>{children}</HoneyContext.Provider>;
+};
