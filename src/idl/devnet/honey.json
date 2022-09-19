@@ -473,7 +473,6 @@
     {
       "name": "depositTokens",
       "docs": [
-        "Deposit tokens into a reserve (balance is managed in a program account)",
         "Deposit tokens into a reserve (unmanaged)"
       ],
       "accounts": [
@@ -563,7 +562,6 @@
     {
       "name": "withdrawTokens",
       "docs": [
-        "Deposit tokens from a reserve (managed)",
         "Withdraw tokens from a reserve (unmanaged)"
       ],
       "accounts": [
@@ -1589,12 +1587,6 @@
           "name": "bump",
           "type": {
             "defined": "ExecuteLiquidateBidBumps"
-          }
-        },
-        {
-          "name": "amount",
-          "type": {
-            "defined": "Amount"
           }
         }
       ]
@@ -2632,8 +2624,8 @@
     },
     {
       "code": 6005,
-      "name": "CollateralExists",
-      "msg": "collateral position already exists"
+      "name": "NftCollateralExists",
+      "msg": "nft collateral position already exists"
     },
     {
       "code": 6006,

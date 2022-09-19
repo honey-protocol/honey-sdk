@@ -339,8 +339,6 @@ export class LiquidatorClient {
     const reserve = await this.program.account.reserve.fetch(params.reserve);
     const obligation = await this.program.account.obligation.fetch(params.obligation);
     const bidData = await this.program.account.bid.fetch(bid.address);
-    // @ts-ignore
-    const amount = Amount.tokens(bidData.bidLimit);
 
     // pay for these should be ther person getting liquidated
     // @ts-ignore
@@ -393,7 +391,7 @@ export class LiquidatorClient {
 
     try {
       // @ts-ignore
-      const result = await this.program.methods.executeLiquidateBid(bumps, amount)
+      const result = await this.program.methods.executeLiquidateBid(bumps)
       .accounts({
         market: params.market,
         marketAuthority: market_authority.address,
