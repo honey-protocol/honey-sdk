@@ -19,25 +19,16 @@ import {
 } from '@solana/web3.js';
 import { Buffer } from 'buffer';
 import type {
+  CustomProgramError,
   HasPublicKey,
-  IdlMetadata,
-  HoneyMarketReserveInfo,
-  MarketAccount,
   ObligationAccount,
   ObligationPositionStruct,
-  ReserveAccount,
   ReserveConfigStruct,
-  ReserveStateStruct,
   ToBytes,
-  User,
-  SlopeTxn,
-  CustomProgramError,
-  MarketMetadata,
 } from './honeyTypes';
 import { TxnResponse } from './honeyTypes';
-import { MarketReserveInfoList, PositionInfoList, ReserveStateLayout } from './layout';
+import { PositionInfoList } from './layout';
 import { TokenAmount } from './util';
-import bs58 from 'bs58';
 
 // Find PDA functions and jet algorithms that are reimplemented here
 
@@ -306,63 +297,6 @@ export const getAccountInfoAndSubscribe = async function (
   return subscriptionId;
 };
 
-export const sendTransaction = async (
-  provider: anchor.Provider,
-  instructions: TransactionInstruction[],
-  signers?: Signer[],
-  skipConfirmation?: boolean,
-): Promise<[res: TxnResponse, txid: string[]]> => {
-  if (!provider.wallet?.publicKey) {
-    throw new Error('Wallet is not connected');
-  }
-  // Building phase
-  let transaction = new Transaction();
-  transaction.instructions = instructions;
-  transaction.recentBlockhash = (await provider.connection.getRecentBlockhash()).blockhash;
-  transaction.feePayer = provider.wallet.publicKey;
-
-  // Signing phase
-  if (signers && signers.length > 0) {
-    transaction.partialSign(...signers);
-  }
-  //Slope wallet funcs only take bs58 strings
-  // if (user.wallet?.name === 'Slope') {
-  //   try {
-  //     const { msg, data } = await provider.wallet.signTransaction(bs58.encode(transaction.serializeMessage()) as any) as unknown as SlopeTxn;
-  //     if (!data.publicKey || !data.signature) {
-  //       throw new Error("Transaction Signing Failed");
-  //     }
-  //     transaction.addSignature(new PublicKey(data.publicKey), bs58.decode(data.signature));
-  //   } catch (err) {
-  //     console.log('Signing Transactions Failed', err);
-  //     return [TxnResponse.Cancelled, []];
-  //   }
-  // } else {
-  try {
-    transaction = await provider.wallet.signTransaction(transaction);
-  } catch (err) {
-    console.log('Signing Transactions Failed', err, [TxnResponse.Failed, null]);
-    // wallet refused to sign
-    return [TxnResponse.Cancelled, []];
-  }
-  // }
-
-  // Sending phase
-  const rawTransaction = transaction.serialize();
-  const txid = await provider.connection.sendRawTransaction(rawTransaction, provider.opts);
-
-  // Confirming phase
-  let res = TxnResponse.Success;
-  if (!skipConfirmation) {
-    const status = (await provider.connection.confirmTransaction(txid, provider.opts.commitment)).value;
-
-    if (status?.err && txid.length) {
-      res = TxnResponse.Failed;
-    }
-  }
-  return [res, [txid]];
-};
-
 export const inDevelopment: boolean = true;
 
 export const explorerUrl = (txid: string) => {
@@ -423,7 +357,7 @@ export interface InstructionAndSigner {
 }
 
 export const simulateAllTransactions = async (
-  provider: anchor.Provider,
+  provider: anchor.AnchorProvider,
   transactions: InstructionAndSigner[],
   skipConfirmation?: boolean,
 ): Promise<[res: TxnResponse, txids: string[]]> => {
@@ -492,7 +426,7 @@ export const simulateAllTransactions = async (
 };
 
 export const sendAllTransactions = async (
-  provider: anchor.Provider,
+  provider: anchor.AnchorProvider,
   transactions: InstructionAndSigner[],
   skipConfirmation?: boolean,
 ): Promise<[res: TxnResponse, txids: string[]]> => {
@@ -536,7 +470,6 @@ export const sendAllTransactions = async (
   // }
 
   // Sending phase
-  console.log('Transactions', txs);
   let res = TxnResponse.Success;
   const txids: string[] = [];
   for (let i = 0; i < signedTransactions.length; i++) {
@@ -606,9 +539,7 @@ export const parseObligationAccount = (account: Buffer, coder: anchor.Coder) => 
     return pos;
   };
 
-  obligation.collateral = PositionInfoList.decode(Buffer.from(obligation.collateral as any as number[])).map(
-    parsePosition,
-  );
+
   obligation.loans = PositionInfoList.decode(Buffer.from(obligation.loans as any as number[])).map(parsePosition);
 
   return obligation;
@@ -618,24 +549,6 @@ export const parseU192 = (data: Buffer | number[]) => {
   return new BN(data, undefined, 'le');
 };
 
-export const parseIdlMetadata = (idlMetadata: IdlMetadata): IdlMetadata => {
-  return {
-    ...idlMetadata,
-    address: new PublicKey(idlMetadata.address),
-    market: {
-      market: new PublicKey(idlMetadata.market.market),
-      marketAuthority: new PublicKey(idlMetadata.market.marketAuthority),
-    } as MarketMetadata,
-    reserves: idlMetadata.reserves
-      ? (idlMetadata.reserves.map((reserve) => {
-          return {
-            ...reserve,
-            accounts: toPublicKeys(reserve.accounts),
-          };
-        }) as any)
-      : [],
-  };
-};
 
 /**
  * Convert some object of fields with address-like values,

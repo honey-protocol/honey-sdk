@@ -22,7 +22,7 @@ export const useMarket = (
     const fetchHoneyClient = async () => {
       if (!wallet) return;
 
-      const provider = new anchor.Provider(connection, wallet, anchor.Provider.defaultOptions());
+      const provider = new anchor.AnchorProvider(connection, wallet, anchor.AnchorProvider.defaultOptions());
       const client: HoneyClient = await HoneyClient.connect(provider, honeyProgramId, true);
       setHoneyClient(client);
 
@@ -34,11 +34,11 @@ export const useMarket = (
       market.refresh();
 
       const reserves: HoneyReserve[] = market.reserves.map(
-        (reserve) => new HoneyReserve(client, market, reserve.address),
+        (reserve) => new HoneyReserve(client, market, reserve.reserve),
       );
       await Promise.all(
         reserves.map(async (reserve) => {
-          if (reserve.address && reserve.address.toBase58() !== PublicKey.default.toBase58()) await reserve.refresh();
+          if (reserve.reserve && reserve.reserve.toBase58() !== PublicKey.default.toBase58()) await reserve.refresh();
         }),
       );
       setHoneyReserves(reserves);

@@ -13,6 +13,15 @@ export interface AnchorContext {
 }
 const AnchorContext = React.createContext<AnchorContext>(null!);
 
+/**
+ * The useAnchor hook is accessible throught the application and provides functionality to interact with Anchor programs.
+ *
+ * @example
+ * ```ts 
+ * import { useAnchor } from '@honey-finance/sdk';
+ * const { program } = useAnchor();
+ * ```
+ */
 export const useAnchor = () => {
   const context = useContext(AnchorContext);
   return context;
@@ -32,6 +41,34 @@ export interface AnchorProviderProps {
   honeyProgram: string
 }
 
+/**
+ * On-chain context provider for Anchor programs.
+ * 
+ * @example
+ * You need to wrap the entrypoint to your frontend application. 
+ * For React Applications go to `src/App.tsx`.
+ * For NextJS Applications go to `pages/_app.tsx`
+ * 
+ * ```ts
+ * import { AnchorProvider } from '@honey-finance/sdk';
+ * const wallet = useConnectedWallet();
+ * const connection = useConnection();
+ * const network = 'devnet';
+ * 
+ * return (
+ *  <AnchorProvider
+ *    wallet={wallet}
+ *    connection={connection}
+ *    network={network}
+ *    honeyProgram={HONEY_PROGRAM_ID}>
+ * 
+ *    <Component {...pageProps} /> # entrypoint to your application
+ * 
+ *  </AnchorProvider>
+ * )
+ * ```
+
+ */
 export const AnchorProvider: FC<AnchorProviderProps> = ({
   children,
   wallet,
@@ -43,30 +80,31 @@ export const AnchorProvider: FC<AnchorProviderProps> = ({
   const [coder, setAnchorCoder] = useState<anchor.Coder>({} as anchor.Coder);
   const [isConfigured, setIsConfigured] = useState<boolean>(false);
 
-  useEffect(() => {      
+  useEffect(() => {
     // setup coder for anchor operations
     const setup = async () => {
       const idl: any = network === 'devnet' ? devnetIdl : mainnetBetaIdl;
-      setAnchorCoder(new anchor.Coder(idl));
+      setAnchorCoder(new anchor.BorshCoder(idl));
       // init program
       const HONEY_PROGRAM_ID = new PublicKey(honeyProgram);
-      const provider = new anchor.Provider(connection, wallet, anchor.Provider.defaultOptions());
+
+      const provider = new anchor.AnchorProvider(connection, wallet, anchor.AnchorProvider.defaultOptions());
       const anchorProgram: Program = new anchor.Program(idl as any, HONEY_PROGRAM_ID, provider);
       setProgram(anchorProgram);
       setIsConfigured(true);
     };
-    
+
     if (connection && wallet)
       setup();
   }, [connection, wallet])
-  
+
   return (
     <AnchorContext.Provider
       value={{
         program,
         coder,
         isConfigured
-      }}> 
+      }}>
       {children}
     </AnchorContext.Provider>
   )

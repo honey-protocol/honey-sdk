@@ -1,4 +1,4 @@
-import { PublicKey, Keypair } from '@solana/web3.js';
+import { PublicKey, Keypair, Connection } from '@solana/web3.js';
 import * as anchor from '@project-serum/anchor';
 import { CreateMarketParams, HoneyMarket } from './market';
 import { DerivedAccount } from './derived-account';
@@ -23,7 +23,7 @@ export class HoneyClient {
    * @param provider The provider with wallet/network access that can be used to send transactions.
    * @returns The client
    */
-  static async connect(provider: anchor.Provider, honeyPubKey: string, devnet?: boolean): Promise<HoneyClient> {
+  static async connect(provider: anchor.AnchorProvider, honeyPubKey: string, devnet?: boolean): Promise<HoneyClient> {
     const idl = devnet ? devnetIdl : mainnetBetaIdl;
     const HONEY_PROGRAM_ID = new PublicKey(honeyPubKey);
     const program = new anchor.Program(idl as any, HONEY_PROGRAM_ID, provider);
@@ -59,21 +59,16 @@ export class HoneyClient {
       account = Keypair.generate();
     }
 
-    await this.program.rpc.initMarket(
+    await this.program.methods.initMarket(
       params.owner,
       params.quoteCurrencyName,
       params.quoteCurrencyMint,
-      params.nftCollectionCreator,
-      {
-        accounts: {
+      params.nftCollectionCreator).accounts({
           market: account.publicKey,
           oraclePrice: params.nftOraclePrice,
-          oracleProduct: params.nftOracleProduct,
-        },
-        signers: [account],
-        instructions: [await this.program.account.market.createInstruction(account)],
-      },
-    );
+      }).signers([account])
+      .preInstructions([await this.program.account.market.createInstruction(account)])
+      .rpc();
 
     return HoneyMarket.load(this, account.publicKey);
   }

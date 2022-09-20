@@ -8,8 +8,7 @@ import { HoneyMarket } from './market';
 import * as util from './util';
 import { BN } from '@project-serum/anchor';
 import { DerivedAccount } from './derived-account';
-import { IReserve } from '../contexts';
-import { ReserveStateLayout, ReserveStateStruct } from '../helpers';
+import { ReserveStateLayout, ReserveStateStruct, TReserve } from '../helpers';
 
 export interface ReserveConfig {
   utilizationRate1: number;
@@ -23,9 +22,9 @@ export interface ReserveConfig {
   manageFeeCollectionThreshold: anchor.BN;
   manageFeeRate: number;
   loanOriginationFee: number;
-  liquidationSlippage: number;
-  liquidationDexTradeMax: anchor.BN;
-  confidenceThreshold: number;
+  // liquidationSlippage: number;
+  // liquidationDexTradeMax: anchor.BN;
+  // confidenceThreshold: number;
 }
 
 export interface ReserveAccounts {
@@ -43,7 +42,7 @@ export interface CreateReserveParams {
   /**
    * The Serum market for the reserve.
    */
-  dexMarket: PublicKey;
+  dexMarket?: PublicKey;
 
   /**
    * The mint for the token to be stored in the reserve.
@@ -51,14 +50,9 @@ export interface CreateReserveParams {
   tokenMint: PublicKey;
 
   /**
-   * The Pyth account containing the price information for the reserve token.
+   * The Switchboard account containing the price information for the reserve token.
    */
-  pythOraclePrice: PublicKey;
-
-  /**
-   * The Pyth account containing the metadata about the reserve token.
-   */
-  pythOracleProduct: PublicKey;
+  switchboardOracle: PublicKey;
 
   /**
    * The initial configuration for the reserve
@@ -68,17 +62,17 @@ export interface CreateReserveParams {
   /**
    * token mint for the solvent droplets
    */
-  nftDropletMint: PublicKey;
+  nftDropletMint?: PublicKey;
 
   /**
    * Dex market A
    */
-  dexMarketA: PublicKey;
+  dexMarketA?: PublicKey;
 
   /**
    * dex market B
    */
-  dexMarketB: PublicKey;
+  dexMarketB?: PublicKey;
 
   /**
    * The account to use for the reserve data.
@@ -91,10 +85,7 @@ export interface CreateReserveParams {
 export interface ReserveData {
   // index: number;
   market: PublicKey;
-  pythPrice: PublicKey;
-  pythProduct: PublicKey;
-  pythOraclePrice?: PublicKey;
-  pythOracleProduct?: PublicKey;
+  switchBoardOracle: PublicKey;
   tokenMint: PublicKey;
   depositNoteMint: PublicKey;
   loanNoteMint: PublicKey;
@@ -147,8 +138,8 @@ export class HoneyReserve {
   constructor(
     private client: HoneyClient,
     private market: HoneyMarket,
-    public address: PublicKey,
-    public data?: IReserve,
+    public reserve: PublicKey,
+    public data?: TReserve,
     public state?: ReserveStateStruct,
   ) {
     this.conn = this.client.program.provider.connection;
@@ -156,13 +147,13 @@ export class HoneyReserve {
 
   async refresh(): Promise<void> {
     await this.market.refresh();
-    const { data, state } = await HoneyReserve.decodeReserve(this.client, this.address);
+    const { data, state } = await HoneyReserve.decodeReserve(this.client, this.reserve);
     this.data = data;
     this.state = state;
   }
 
   static async decodeReserve(client: HoneyClient, address: PublicKey) {
-    const reserveData = (await client.program.account.reserve.fetch(address)) as IReserve;
+    const reserveData = (await client.program.account.reserve.fetch(address)) as any as TReserve;
     const reserveState = ReserveStateLayout.decode(Buffer.from(reserveData.state)) as ReserveStateStruct;
     reserveData.reserveState = reserveState;
 
@@ -171,7 +162,7 @@ export class HoneyReserve {
 
   async sendRefreshTx(): Promise<string> {
     const tx = new Transaction().add(await this.makeRefreshIx());
-    return await this.client.program.provider.send(tx);
+    return await this.client.program.provider.sendAndConfirm(tx);
   }
 
   async refreshOldReserves(): Promise<void> {
@@ -189,28 +180,28 @@ export class HoneyReserve {
   async makeRefreshIx(): Promise<TransactionInstruction> {
     if (!this.data) return;
 
-    const [feeAccount, feeAccountBump] = await PublicKey.findProgramAddress(
-      [Buffer.from('fee-vault'), this.address.toBuffer()],
+    const [feeAccount, _feeAccountBump] = await PublicKey.findProgramAddress(
+      [Buffer.from('fee-vault'), this.reserve.toBuffer()],
       this.client.program.programId,
     );
 
-    const [protocolFeeAccount, protocolFeeAccountBump] = await PublicKey.findProgramAddress(
-      [Buffer.from('protocol-fee-vault'), this.address.toBuffer()],
+    const [protocolFeeAccount, _protocolFeeAccountBump] = await PublicKey.findProgramAddress(
+      [Buffer.from('protocol-fee-vault'), this.reserve.toBuffer()],
       this.client.program.programId,
     );
 
-    return this.client.program.instruction.refreshReserve({
-      accounts: {
+    return this.client.program.methods.refreshReserve()
+      .accounts({
         market: this.market.address,
         marketAuthority: this.market.marketAuthority,
-        reserve: this.address,
+        reserve: this.reserve,
         feeNoteVault: feeAccount,
         protocolFeeNoteVault: protocolFeeAccount,
         depositNoteMint: this.data.depositNoteMint,
-        pythOraclePrice: this.data.pythOraclePrice,
+        switchboardPriceAggregator: this.data.switchboardPriceAggregator,
+        nftSwitchboardPriceAggregator: this.market.nftSwitchboardPriceAggregator,
         tokenProgram: TOKEN_PROGRAM_ID,
-      },
-    });
+      }).instruction();
   }
 
   async updateReserveConfig(params: UpdateReserveConfigParams): Promise<void> {
@@ -249,13 +240,3 @@ export class HoneyReserve {
     };
   }
 }
-
-const ReserveStateStruct = BL.struct([
-  util.u64Field('accruedUntil'),
-  util.numberField('outstandingDebt'),
-  util.numberField('uncollectedFees'),
-  util.u64Field('totalDeposits'),
-  util.u64Field('totalDepositNotes'),
-  util.u64Field('totalLoanNotes'),
-  BL.blob(416 + 16, '_RESERVED_'),
-]);

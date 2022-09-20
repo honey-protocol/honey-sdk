@@ -2,9 +2,7 @@ import { Metadata } from '@metaplex-foundation/mpl-token-metadata';
 import { Connection, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
 import { useEffect, useState } from 'react';
 import { getNFTAssociatedMetadata } from '..';
-import { useHoney } from '../contexts/honey';
 import { ObligationAccount } from '../helpers/honeyTypes';
-import { SupportedWallet, TBorrowPosition } from '../helpers/types';
 import { ConnectedWallet } from '../helpers/walletType';
 import { useMarket } from './useMarket';
 
@@ -44,6 +42,7 @@ export const useBorrowPositions = (
   }>({ loading: false });
 
   const { honeyUser } = useMarket(connection, wallet, honeyId, honeyMarketId);
+
 
   const fetchData = async () => {
     setStatus({ loading: true });
@@ -93,16 +92,7 @@ export const useBorrowPositions = (
       });
     });
 
-    const fungibleCollateralPosition: FungibleCollateralPosition[] = [];
-    obligation.collateral.map((collateral: any) => {
-      if (collateral.account.equals(PublicKey.default)) return;
-      fungibleCollateralPosition.push({
-        amount: collateral.amount.toNumber() / 10 ** 15,
-        tokenAccount: collateral.account,
-      });
-    });
-
-    setStatus({ loading: false, collateralNFTPositions, loanPositions, fungibleCollateralPosition });
+    setStatus({ loading: false, collateralNFTPositions, loanPositions });
   };
 
   const refreshPositions = async () => {
