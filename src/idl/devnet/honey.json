@@ -1431,10 +1431,6 @@
           "type": {
             "defined": "RevokeLiquidateBidBumps"
           }
-        },
-        {
-          "name": "withdrawAmount",
-          "type": "u64"
         }
       ]
     },
