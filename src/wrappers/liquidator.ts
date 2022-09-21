@@ -31,7 +31,6 @@ export interface IncreaseBidParams {
 }
 
 export interface RevokeBidParams {
-  amount: number;
   market: PublicKey;
   bidder: PublicKey;
   bid_mint: PublicKey;
@@ -247,27 +246,13 @@ export class LiquidatorClient {
       bidEscrowAuthority: bid_escrow_authority.bumpSeed,
     };
 
-    const amount = params.amount * 1e9; /* Wrapped SOL's decimals is 9 */
-    const amountBN = new anchor.BN(amount);
     const bidder = params.bidder;
 
     // wSOL withdrawal
     const withdrawDestination = Keypair.generate();
-    // const tx = new Transaction().add(
-    //   // create token account
-    //   SystemProgram.createAccount({
-    //     fromPubkey: bidder,
-    //     newAccountPubkey: withdrawDestination.publicKey,
-    //     space: TokenAccountLayout.span,
-    //     lamports: await Token.getMinBalanceRentForExemptAccount(this.program.provider.connection), // rent + amount
-    //     programId: TOKEN_PROGRAM_ID,
-    //   }),
-    //   // init token account
-    //   Token.createInitAccountInstruction(TOKEN_PROGRAM_ID, NATIVE_MINT, withdrawDestination.publicKey, bidder),
-    // );
 
     try {
-      const ix_result = await this.program.methods.revokeLiquidateBid(bumps, amountBN)
+      const ix_result = await this.program.methods.revokeLiquidateBid(bumps)
       .accounts({
         market: params.market,
         marketAuthority: market_authority.address,
