@@ -36,26 +36,6 @@ export const deposit = async (
   return await honeyUser.deposit(depositReserve, associatedTokenAccount, amount);
 };
 
-// export const depositCollateral = async (
-//   honeyUser: HoneyUser,
-//   tokenAmount: number,
-//   depositTokenMint: PublicKey,
-//   depositReserves: HoneyReserve[],
-// ): Promise<TxResponse> => {
-//   const depositReserve = depositReserves.filter((reserve: HoneyReserve) =>
-//     reserve?.data?.tokenMint.equals(depositTokenMint),
-//   )[0];
-//   return await honeyUser.depositCollateral(depositReserve, Amount.tokens(tokenAmount));
-// };
-/**
- * Withdraw Collateral.
- *
- * ```
- * import { withdraw } from '@honey-finance/sdk';
- * const tx = await withdraw(honeyUser, tokenAmount, depositTokenMint, honeyReserves);
- * ```
- *
- */
 export const withdraw = async (
   honeyUser: HoneyUser,
   tokenAmount: number,
@@ -76,20 +56,3 @@ export const withdraw = async (
   }
   return await honeyUser.withdraw(withdrawReserve, associatedTokenAccount, amount);
 };
-
-// export const withdrawCollateral = async (
-//   honeyUser: HoneyUser,
-//   tokenAmount: number,
-//   withdrawTokenMint: PublicKey,
-//   withdrawReserves: HoneyReserve[],
-// ): Promise<TxResponse> => {
-//   const withdrawReserve = withdrawReserves.find((reserve: HoneyReserve) =>
-//     reserve?.data?.tokenMint.equals(withdrawTokenMint),
-//   )[0];
-//   if (!withdrawReserve) {
-//     console.error(`Reserve with token mint ${withdrawTokenMint} does not exist`);
-//     return [TxnResponse.Failed, []];
-//   }
-//   const withdrawCollateralTx = await honeyUser.withdrawCollateral(withdrawReserve, Amount.tokens(tokenAmount));
-//   return withdrawCollateralTx;
-// };
