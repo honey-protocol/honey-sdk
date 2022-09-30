@@ -13,6 +13,15 @@ export interface AnchorContext {
 }
 const AnchorContext = React.createContext<AnchorContext>(null!);
 
+/**
+ * The useAnchor hook is accessible throught the application and provides functionality to interact with Anchor programs.
+ *
+ * @example
+ * ```ts 
+ * import { useAnchor } from '@honey-finance/sdk';
+ * const { program } = useAnchor();
+ * ```
+ */
 export const useAnchor = () => {
   const context = useContext(AnchorContext);
   return context;
@@ -32,6 +41,34 @@ export interface AnchorProviderProps {
   honeyProgram: string
 }
 
+/**
+ * On-chain context provider for Anchor programs.
+ * 
+ * @example
+ * You need to wrap the entrypoint to your frontend application. 
+ * For React Applications go to `src/App.tsx`.
+ * For NextJS Applications go to `pages/_app.tsx`
+ * 
+ * ```ts
+ * import { AnchorProvider } from '@honey-finance/sdk';
+ * const wallet = useConnectedWallet();
+ * const connection = useConnection();
+ * const network = 'devnet';
+ * 
+ * return (
+ *  <AnchorProvider
+ *    wallet={wallet}
+ *    connection={connection}
+ *    network={network}
+ *    honeyProgram={HONEY_PROGRAM_ID}>
+ * 
+ *    <Component {...pageProps} /> # entrypoint to your application
+ * 
+ *  </AnchorProvider>
+ * )
+ * ```
+
+ */
 export const AnchorProvider: FC<AnchorProviderProps> = ({
   children,
   wallet,

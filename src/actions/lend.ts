@@ -3,7 +3,16 @@ import { TxnResponse } from '../helpers/honeyTypes';
 import { Amount, HoneyReserve, HoneyUser } from '../wrappers';
 import { deriveAssociatedTokenAccount } from './borrow';
 import { TxResponse } from './types';
-
+/**
+ * Deposit Collateral.
+ *
+ * @example
+ * ```ts
+ * import { deposit } from '@honey-finance/sdk';
+ * const tx = await deposit(honeyUser, tokenAmount, depositTokenMint, honeyReserves);
+ * ```
+ *
+ */
 export const deposit = async (
   honeyUser: HoneyUser,
   tokenAmount: number,
