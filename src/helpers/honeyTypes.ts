@@ -1,7 +1,5 @@
-import type { AccountInfo, PublicKey } from '@solana/web3.js';
+import type { PublicKey } from '@solana/web3.js';
 import type BN from 'bn.js';
-import type WalletAdapter from './walletAdapter';
-import type { TokenAmount } from './util';
 
 // Web3
 export interface HasPublicKey {
@@ -12,24 +10,24 @@ export interface ToBytes {
 }
 
 export type ReserveStateStruct = CacheStruct & {
-  accruedUntil: BN,
-  outstandingDebt: BN,
-  uncollectedFees: BN,
-  protocolUncollectedFees: BN,
-  totalDeposits: BN,
-  totalDepositNotes: BN,
-  totalLoanNotes: BN,
-  _reserved: number[],
+  accruedUntil: BN;
+  outstandingDebt: BN;
+  uncollectedFees: BN;
+  protocolUncollectedFees: BN;
+  totalDeposits: BN;
+  totalDepositNotes: BN;
+  totalLoanNotes: BN;
+  _reserved: number[];
 };
 
 export interface CacheStruct {
   /** The last slot that this information was updated in */
-  lastUpdated: BN,
+  lastUpdated: BN;
   /** Whether the value has been manually invalidated */
-  invalidated: number,
+  invalidated: number;
   /** Unused space */
-  _reserved: number[],
-};
+  _reserved: number[];
+}
 
 // Idl errors
 export interface CustomProgramError {
@@ -59,8 +57,8 @@ export interface MarketAccount {
   quoteTokenMint: PublicKey;
   nftSwitchboardPriceAggregator: PublicKey;
   nftCollectionCreator: PublicKey;
-  flags: number,
-  marketOracleState: number[],
+  flags: number;
+  marketOracleState: number[];
   /** Reserved space */
   _reserved: number[];
   /** Tracks the current prices of the tokens in reserve accounts */

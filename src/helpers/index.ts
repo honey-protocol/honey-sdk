@@ -8,4 +8,3 @@ export * from './programUtil';
 export * from './subscribe';
 export * from './types';
 export * from './util';
-export * from './walletAdapter';

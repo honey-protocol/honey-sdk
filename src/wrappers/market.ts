@@ -1,26 +1,9 @@
-import { PublicKey, Keypair, Transaction, sendAndConfirmTransaction } from '@solana/web3.js';
-import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID, u64 } from '@solana/spl-token';
+import { PublicKey, Keypair, Transaction } from '@solana/web3.js';
+import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, u64 } from '@solana/spl-token';
 import * as anchor from '@project-serum/anchor';
-import * as BL from '@solana/buffer-layout';
-
 import { CreateReserveParams, HoneyReserve } from './reserve';
-import * as util from './util';
 import { HoneyClient } from './client';
 import { HoneyMarketReserveInfo, MarketReserveInfoList } from '../helpers';
-
-const MAX_RESERVES = 32;
-
-// const ReserveInfoStruct = BL.struct([
-//   util.pubkeyField('address'),
-//   BL.blob(80, '_UNUSED_0_'),
-//   util.numberField('price'),
-//   util.numberField('depositNoteExchangeRate'),
-//   util.numberField('loanNoteExchangeRate'),
-//   util.numberField('minCollateralRatio'),
-//   BL.u16('liquidationBonus'),
-//   BL.blob(158, '_UNUSED_1_'),
-//   BL.blob(16, '_CACHE_TAIL'),
-// ]);
 
 // const MarketReserveInfoList = BL.seq(ReserveInfoStruct, MAX_RESERVES);
 export const DEX_PID = new PublicKey('DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY'); // localnet
@@ -145,21 +128,15 @@ export class HoneyMarket implements HoneyMarketData {
       depositNoteMint: derivedAccounts.depositNoteMint.bumpSeed,
     };
 
-    const nftDropletAccount = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      params.nftDropletMint,
-      this.marketAuthority,
-      true,
-    );
-
     const createReserveAccount = await this.client.program.account.reserve.createInstruction(account);
     const transaction = new Transaction();
     transaction.add(createReserveAccount);
     const initTx = await this.client.program.provider.sendAndConfirm(transaction, [account], { skipPreflight: true });
     console.log(`Init reserve account tx ${initTx}`);
 
-    const txid = await this.client.program.methods.initReserve(bumpSeeds, params.config).accounts({
+    const txid = await this.client.program.methods
+      .initReserve(bumpSeeds, params.config)
+      .accounts({
         market: this.address,
         marketAuthority: this.marketAuthority,
         reserve: account.publicKey,
@@ -174,13 +151,14 @@ export class HoneyMarket implements HoneyMarketData {
         owner: this.owner,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: anchor.web3.SystemProgram.programId,
-        rent: anchor.web3.SYSVAR_RENT_PUBKEY
+        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
 
         // nftDropletMint: params.nftDropletMint,
         // nftDropletVault: nftDropletAccount,
         // dexProgram: DEX_PID,
-      // instructions: [createReserveAccount],
-    }).rpc();
+        // instructions: [createReserveAccount],
+      })
+      .rpc();
     console.log('initReserve tx', txid);
     return await HoneyReserve.load(this.client, account.publicKey, this);
   }
