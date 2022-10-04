@@ -26,6 +26,7 @@ export const useAllPositions = (
   wallet: ConnectedWallet,
   honeyId: string,
   honeyMarketId: string,
+  devnet?:boolean
 ) => {
   const [status, setStatus] = useState<{
     loading: boolean;
@@ -58,8 +59,8 @@ export const useAllPositions = (
     const client: HoneyClient = await HoneyClient.connect(provider, honeyId, true);
     let arrPositions: NftPosition[] = [];
 
-    const solPriceUsd = await getOraclePrice('devnet', connection, honeyReserves[0].data.switchboardPriceAggregator);
-    const nftPriceUsd = await getOraclePrice('devnet', connection, honeyMarket.nftSwitchboardPriceAggregator);
+    const solPriceUsd = await getOraclePrice(devnet?'devnet': 'mainnet-beta', connection, honeyReserves[0].data.switchboardPriceAggregator);
+    const nftPriceUsd = await getOraclePrice(devnet?'devnet': 'mainnet-beta', connection, honeyMarket.nftSwitchboardPriceAggregator);
     const nftPrice = nftPriceUsd / solPriceUsd;
 
     let obligations = await honeyMarket.fetchObligations();
