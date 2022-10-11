@@ -218,6 +218,7 @@ export class HoneyUser implements User {
 
         reserve: reserve.reserve,
         vault: reserve.data.vault,
+        tokenMint: reserve.data.tokenMint,
         obligation: this.obligation.address,
         loanNoteMint: reserve.data.loanNoteMint,
         loanAccount: accounts.loan.address,
@@ -525,6 +526,7 @@ export class HoneyUser implements User {
           marketAuthority: this.market.marketAuthority,
           reserve: reserve.reserve,
           vault: reserve.data.vault,
+          tokenMint: reserve.data.tokenMint,
           depositNoteMint: reserve.data.depositNoteMint,
           depositor: this.address,
           depositNoteAccount: accounts.deposits.address,
