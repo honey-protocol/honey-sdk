@@ -54,7 +54,7 @@ export interface NftPosition {
 
 export interface TMarket {
   version: 0,
-  quoteExponent: number,
+  _reserved1: number,
   quoteCurrency: number[],
   authorityBumpSeed: number[],
   authoritySeed: PublicKey,
