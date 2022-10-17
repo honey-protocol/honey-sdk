@@ -1,6 +1,7 @@
 import { Metadata } from '@metaplex-foundation/mpl-token-metadata';
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { Connection, PublicKey } from '@solana/web3.js';
+import { InstructionAndSigner } from '../helpers';
 import { TxnResponse } from '../helpers/honeyTypes';
 import { Amount, HoneyReserve, HoneyUser } from '../wrappers';
 import { TxResponse } from './types';
@@ -129,6 +130,28 @@ export const borrow = async (
   return borrowTx;
 };
 
+export const makeBorrowTx = async (
+  honeyUser: HoneyUser,
+  borrowAmount: number,
+  borrowTokenMint: PublicKey,
+  borrowReserves: HoneyReserve[],
+): Promise<InstructionAndSigner[]> => {
+  const amount = Amount.tokens(borrowAmount);
+  const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(
+    borrowTokenMint,
+    honeyUser.address,
+  );
+  const borrowReserve: HoneyReserve = borrowReserves.filter((reserve: HoneyReserve) =>
+    reserve?.data?.tokenMint.equals(borrowTokenMint),
+  )[0];
+
+  if (!associatedTokenAccount) {
+    console.error(`Ata could not be found`);
+    return [];
+  }
+  return await honeyUser.makeBorrowTx(borrowReserve, associatedTokenAccount, amount);
+};
+
 /**
  * Repays a loan.
  *
@@ -159,4 +182,25 @@ export const repay = async (
     return [TxnResponse.Failed, []];
   }
   return await honeyUser.repay(repayReserve, associatedTokenAccount, amount);
+};
+
+export const makeRepayTx = async (
+  honeyUser: HoneyUser,
+  repayAmount: number,
+  repayTokenMint: PublicKey,
+  repayReserves: HoneyReserve[],
+): Promise<InstructionAndSigner[]> => {
+  const amount = Amount.tokens(repayAmount); // basically just pay back double the loan for now
+  const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(
+    repayTokenMint,
+    honeyUser.address,
+  );
+  const repayReserve: HoneyReserve = repayReserves.filter((reserve: HoneyReserve) =>
+    reserve?.data?.tokenMint.equals(repayTokenMint),
+  )[0];
+  if (!associatedTokenAccount) {
+    console.error(`Ata could not be found`);
+    return [];
+  }
+  return await honeyUser.makeRepayTx(repayReserve, associatedTokenAccount, amount);
 };
