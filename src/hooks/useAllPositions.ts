@@ -1,7 +1,7 @@
 import { Metadata } from '@metaplex-foundation/mpl-token-metadata';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { useEffect, useState } from 'react';
-import { HoneyClient, ObligationPositionStruct, PositionInfoList } from '..';
+import { HoneyClient, HoneyMarket, HoneyMarketReserveInfo, HoneyReserve, ObligationPositionStruct, PositionInfoList } from '..';
 import { useHoney } from '../contexts/honey';
 import { ConnectedWallet } from '../helpers/walletType';
 import { useMarket } from './useMarket';
@@ -38,88 +38,89 @@ export const useAllPositions = (
   const { honeyUser, honeyReserves, honeyMarket } = useMarket(connection, wallet, honeyId, honeyMarketId);
   const { marketReserveInfo } = useHoney();
 
-  const fetchPositions = async () => {
-    console.log('fetching bids...');
-    const resBids = await fetch(
-      devnet?'https://honey-nft-api.herokuapp.com/bids': 'https://honey-mainnet-api.herokuapp.com/bids',
-      // 'http://localhost:3001/bids',
-      { mode: 'cors' },
-    );
-    const arrBids = await resBids.json();
-    // const parsedBids = arrBids.map((str) => JSON.parse(str));
-
-    const highestBid = Math.max.apply(
-      Math,
-      arrBids.map(function (o) {
-        return o.bidLimit;
-      }),
-    );
-    console.log('fetching positions...');
-    const provider = new anchor.AnchorProvider(connection, wallet, anchor.AnchorProvider.defaultOptions());
-    const client: HoneyClient = await HoneyClient.connect(provider, honeyId, true);
-    let arrPositions: NftPosition[] = [];
-
-    const solPriceUsd = await getOraclePrice(devnet?'devnet': 'mainnet-beta', connection, honeyReserves[0].data.switchboardPriceAggregator);
-    const nftPriceUsd = await getOraclePrice(devnet?'devnet': 'mainnet-beta', connection, honeyMarket.nftSwitchboardPriceAggregator);
-    const nftPrice = nftPriceUsd / solPriceUsd;
-
-    let obligations = await honeyMarket.fetchObligations();
-    if (obligations && marketReserveInfo) {
-      await Promise.all(
-        obligations.map(async (item) => {
-          let nftMints: PublicKey[] = item.account.collateralNftMint;
-
-          const parsePosition = (position: any) => {
-            const pos: ObligationPositionStruct = {
-              account: new PublicKey(position.account),
-              amount: new BN(position.amount),
-              side: position.side,
-              reserveIndex: position.reserveIndex,
-              _reserved: [],
-            };
-            return pos;
-          };
-
-          item.account.loans = PositionInfoList.decode(Buffer.from(item.account.loans as any as number[])).map(
-            parsePosition,
-          );
-          await Promise.all(
-            nftMints.map(async (nft) => {
-              if (nft.toString() != '11111111111111111111111111111111') {
-                const totalDebt =
-                  marketReserveInfo[0].loanNoteExchangeRate
-                    .mul(item.account?.loans[0]?.amount)
-                    .div(new BN(10 ** 15))
-                    .div(new BN(10 ** 6)) //!!
-                    .div(new BN(10 ** 5))
-                    .toNumber() /
-                  10 ** 4; //dividing lamport
-                let position: NftPosition = {
-                  obligation: item.publicKey.toString(),
-                  debt: totalDebt,
-                  nft_mint: new PublicKey(nft),
-                  owner: item.account.owner,
-                  ltv: 40,
-                  is_healthy: getHealthStatus(totalDebt, nftPrice),
-                  highest_bid: highestBid,
-                };
-                arrPositions.push(position);
-              }
-            }),
-          );
-        }),
-      );
-      setStatus({ loading: false, positions: arrPositions, bids: arrBids });
-    }
-  };
-
   // build nft positions
   useEffect(() => {
     if (!honeyUser) {
       setStatus({ loading: false, error: new Error('HoneyUser is undefined') });
       return;
     }
-    fetchPositions();
+    fetchPositionBids(devnet, connection, wallet, honeyId, honeyReserves, honeyMarket, marketReserveInfo).then(res => {
+      setStatus({ loading: false, positions: res.positions, bids: res.bids })
+    });
   }, [honeyUser, marketReserveInfo]);
-  return { ...status, fetchPositions };
+  return { ...status, fetchPositions: fetchPositionBids };
+};
+export const fetchPositionBids = async (devnet:boolean, connection: Connection, wallet: ConnectedWallet, honeyId: string, honeyReserves: HoneyReserve[], honeyMarket: HoneyMarket, marketReserveInfo: HoneyMarketReserveInfo[]) => {
+  console.log('fetching bids...');
+  const resBids = await fetch(
+    devnet?'https://honey-nft-api.herokuapp.com/bids': 'https://honey-mainnet-api.herokuapp.com/bids',
+    // 'http://localhost:3001/bids',
+    { mode: 'cors' },
+  );
+  const arrBids = await resBids.json();
+  // const parsedBids = arrBids.map((str) => JSON.parse(str));
+
+  const highestBid = Math.max.apply(
+    Math,
+    arrBids.map(function (o) {
+      return o.bidLimit;
+    }),
+  );
+  console.log('fetching positions...');
+  const provider = new anchor.AnchorProvider(connection, wallet, anchor.AnchorProvider.defaultOptions());
+  const client: HoneyClient = await HoneyClient.connect(provider, honeyId, true);
+  let arrPositions: NftPosition[] = [];
+
+  const solPriceUsd = await getOraclePrice(devnet?'devnet': 'mainnet-beta', connection, honeyReserves[0].data.switchboardPriceAggregator);
+  const nftPriceUsd = await getOraclePrice(devnet?'devnet': 'mainnet-beta', connection, honeyMarket.nftSwitchboardPriceAggregator);
+  const nftPrice = nftPriceUsd / solPriceUsd;
+
+  let obligations = await honeyMarket.fetchObligations();
+  if (obligations && marketReserveInfo) {
+    await Promise.all(
+      obligations.map(async (item) => {
+        let nftMints: PublicKey[] = item.account.collateralNftMint;
+
+        const parsePosition = (position: any) => {
+          const pos: ObligationPositionStruct = {
+            account: new PublicKey(position.account),
+            amount: new BN(position.amount),
+            side: position.side,
+            reserveIndex: position.reserveIndex,
+            _reserved: [],
+          };
+          return pos;
+        };
+
+        item.account.loans = PositionInfoList.decode(Buffer.from(item.account.loans as any as number[])).map(
+          parsePosition,
+        );
+        await Promise.all(
+          nftMints.map(async (nft) => {
+            if (nft.toString() != '11111111111111111111111111111111') {
+              const totalDebt =
+                marketReserveInfo[0].loanNoteExchangeRate
+                  .mul(item.account?.loans[0]?.amount)
+                  .div(new BN(10 ** 15))
+                  .div(new BN(10 ** 6)) //!!
+                  .div(new BN(10 ** 5))
+                  .toNumber() /
+                10 ** 4; //dividing lamport
+              let position: NftPosition = {
+                obligation: item.publicKey.toString(),
+                debt: totalDebt,
+                nft_mint: new PublicKey(nft),
+                owner: item.account.owner,
+                ltv: 40,
+                is_healthy: getHealthStatus(totalDebt, nftPrice),
+                highest_bid: highestBid,
+              };
+              arrPositions.push(position);
+            }
+          }),
+        );
+      }),
+    );
+    return { positions: arrPositions, bids: arrBids };
+  }
 };
