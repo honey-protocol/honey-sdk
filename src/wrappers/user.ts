@@ -218,7 +218,6 @@ export class HoneyUser implements User {
 
         reserve: reserve.reserve,
         vault: reserve.data.vault,
-        tokenMint: reserve.data.tokenMint,
         obligation: this.obligation.address,
         loanNoteMint: reserve.data.loanNoteMint,
         loanAccount: accounts.loan.address,
@@ -391,8 +390,10 @@ export class HoneyUser implements User {
         const ix = await this.client.program.methods.initObligation(obligationBump)
           .accounts({
             market: this.market.address,
+            marketAuthority: this.market.marketAuthority,
             obligation: obligationAddress,
             borrower: this.address,
+            tokenProgram: TOKEN_PROGRAM_ID,
             systemProgram: anchor.web3.SystemProgram.programId,
           }).instruction();
 
@@ -526,7 +527,6 @@ export class HoneyUser implements User {
           marketAuthority: this.market.marketAuthority,
           reserve: reserve.reserve,
           vault: reserve.data.vault,
-          tokenMint: reserve.data.tokenMint,
           depositNoteMint: reserve.data.depositNoteMint,
           depositor: this.address,
           depositNoteAccount: accounts.deposits.address,
@@ -633,12 +633,11 @@ export class HoneyUser implements User {
           marketAuthority: this.market.marketAuthority,
 
           depositSource: depositSourcePubkey,
-          depositNoteAccount: accounts.deposits.address,
+          depositAccount: accounts.deposits.address,
           depositor: this.address,
 
           reserve: reserve.reserve,
           vault: reserve.data.vault,
-          tokenMint: reserve.data.tokenMint,
           depositNoteMint: reserve.data.depositNoteMint,
 
           tokenProgram: TOKEN_PROGRAM_ID,

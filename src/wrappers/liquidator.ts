@@ -65,9 +65,11 @@ export class LiquidatorClient {
     honeyPubKey: string,
     devnet?: boolean,
   ): Promise<LiquidatorClient> {
+    console.log('provider in liquidator', typeof provider);
     const idl = devnet ? devnetIdl : mainnetBetaIdl;
     const HONEY_PROGRAM_ID = new PublicKey(honeyPubKey);
     const program = new anchor.Program(idl as any, HONEY_PROGRAM_ID, provider);
+
     return new LiquidatorClient(program);
   }
 

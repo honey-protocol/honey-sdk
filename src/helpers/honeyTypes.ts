@@ -40,7 +40,7 @@ export interface CustomProgramError {
 export interface MarketAccount {
   version: number;
   /** The exponent used for quote prices */
-  _reserved1: number;
+  quoteExponent: number;
   /** The currency used for quote prices */
   quoteCurrency: BN;
   /** The bump seed value for generating the authority address. */
