@@ -130,6 +130,28 @@ export const borrow = async (
   return borrowTx;
 };
 
+export const borrowAndRefresh = async (
+  honeyUser: HoneyUser,
+  borrowAmount: number,
+  borrowTokenMint: PublicKey,
+  borrowReserves: HoneyReserve[],
+): Promise<TxResponse> => {
+  const amount = Amount.tokens(borrowAmount);
+  const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(
+    borrowTokenMint,
+    honeyUser.address,
+  );
+  const borrowReserve: HoneyReserve = borrowReserves.filter((reserve: HoneyReserve) =>
+    reserve?.data?.tokenMint.equals(borrowTokenMint),
+  )[0];
+
+  if (!associatedTokenAccount) {
+    console.error(`Ata could not be found`);
+    return [TxnResponse.Failed, []];
+  }
+  return await honeyUser.borrowAndRefresh(borrowReserve, associatedTokenAccount, amount);
+};
+
 export const makeBorrowTx = async (
   honeyUser: HoneyUser,
   borrowAmount: number,
@@ -182,6 +204,27 @@ export const repay = async (
     return [TxnResponse.Failed, []];
   }
   return await honeyUser.repay(repayReserve, associatedTokenAccount, amount);
+};
+
+export const repayAndRefresh = async (
+  honeyUser: HoneyUser,
+  repayAmount: number,
+  repayTokenMint: PublicKey,
+  repayReserves: HoneyReserve[],
+): Promise<TxResponse> => {
+  const amount = Amount.tokens(repayAmount); // basically just pay back double the loan for now
+  const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(
+    repayTokenMint,
+    honeyUser.address,
+  );
+  const repayReserve: HoneyReserve = repayReserves.filter((reserve: HoneyReserve) =>
+    reserve?.data?.tokenMint.equals(repayTokenMint),
+  )[0];
+  if (!associatedTokenAccount) {
+    console.error(`Ata could not be found`);
+    return [TxnResponse.Failed, []];
+  }
+  return await honeyUser.repayAndRefresh(repayReserve, associatedTokenAccount, amount);
 };
 
 export const makeRepayTx = async (

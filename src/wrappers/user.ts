@@ -158,6 +158,17 @@ export class HoneyUser implements User {
     }
   }
 
+  async repayAndRefresh(reserve: HoneyReserve, tokenAccount: PublicKey, amount: Amount): Promise<TxResponse> {
+    const ixs = await this.makeRepayTx(reserve, tokenAccount, amount);
+    ixs.push({ ix: [await reserve.makeRefreshIx()], signers: [] });
+    try {
+      return await sendAllTransactions(this.client.program.provider as anchor.AnchorProvider, ixs);
+    } catch (err) {
+      console.error(`Repay error: ${err}`);
+      return [TxnResponse.Failed, []];
+    }
+  }
+
   async makeRepayTx(reserve: HoneyReserve, tokenAccount: PublicKey, amount: Amount) {
     const accounts = await this.findReserveAccounts(reserve);
     let depositSourcePubkey = tokenAccount;
@@ -652,6 +663,13 @@ export class HoneyUser implements User {
 
   async borrow(reserve: HoneyReserve, receiver: PublicKey, amount: Amount): Promise<TxResponse> {
     const ixs = await this.makeBorrowTx(reserve, receiver, amount);
+    return await sendAllTransactions(this.client.program.provider as anchor.AnchorProvider, ixs);
+  }
+
+  async borrowAndRefresh(reserve: HoneyReserve, receiver: PublicKey, amount: Amount): Promise<TxResponse> {
+    const ixs = await this.makeBorrowTx(reserve, receiver, amount);
+    ixs.push({ ix: [await reserve.makeRefreshIx()] });
+
     return await sendAllTransactions(this.client.program.provider as anchor.AnchorProvider, ixs);
   }
 
