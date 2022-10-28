@@ -40,7 +40,7 @@ export const useAllPositions = (
   const fetchPositions = async () => {
     console.log('fetching bids...');
     const resBids = await fetch(
-      devnet?'https://honey-nft-api.herokuapp.com/bids': 'https://honey-mainnet-api.herokuapp.com/bids',
+      devnet?`https://honey-nft-api.herokuapp.com/bids/${honeyMarketId}`: `https://honey-mainnet-api.herokuapp.com/bids/${honeyMarketId}`,
       // 'http://localhost:3001/bids',
       { mode: 'cors' },
     );
