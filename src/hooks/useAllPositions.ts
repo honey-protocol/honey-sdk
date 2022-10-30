@@ -1,5 +1,5 @@
 import { Metadata } from '@metaplex-foundation/mpl-token-metadata';
-import { Connection, PublicKey } from '@solana/web3.js';
+import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { useEffect, useState } from 'react';
 import { HoneyClient, ObligationPositionStruct, PositionInfoList } from '..';
 import { useHoney } from '../contexts/honey';
@@ -9,6 +9,7 @@ import * as anchor from '@project-serum/anchor';
 import { BN } from '@project-serum/anchor';
 import { NftPosition } from '../helpers/types';
 import { getHealthStatus, getOraclePrice } from '../helpers/util';
+import NodeWallet from '@project-serum/anchor/dist/cjs/nodewallet';
 
 export const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
 export const LTV_MAX = 40;
@@ -23,7 +24,7 @@ export interface Bid {
 
 export const useAllPositions = (
   connection: Connection,
-  wallet: ConnectedWallet,
+  wallet: ConnectedWallet | null,
   honeyId: string,
   honeyMarketId: string,
 ) => {
@@ -54,7 +55,11 @@ export const useAllPositions = (
       }),
     );
     console.log('fetching positions...');
-    const provider = new anchor.AnchorProvider(connection, wallet, anchor.AnchorProvider.defaultOptions());
+    const provider = new anchor.AnchorProvider(
+      connection,
+      new NodeWallet(new Keypair()),
+      anchor.AnchorProvider.defaultOptions(),
+    );
     const client: HoneyClient = await HoneyClient.connect(provider, honeyId, true);
     let arrPositions: NftPosition[] = [];
 
