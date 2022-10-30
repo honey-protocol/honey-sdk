@@ -410,6 +410,7 @@ export class LiquidatorClient {
       console.log(result);
       return [TxnResponse.Success, [result]];
     } catch(err) {
+      console.log('error', err)
       return [TxnResponse.Failed, []];
     }
   }
