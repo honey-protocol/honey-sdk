@@ -1,5 +1,6 @@
 import * as anchor from '@project-serum/anchor';
-import { Connection, PublicKey } from '@solana/web3.js';
+import NodeWallet from '@project-serum/anchor/dist/cjs/nodewallet';
+import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { useEffect, useState } from 'react';
 import { HoneyClient, HoneyMarket, HoneyUser, HoneyReserve } from '..';
 import { useAnchor } from '../contexts/anchor';
@@ -7,7 +8,7 @@ import { ConnectedWallet } from '../helpers/walletType';
 
 export const useMarket = (
   connection: Connection,
-  wallet: ConnectedWallet,
+  wallet: ConnectedWallet | null,
   honeyProgramId: string,
   honeyMarketId: string,
 ) => {
@@ -19,10 +20,13 @@ export const useMarket = (
   const [honeyReserves, setHoneyReserves] = useState<HoneyReserve[]>();
 
   useEffect(() => {
+    const readOnlyKeypair = new Keypair();
     const fetchHoneyClient = async () => {
-      if (!wallet) return;
-
-      const provider = new anchor.AnchorProvider(connection, wallet, anchor.AnchorProvider.defaultOptions());
+      const provider = new anchor.AnchorProvider(
+        connection,
+        wallet ?? new NodeWallet(readOnlyKeypair),
+        anchor.AnchorProvider.defaultOptions(),
+      );
       const client: HoneyClient = await HoneyClient.connect(provider, honeyProgramId, true);
       setHoneyClient(client);
 
@@ -43,14 +47,19 @@ export const useMarket = (
       );
       setHoneyReserves(reserves);
 
-      const user: HoneyUser = await HoneyUser.load(client, market, new PublicKey(wallet.publicKey), reserves);
+      const user: HoneyUser = await HoneyUser.load(
+        client,
+        market,
+        wallet ? new PublicKey(wallet.publicKey) : readOnlyKeypair.publicKey,
+        reserves,
+      );
       setHoneyUser(user);
     };
     // load jet
-    if (isConfigured && wallet && connection && honeyProgramId && honeyMarketId) {
+    if (isConfigured && connection && honeyProgramId && honeyMarketId) {
       fetchHoneyClient();
     }
-  }, [isConfigured, connection, wallet, honeyProgramId, honeyMarketId]);
+  }, [isConfigured, connection, honeyProgramId, honeyMarketId]);
 
   return {
     honeyClient,
