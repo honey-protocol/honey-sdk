@@ -1,7 +1,14 @@
 import { Metadata } from '@metaplex-foundation/mpl-token-metadata';
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { useEffect, useState } from 'react';
-import { HoneyClient, HoneyMarket, HoneyMarketReserveInfo, HoneyReserve, ObligationPositionStruct, PositionInfoList } from '..';
+import {
+  HoneyClient,
+  HoneyMarket,
+  HoneyMarketReserveInfo,
+  HoneyReserve,
+  ObligationPositionStruct,
+  PositionInfoList,
+} from '..';
 import { useHoney } from '../contexts/honey';
 import { ConnectedWallet } from '../helpers/walletType';
 import { useMarket } from './useMarket';
@@ -27,7 +34,7 @@ export const useAllPositions = (
   wallet: ConnectedWallet | null,
   honeyId: string,
   honeyMarketId: string,
-  devnet?:boolean
+  devnet?: boolean,
 ) => {
   const [status, setStatus] = useState<{
     loading: boolean;
@@ -38,16 +45,18 @@ export const useAllPositions = (
 
   const { honeyUser, honeyReserves, honeyMarket } = useMarket(connection, wallet, honeyId, honeyMarketId);
   const { marketReserveInfo } = useHoney();
-  const fetchPositions = async () => {
+  const fetchPositions = async (isDevnet: boolean) => {
     console.log('fetching bids...');
     const resBids = await fetch(
-      devnet?`https://honey-nft-api.herokuapp.com/bids/${honeyMarketId}`: `https://honey-mainnet-api.herokuapp.com/bids/${honeyMarketId}`,
+      isDevnet
+        ? `https://honey-nft-api.herokuapp.com/bids/${honeyMarketId}`
+        : `https://honey-mainnet-api.herokuapp.com/bids/${honeyMarketId}`,
       // 'http://localhost:3001/bids',
       { mode: 'cors' },
     );
     const arrBids = await resBids.json();
     // const parsedBids = arrBids.map((str) => JSON.parse(str));
-  
+
     const highestBid = Math.max.apply(
       Math,
       arrBids.map(function (o) {
@@ -62,17 +71,25 @@ export const useAllPositions = (
     );
     const client: HoneyClient = await HoneyClient.connect(provider, honeyId, true);
     let arrPositions: NftPosition[] = [];
-  
-    const solPriceUsd = await getOraclePrice(devnet?'devnet': 'mainnet-beta', connection, honeyReserves[0].data.switchboardPriceAggregator);
-    const nftPriceUsd = await getOraclePrice(devnet?'devnet': 'mainnet-beta', connection, honeyMarket.nftSwitchboardPriceAggregator);
+
+    const solPriceUsd = await getOraclePrice(
+      isDevnet ? 'devnet' : 'mainnet-beta',
+      connection,
+      honeyReserves[0].data.switchboardPriceAggregator,
+    );
+    const nftPriceUsd = await getOraclePrice(
+      isDevnet ? 'devnet' : 'mainnet-beta',
+      connection,
+      honeyMarket.nftSwitchboardPriceAggregator,
+    );
     const nftPrice = nftPriceUsd / solPriceUsd;
-  
+
     let obligations = await honeyMarket.fetchObligations();
     if (obligations && marketReserveInfo) {
       await Promise.all(
         obligations.map(async (item) => {
           let nftMints: PublicKey[] = item.account.collateralNftMint;
-  
+
           const parsePosition = (position: any) => {
             const pos: ObligationPositionStruct = {
               account: new PublicKey(position.account),
@@ -83,7 +100,7 @@ export const useAllPositions = (
             };
             return pos;
           };
-  
+
           item.account.loans = PositionInfoList.decode(Buffer.from(item.account.loans as any as number[])).map(
             parsePosition,
           );
@@ -122,8 +139,8 @@ export const useAllPositions = (
       setStatus({ loading: false, error: new Error('HoneyUser is undefined') });
       return;
     }
-    fetchPositions().then(res => {
-      setStatus({ loading: false, positions: res.positions, bids: res.bids })
+    fetchPositions(devnet).then((res) => {
+      setStatus({ loading: false, positions: res.positions, bids: res.bids });
     });
   }, [honeyUser, marketReserveInfo]);
   return { ...status, fetchPositions: fetchPositions };

@@ -1,10 +1,7 @@
 import { BN } from '@project-serum/anchor';
 import type { AccountInfo as TokenAccountInfo, MintInfo, u64 } from '@solana/spl-token';
-import { Connection, Keypair, PublicKey } from "@solana/web3.js";
-import {
-    AggregatorAccount,
-    loadSwitchboardProgram,
-  } from "@switchboard-xyz/switchboard-v2";
+import { Connection, Keypair, PublicKey } from '@solana/web3.js';
+import { AggregatorAccount, loadSwitchboardProgram } from '@switchboard-xyz/switchboard-v2';
 
 // Check for localStorage dark theme preference
 // and set if necessary
@@ -268,24 +265,24 @@ export class TokenAmount {
 }
 
 export const getHealthStatus = (debt: number, collaterl: number): string => {
-  const ltv = debt * 100 / collaterl;
+  const ltv = (debt * 100) / collaterl;
 
-  if(ltv < 20)
-      return "LOW";
-  else if(ltv < 30)
-      return "MEDIUM";
-  else if(ltv == 40)
-      return "HIGH";
-  else
-      return "RISKY";
-}
+  if (ltv < 20) return 'LOW';
+  else if (ltv < 30) return 'MEDIUM';
+  else if (ltv == 40) return 'HIGH';
+  else return 'RISKY';
+};
 
-export async function getOraclePrice(cluster: "devnet" | "mainnet-beta" = "devnet", connection: Connection, aggregatorKey: PublicKey): Promise<any> {
+export async function getOraclePrice(
+  cluster: 'devnet' | 'mainnet-beta' = 'devnet',
+  connection: Connection,
+  aggregatorKey: PublicKey,
+): Promise<any> {
   // load the switchboard program
   const program = await loadSwitchboardProgram(
     cluster,
     connection,
-    Keypair.fromSeed(new Uint8Array(32).fill(1)) // using dummy keypair since we wont be submitting any transactions
+    Keypair.fromSeed(new Uint8Array(32).fill(1)), // using dummy keypair since we wont be submitting any transactions
   );
 
   // load the switchboard aggregator
