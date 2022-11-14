@@ -15,6 +15,7 @@ export interface CollateralNFTPosition {
   symbol: string;
   uri: string;
   image: string;
+  verifiedCreator?: string | null;
 }
 
 export interface LoanPosition {
@@ -43,7 +44,6 @@ export const useBorrowPositions = (
 
   const { honeyUser } = useMarket(connection, wallet, honeyId, honeyMarketId);
 
-
   const fetchData = async () => {
     setStatus({ loading: true });
 
@@ -67,6 +67,7 @@ export const useBorrowPositions = (
         const data = await getNFTAssociatedMetadata(connection, nftMetadata);
         if (!data) return;
         const tokenMetadata = new Metadata(nftMetadata, data);
+        const verifiedCreator = tokenMetadata.data.data.creators.filter((creator) => creator.verified)[0].address;
         const arweaveData = await (await fetch(tokenMetadata.data.data.uri)).json();
         collateralNFTPositions.push({
           mint: new PublicKey(tokenMetadata?.data?.mint),
@@ -75,6 +76,7 @@ export const useBorrowPositions = (
           symbol: tokenMetadata?.data?.data.symbol,
           uri: tokenMetadata?.data?.data.uri,
           image: arweaveData?.image,
+          verifiedCreator,
         });
       }
     });

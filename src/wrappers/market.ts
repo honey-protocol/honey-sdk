@@ -13,7 +13,6 @@ export interface HoneyMarketData {
   quoteCurrency: string;
   marketAuthority: PublicKey;
   owner: PublicKey;
-
   reserves: HoneyMarketReserveInfo[];
   nftSwitchboardPriceAggregator: PublicKey;
   updateAuthority: PublicKey;

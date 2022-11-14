@@ -59,16 +59,17 @@ export class HoneyClient {
       account = Keypair.generate();
     }
 
-    await this.program.methods.initMarket(
-      params.owner,
-      params.quoteCurrencyName,
-      params.quoteCurrencyMint,
-      params.nftCollectionCreator).accounts({
-          market: account.publicKey,
-          oraclePrice: params.nftOraclePrice,
-      }).signers([account])
+    const tx = await this.program.methods
+      .initMarket(params.owner, params.quoteCurrencyName, params.quoteCurrencyMint, params.nftCollectionCreator)
+      .accounts({
+        market: account.publicKey,
+        oraclePrice: params.nftOraclePrice,
+      })
+      .signers([account])
       .preInstructions([await this.program.account.market.createInstruction(account)])
       .rpc();
+
+    await this.program.provider.connection.confirmTransaction(tx, 'processed');
 
     return HoneyMarket.load(this, account.publicKey);
   }
