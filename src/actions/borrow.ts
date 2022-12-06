@@ -226,6 +226,7 @@ export const repayAndRefresh = async (
     console.error(`Ata could not be found`);
     return [TxnResponse.Failed, []];
   }
+  await repayReserve.refreshOldReserves();
   return await honeyUser.repayAndRefresh(repayReserve, associatedTokenAccount, amount);
 };
 
