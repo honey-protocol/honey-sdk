@@ -32,6 +32,14 @@
         {
           "name": "nftCollectionCreator",
           "type": "publicKey"
+        },
+        {
+          "name": "borrowFeeReceiver",
+          "type": "publicKey"
+        },
+        {
+          "name": "borrowFeeAmount",
+          "type": "u16"
         }
       ]
     },
@@ -358,6 +366,31 @@
       ]
     },
     {
+      "name": "setBorrowInfo",
+      "accounts": [
+        {
+          "name": "market",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "newBorrowFeeReceiver",
+          "type": "publicKey"
+        },
+        {
+          "name": "newBorrowFeeAmount",
+          "type": "u16"
+        }
+      ]
+    },
+    {
       "name": "depositTokens",
       "accounts": [
         {
@@ -653,7 +686,7 @@
         },
         {
           "name": "borrower",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -667,12 +700,37 @@
           "isSigner": false
         },
         {
+          "name": "borrowFeeReceiverAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "borrowFeeReceiver",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "tokenMint",
           "isMut": false,
           "isSigner": false
         },
         {
           "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
           "isMut": false,
           "isSigner": false
         },
@@ -1150,6 +1208,11 @@
           "isSigner": false
         },
         {
+          "name": "rootAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "bidMint",
           "isMut": false,
           "isSigner": false
@@ -1301,7 +1364,10 @@
           {
             "name": "authorityBumpSeed",
             "type": {
-              "array": ["u8", 1]
+              "array": [
+                "u8",
+                1
+              ]
             }
           },
           {
@@ -1335,13 +1401,19 @@
           {
             "name": "quoteCurrency",
             "type": {
-              "array": ["u8", 15]
+              "array": [
+                "u8",
+                15
+              ]
             }
           },
           {
             "name": "authorityBumpSeed",
             "type": {
-              "array": ["u8", 1]
+              "array": [
+                "u8",
+                1
+              ]
             }
           },
           {
@@ -1375,19 +1447,36 @@
           {
             "name": "marketOracleState",
             "type": {
-              "array": ["u8", 24]
+              "array": [
+                "u8",
+                24
+              ]
             }
+          },
+          {
+            "name": "borrowFeeReceiver",
+            "type": "publicKey"
+          },
+          {
+            "name": "borrowFeeAmount",
+            "type": "u16"
           },
           {
             "name": "reserved",
             "type": {
-              "array": ["u8", 352]
+              "array": [
+                "u8",
+                352
+              ]
             }
           },
           {
             "name": "reserves",
             "type": {
-              "array": ["u8", 12288]
+              "array": [
+                "u8",
+                12288
+              ]
             }
           }
         ]
@@ -1417,25 +1506,37 @@
           {
             "name": "reserved1",
             "type": {
-              "array": ["u8", 184]
+              "array": [
+                "u8",
+                184
+              ]
             }
           },
           {
             "name": "collateralNftMint",
             "type": {
-              "array": ["publicKey", 11]
+              "array": [
+                "publicKey",
+                11
+              ]
             }
           },
           {
             "name": "cached",
             "type": {
-              "array": ["u8", 256]
+              "array": [
+                "u8",
+                256
+              ]
             }
           },
           {
             "name": "loans",
             "type": {
-              "array": ["u8", 2048]
+              "array": [
+                "u8",
+                2048
+              ]
             }
           }
         ]
@@ -1493,7 +1594,10 @@
           {
             "name": "reserved0",
             "type": {
-              "array": ["u8", 408]
+              "array": [
+                "u8",
+                408
+              ]
             }
           },
           {
@@ -1505,13 +1609,19 @@
           {
             "name": "reserved1",
             "type": {
-              "array": ["u8", 704]
+              "array": [
+                "u8",
+                704
+              ]
             }
           },
           {
             "name": "state",
             "type": {
-              "array": ["u8", 536]
+              "array": [
+                "u8",
+                536
+              ]
             }
           }
         ]
@@ -1713,13 +1823,19 @@
           {
             "name": "reserved1",
             "type": {
-              "array": ["u8", 24]
+              "array": [
+                "u8",
+                24
+              ]
             }
           },
           {
             "name": "reserved2",
             "type": {
-              "array": ["u8", 10]
+              "array": [
+                "u8",
+                10
+              ]
             }
           }
         ]
@@ -1830,6 +1946,11 @@
         },
         {
           "name": "debt",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "fee",
           "type": "u64",
           "index": false
         }

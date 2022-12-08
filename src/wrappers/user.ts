@@ -741,6 +741,13 @@ export class HoneyUser implements User {
     //   this.client.program.programId,
     // );
 
+    const borrowFeeReceiverAccount = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      reserve.data.tokenMint,
+      this.market.borrowFeeReceiver
+    );
+
     const [loanAccountPK, loanAccountBump] = await PublicKey.findProgramAddress(
       [Buffer.from('loan'), reserve.reserve.toBuffer(), this.obligation.address.toBuffer(), this.address.toBuffer()],
       this.client.program.programId,
@@ -763,6 +770,8 @@ export class HoneyUser implements User {
         loanAccount: loanAccountPK,
         tokenMint: reserve.data.tokenMint,
         receiverAccount,
+        borrowFeeReceiverAccount,
+        borrowFeeReceiver: this.market.borrowFeeReceiver,
         nftSwitchboardPriceAggregator: this.market.nftSwitchboardPriceAggregator,
         tokenProgram: TOKEN_PROGRAM_ID,
       }).instruction();

@@ -29,6 +29,7 @@ export class HoneyMarket implements HoneyMarketData {
     public reserves: HoneyMarketReserveInfo[],
     public nftSwitchboardPriceAggregator: PublicKey,
     public updateAuthority: PublicKey,
+    public borrowFeeReceiver: PublicKey,
   ) {}
 
   async fetchObligations(): Promise<any[]> {
@@ -70,6 +71,7 @@ export class HoneyMarket implements HoneyMarketData {
       reserveInfoList,
       data.nftSwitchboardPriceAggregator,
       data.updateAuthority,
+      data.borrowFeeReceiver,
     );
   }
 
