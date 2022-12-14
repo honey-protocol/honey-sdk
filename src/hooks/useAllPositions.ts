@@ -1,14 +1,6 @@
-import { Metadata } from '@metaplex-foundation/mpl-token-metadata';
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { useEffect, useState } from 'react';
-import {
-  HoneyClient,
-  HoneyMarket,
-  HoneyMarketReserveInfo,
-  HoneyReserve,
-  ObligationPositionStruct,
-  PositionInfoList,
-} from '..';
+import { HoneyClient, ObligationPositionStruct, PositionInfoList } from '..';
 import { useHoney } from '../contexts/honey';
 import { ConnectedWallet } from '../helpers/walletType';
 import { useMarket } from './useMarket';
@@ -45,6 +37,7 @@ export const useAllPositions = (
 
   const { honeyUser, honeyReserves, honeyMarket } = useMarket(connection, wallet, honeyId, honeyMarketId);
   const { marketReserveInfo } = useHoney();
+
   const fetchPositions = async (isDevnet: boolean) => {
     console.log('fetching bids...');
     const resBids = await fetch(
@@ -133,12 +126,14 @@ export const useAllPositions = (
       return { positions: arrPositions, bids: arrBids };
     }
   };
+
   // build nft positions
   useEffect(() => {
     if (!honeyUser) {
       setStatus({ loading: false, error: new Error('HoneyUser is undefined') });
       return;
     }
+
     fetchPositions(devnet).then((res) => {
       setStatus({ loading: false, positions: res.positions, bids: res.bids });
     });
