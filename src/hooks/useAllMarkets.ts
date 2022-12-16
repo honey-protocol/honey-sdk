@@ -1,6 +1,5 @@
 import { ConnectedWallet } from '../helpers/walletType';
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
-import { useEffect, useState } from 'react';
 import {
   HoneyClient,
   HoneyMarket,
@@ -10,16 +9,15 @@ import {
   MarketReserveInfoList,
   ObligationPositionStruct,
   PositionInfoList,
-  useAnchor,
 } from '..';
-import { useHoney } from '../contexts/honey';
-import { useMarket } from './useMarket';
 import * as anchor from '@project-serum/anchor';
 import { BN, Program } from '@project-serum/anchor';
 import { NftPosition } from '../helpers/types';
 import { getHealthStatus, getOraclePrice } from '../helpers/util';
-import NodeWallet from '@project-serum/anchor/dist/cjs/nodewallet';
 import { Bid } from './useAllPositions';
+import devnetIdl from '../idl/devnet/honey.json';
+import mainnetBetaIdl from '../idl/mainnet-beta/honey.json';
+import NodeWallet from '@project-serum/anchor/dist/cjs/nodewallet';
 
 export interface MarketBundle {
   client: HoneyClient;
@@ -38,8 +36,7 @@ export const useAllMarkets = async (
   devnet?: boolean,
 ): Promise<MarketBundle[]> => {
   const marketBundles: MarketBundle[] = [];
-  const { program } = useAnchor();
-
+  const program: Program = await buildProgram(honeyId, connection, wallet, devnet);
   await Promise.all(
     honeyMarketIds.map(async (honeyMarketId) => {
       const marketBundle = await buildMarketBundle(connection, wallet, honeyId, honeyMarketId);
@@ -64,14 +61,11 @@ const buildMarketBundle = async (
   honeyProgramId: string,
   honeyMarketId: string,
 ): Promise<MarketBundle> => {
-  const readOnlyKeypair = new Keypair();
-
   const provider = new anchor.AnchorProvider(
     connection,
-    wallet ?? new NodeWallet(readOnlyKeypair),
+    wallet ?? new NodeWallet(new Keypair()),
     anchor.AnchorProvider.defaultOptions(),
   );
-
   const client: HoneyClient = await HoneyClient.connect(provider, honeyProgramId, true);
   const honeyMarketPubKey: PublicKey = new PublicKey(honeyMarketId);
   const market: HoneyMarket = await HoneyMarket.load(client, honeyMarketPubKey);
@@ -89,7 +83,7 @@ const buildMarketBundle = async (
   const user: HoneyUser = await HoneyUser.load(
     client,
     market,
-    wallet ? new PublicKey(wallet.publicKey) : readOnlyKeypair.publicKey,
+    wallet ? new PublicKey(wallet.publicKey) : new Keypair().publicKey,
     reserves,
   );
 
@@ -118,22 +112,15 @@ const fetchPositionsAndBids = async (
     { mode: 'cors' },
   );
   const arrBids = await resBids.json();
-  // const parsedBids = arrBids.map((str) => JSON.parse(str));
-
   const highestBid = Math.max.apply(
     Math,
     arrBids.map(function (o) {
       return o.bidLimit;
     }),
   );
-  console.log('fetching positions...');
-  const provider = new anchor.AnchorProvider(
-    connection,
-    new NodeWallet(new Keypair()),
-    anchor.AnchorProvider.defaultOptions(),
-  );
-  let arrPositions: NftPosition[] = [];
 
+  console.log('fetching positions...');
+  let arrPositions: NftPosition[] = [];
   const solPriceUsd = await getOraclePrice(
     isDevnet ? 'devnet' : 'mainnet-beta',
     connection,
@@ -146,9 +133,9 @@ const fetchPositionsAndBids = async (
   );
   const nftPrice = nftPriceUsd / solPriceUsd;
 
-  const marketValue = await program.account.market.fetch(honeyMarket.address);
   // reserve info
-  const reserveInfoData = new Uint8Array(marketValue.reserves as any as number[]);
+  const marketReserves = await program.account.market.fetch(honeyMarket.address);
+  const reserveInfoData = new Uint8Array(marketReserves.reserves as any as number[]);
   const reserveInfoList = MarketReserveInfoList.decode(reserveInfoData) as HoneyMarketReserveInfo[];
 
   let obligations = await honeyMarket.fetchObligations();
@@ -199,4 +186,16 @@ const fetchPositionsAndBids = async (
     );
     return { positions: arrPositions, bids: arrBids };
   }
+};
+
+export const buildProgram = (honeyProgramId: string, connection: Connection, wallet: any, devnet: boolean) => {
+  const idl: any = devnet ? devnetIdl : mainnetBetaIdl;
+  const HONEY_PROGRAM_ID = new PublicKey(honeyProgramId);
+  const provider = new anchor.AnchorProvider(
+    connection,
+    wallet ?? new NodeWallet(new Keypair()),
+    anchor.AnchorProvider.defaultOptions(),
+  );
+  const program: Program = new anchor.Program(idl as any, HONEY_PROGRAM_ID, provider);
+  return program;
 };

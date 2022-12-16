@@ -56,7 +56,7 @@ export class LiquidatorClient {
   }
 
   /**
-   * Create a new client for interacting with the Jet lending program.
+   * Create a new client for interacting with the Honey lending program.
    * @param provider The provider with wallet/network access that can be used to send transactions.
    * @returns The client
    */
@@ -252,42 +252,43 @@ export class LiquidatorClient {
     const withdrawDestination = Keypair.generate();
 
     try {
-      const ix_result = await this.program.methods.revokeLiquidateBid(bumps)
-      .accounts({
-        market: params.market,
-        marketAuthority: market_authority.address,
-        bid: bid.address,
-        bidder: params.bidder,
-        bidEscrow: bid_escrow.address,
-        bidEscrowAuthority: bid_escrow_authority.address,
-        bidMint: params.bid_mint,
-        withdrawDestination: withdrawDestination.publicKey,
+      const ix_result = await this.program.methods
+        .revokeLiquidateBid(bumps)
+        .accounts({
+          market: params.market,
+          marketAuthority: market_authority.address,
+          bid: bid.address,
+          bidder: params.bidder,
+          bidEscrow: bid_escrow.address,
+          bidEscrowAuthority: bid_escrow_authority.address,
+          bidMint: params.bid_mint,
+          withdrawDestination: withdrawDestination.publicKey,
 
-        // system accounts
-        tokenProgram: TOKEN_PROGRAM_ID,
-        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-        systemProgram: anchor.web3.SystemProgram.programId,
-      })
-      .preInstructions([
-        SystemProgram.createAccount({
-          fromPubkey: bidder,
-          newAccountPubkey: withdrawDestination.publicKey,
-          space: TokenAccountLayout.span,
-          lamports: await Token.getMinBalanceRentForExemptAccount(this.program.provider.connection), // rent + amount
-          programId: TOKEN_PROGRAM_ID,
-        }),
-        // init token account
-        Token.createInitAccountInstruction(TOKEN_PROGRAM_ID, NATIVE_MINT, withdrawDestination.publicKey, bidder)
-      ])
-      .postInstructions([
-        Token.createCloseAccountInstruction(TOKEN_PROGRAM_ID, withdrawDestination.publicKey, bidder, bidder, [])
-      ])
-      .signers([withdrawDestination])
-      .rpc();
+          // system accounts
+          tokenProgram: TOKEN_PROGRAM_ID,
+          rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .preInstructions([
+          SystemProgram.createAccount({
+            fromPubkey: bidder,
+            newAccountPubkey: withdrawDestination.publicKey,
+            space: TokenAccountLayout.span,
+            lamports: await Token.getMinBalanceRentForExemptAccount(this.program.provider.connection), // rent + amount
+            programId: TOKEN_PROGRAM_ID,
+          }),
+          // init token account
+          Token.createInitAccountInstruction(TOKEN_PROGRAM_ID, NATIVE_MINT, withdrawDestination.publicKey, bidder),
+        ])
+        .postInstructions([
+          Token.createCloseAccountInstruction(TOKEN_PROGRAM_ID, withdrawDestination.publicKey, bidder, bidder, []),
+        ])
+        .signers([withdrawDestination])
+        .rpc();
 
       console.log('revoke bid result', ix_result);
       return [TxnResponse.Success, [ix_result]];
-    } catch(err) {
+    } catch (err) {
       return [TxnResponse.Failed, []];
     }
 
@@ -376,41 +377,42 @@ export class LiquidatorClient {
 
     try {
       // @ts-ignore
-      const result = await this.program.methods.executeLiquidateBid(bumps)
-      .accounts({
-        market: params.market,
-        marketAuthority: market_authority.address,
-        obligation: params.obligation,
-        reserve: params.reserve,
-        vault: vault.address,
-        loanNoteMint: loanNoteMint.address,
-        loanAccount: loanNoteAddress.address,
-        collateralAccount: vaultedNFT,
-        bid: bid.address,
-        bidder: new PublicKey(bidData.bidder),
-        bidMint: new PublicKey(bidData.bidMint),
-        bidEscrow: new PublicKey(bidData.bidEscrow),
-        bidEscrowAuthority: bid_escrow_authority.address,
-        payerAccount: new PublicKey(bidData.bidEscrow),
-        nftMint: params.nftMint,
-        receiverAccount: receiverAccount,
-        liquidationFeeReceiver,
-        leftoversReceiver,
-        payer: params.payer,
-        // system accounts
-        tokenProgram: TOKEN_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-        systemProgram: anchor.web3.SystemProgram.programId,
-      })
-      .preInstructions([refreshIx])
-      .rpc();
+      const result = await this.program.methods
+        .executeLiquidateBid(bumps)
+        .accounts({
+          market: params.market,
+          marketAuthority: market_authority.address,
+          obligation: params.obligation,
+          reserve: params.reserve,
+          vault: vault.address,
+          loanNoteMint: loanNoteMint.address,
+          loanAccount: loanNoteAddress.address,
+          collateralAccount: vaultedNFT,
+          bid: bid.address,
+          bidder: new PublicKey(bidData.bidder),
+          bidMint: new PublicKey(bidData.bidMint),
+          bidEscrow: new PublicKey(bidData.bidEscrow),
+          bidEscrowAuthority: bid_escrow_authority.address,
+          payerAccount: new PublicKey(bidData.bidEscrow),
+          nftMint: params.nftMint,
+          receiverAccount: receiverAccount,
+          liquidationFeeReceiver,
+          leftoversReceiver,
+          payer: params.payer,
+          // system accounts
+          tokenProgram: TOKEN_PROGRAM_ID,
+          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .preInstructions([refreshIx])
+        .rpc();
 
       // const result = await this.program.provider.sendAndConfirm(tx, [], { skipPreflight: true });
       console.log(result);
       return [TxnResponse.Success, [result]];
-    } catch(err) {
-      console.log('error', err)
+    } catch (err) {
+      console.log('error', err);
       return [TxnResponse.Failed, []];
     }
   }
