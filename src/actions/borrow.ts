@@ -149,6 +149,8 @@ export const borrowAndRefresh = async (
     console.error(`Ata could not be found`);
     return [TxnResponse.Failed, []];
   }
+
+  await borrowReserve.refreshOldReserves();
   return await honeyUser.borrowAndRefresh(borrowReserve, associatedTokenAccount, amount);
 };
 
@@ -224,6 +226,7 @@ export const repayAndRefresh = async (
     console.error(`Ata could not be found`);
     return [TxnResponse.Failed, []];
   }
+  await repayReserve.refreshOldReserves();
   return await honeyUser.repayAndRefresh(repayReserve, associatedTokenAccount, amount);
 };
 

@@ -172,7 +172,7 @@ export class HoneyReserve {
     }
     let accruedUntil = new BN(this.state.accruedUntil);
     while (accruedUntil.add(MAX_ACCRUAL_SECONDS).lt(new BN(Math.floor(Date.now() / 1000)))) {
-      this.sendRefreshTx();
+      await this.sendRefreshTx();
       accruedUntil = accruedUntil.add(MAX_ACCRUAL_SECONDS);
     }
   }
