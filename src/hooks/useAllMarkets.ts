@@ -188,7 +188,7 @@ const fetchPositionsAndBids = async (
   }
 };
 
-export const buildProgram = (honeyProgramId: string, connection: Connection, wallet: any, devnet: boolean) => {
+export const buildProgram = async (honeyProgramId: string, connection: Connection, wallet: any, devnet: boolean) => {
   const idl: any = devnet ? devnetIdl : mainnetBetaIdl;
   const HONEY_PROGRAM_ID = new PublicKey(honeyProgramId);
   const provider = new anchor.AnchorProvider(
