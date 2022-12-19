@@ -4,4 +4,4 @@ export * from './useMarket';
 export { useBorrowPositions } from './useBorrowPositions';
 export { useMarket } from './useMarket';
 export { useAllPositions } from './useAllPositions';
-export { fetchAllMarkets } from './fetchAllMarkets';
+export { fetchAllMarkets, MarketBundle } from './fetchAllMarkets';
