@@ -9,5 +9,5 @@ export * from './contexts';
 export * as hooks from './hooks';
 export * from './hooks';
 
-export { useBorrowPositions, useMarket, useAllMarkets } from './hooks';
+export { useBorrowPositions, useMarket, fetchAllMarkets } from './hooks';
 export { useHoney, useAnchor, HoneyProvider, AnchorProvider } from './contexts';

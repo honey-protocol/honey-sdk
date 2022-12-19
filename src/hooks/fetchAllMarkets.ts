@@ -28,7 +28,7 @@ export interface MarketBundle {
   bids?: Bid[];
 }
 
-export const useAllMarkets = async (
+export const fetchAllMarkets = async (
   connection: Connection,
   wallet: ConnectedWallet | null,
   honeyId: string,
@@ -36,7 +36,7 @@ export const useAllMarkets = async (
   devnet?: boolean,
 ): Promise<MarketBundle[]> => {
   const marketBundles: MarketBundle[] = [];
-  const program: Program = await buildProgram(honeyId, connection, wallet, devnet);
+  const program: Program = buildProgram(honeyId, connection, wallet, devnet);
   await Promise.all(
     honeyMarketIds.map(async (honeyMarketId) => {
       const marketBundle = await buildMarketBundle(connection, wallet, honeyId, honeyMarketId);
