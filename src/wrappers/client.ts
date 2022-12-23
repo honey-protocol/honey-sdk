@@ -19,7 +19,7 @@ export class HoneyClient {
   constructor(public program: anchor.Program, public devnet?: boolean) {}
 
   /**
-   * Create a new client for interacting with the Jet lending program.
+   * Create a new client for interacting with the Honey lending program.
    * @param provider The provider with wallet/network access that can be used to send transactions.
    * @returns The client
    */

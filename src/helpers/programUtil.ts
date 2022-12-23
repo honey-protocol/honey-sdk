@@ -30,8 +30,6 @@ import { TxnResponse } from './honeyTypes';
 import { PositionInfoList } from './layout';
 import { TokenAmount } from './util';
 
-// Find PDA functions and jet algorithms that are reimplemented here
-
 export const SOL_DECIMALS = 9;
 export const NULL_PUBKEY = new PublicKey('11111111111111111111111111111111');
 
@@ -539,7 +537,6 @@ export const parseObligationAccount = (account: Buffer, coder: anchor.Coder) => 
     return pos;
   };
 
-
   obligation.loans = PositionInfoList.decode(Buffer.from(obligation.loans as any as number[])).map(parsePosition);
 
   return obligation;
@@ -548,7 +545,6 @@ export const parseObligationAccount = (account: Buffer, coder: anchor.Coder) => 
 export const parseU192 = (data: Buffer | number[]) => {
   return new BN(data, undefined, 'le');
 };
-
 
 /**
  * Convert some object of fields with address-like values,

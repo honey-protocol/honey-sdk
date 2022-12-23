@@ -1,35 +1,51 @@
-import { PublicKey, Keypair, Transaction } from '@solana/web3.js';
-import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, u64 } from '@solana/spl-token';
 import * as anchor from '@project-serum/anchor';
-import { CreateReserveParams, HoneyReserve } from './reserve';
 import { HoneyClient } from './client';
-import { HoneyMarketReserveInfo, MarketReserveInfoList } from '../helpers';
-
-// const MarketReserveInfoList = BL.seq(ReserveInfoStruct, MAX_RESERVES);
-export const DEX_PID = new PublicKey('DESVgJVGajEgKGXhb6XmqDHGz3VjdgP7rEVESBgxmroY'); // localnet
+import { CreateReserveParams, HoneyReserve } from './reserve';
+import { PublicKey, Keypair, Transaction, Connection } from '@solana/web3.js';
+import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, u64 } from '@solana/spl-token';
+import {
+  getOraclePrice,
+  HoneyMarketReserveInfo,
+  MarketReserveInfoList,
+  ReserveStateStruct,
+  TMarket,
+  TReserve,
+} from '../helpers';
 
 export interface HoneyMarketData {
   quoteTokenMint: PublicKey;
-  quoteCurrency: string;
   marketAuthority: PublicKey;
   owner: PublicKey;
-  reserves: HoneyMarketReserveInfo[];
   nftSwitchboardPriceAggregator: PublicKey;
-  updateAuthority: PublicKey;
+  nftCollectionCreator: PublicKey;
+  market: TMarket;
+  reserves: HoneyMarketReserveInfo[];
+  reserveList: ReserveDataAndState[];
+  conn: Connection;
+}
+
+export interface ReserveDataAndState {
+  data: TReserve;
+  state: ReserveStateStruct;
 }
 
 export class HoneyMarket implements HoneyMarketData {
+  conn: anchor.web3.Connection;
+
   private constructor(
     private client: HoneyClient,
     public address: PublicKey,
     public quoteTokenMint: PublicKey,
-    public quoteCurrency: string,
     public marketAuthority: PublicKey,
     public owner: PublicKey,
+    public market: TMarket,
     public reserves: HoneyMarketReserveInfo[],
+    public reserveList: ReserveDataAndState[],
     public nftSwitchboardPriceAggregator: PublicKey,
-    public updateAuthority: PublicKey,
-  ) {}
+    public nftCollectionCreator: PublicKey,
+  ) {
+    this.conn = this.client.program.provider.connection;
+  }
 
   async fetchObligations(): Promise<any[]> {
     let obligations = await this.client.program.account.obligation?.all();
@@ -42,13 +58,29 @@ export class HoneyMarket implements HoneyMarketData {
     return obligations;
   }
 
-  public static async fetchData(client: HoneyClient, address: PublicKey): Promise<[any, HoneyMarketReserveInfo[]]> {
-    const data: any = await client.program.account.market.fetch(address);
+  public static async fetchMarket(
+    client: HoneyClient,
+    address?: PublicKey,
+  ): Promise<[TMarket, HoneyMarketReserveInfo[], ReserveDataAndState[]]> {
+    const tMarket: TMarket = (await client.program.account.market.fetch(address)) as any as TMarket;
 
-    const reserveInfoData = new Uint8Array(data.reserves);
+    const reserveInfoData = new Uint8Array(tMarket.reserves);
     const reserveInfoList = MarketReserveInfoList.decode(reserveInfoData) as HoneyMarketReserveInfo[];
 
-    return [data, reserveInfoList];
+    const reservesList = [] as ReserveDataAndState[];
+    for (const reserve of reserveInfoList) {
+      if (reserve.reserve.equals(PublicKey.default)) {
+        continue;
+      }
+      const { data, state } = await HoneyReserve.decodeReserve(client, reserve.reserve);
+      reservesList.push({ data, state });
+    }
+
+    return [tMarket, reserveInfoList, reservesList];
+  }
+
+  public async fetchNFTFloorPrice(cluster: 'mainnet-beta' | 'devnet' = 'mainnet-beta'): Promise<any> {
+    return await getOraclePrice(cluster, this.conn, this.market.nftSwitchboardPriceAggregator);
   }
 
   /**
@@ -58,18 +90,19 @@ export class HoneyMarket implements HoneyMarketData {
    * @returns An object for interacting with the Honey market.
    */
   static async load(client: HoneyClient, address: PublicKey): Promise<HoneyMarket> {
-    const [data, reserveInfoList] = await HoneyMarket.fetchData(client, address);
+    const [tMarket, reserveInfoList, reserveList] = await HoneyMarket.fetchMarket(client, address);
 
     return new HoneyMarket(
       client,
       address,
-      data.quoteTokenMint,
-      data.quoteCurrency,
-      data.marketAuthority,
-      data.owner,
+      tMarket.quoteTokenMint,
+      tMarket.marketAuthority,
+      tMarket.owner,
+      tMarket,
       reserveInfoList,
-      data.nftSwitchboardPriceAggregator,
-      data.updateAuthority,
+      reserveList,
+      tMarket.nftSwitchboardPriceAggregator,
+      tMarket.nftCollectionCreator,
     );
   }
 
@@ -77,15 +110,16 @@ export class HoneyMarket implements HoneyMarketData {
    * Get the latest market account data from the network.
    */
   async refresh(): Promise<void> {
-    const [data, reserveInfoList] = await HoneyMarket.fetchData(this.client, this.address);
+    const [tMarket, reserveInfoList, reserveList] = await HoneyMarket.fetchMarket(this.client, this.address);
 
+    this.market = tMarket;
     this.reserves = reserveInfoList;
-    this.owner = data.owner;
-    this.marketAuthority = data.marketAuthority;
-    this.quoteCurrency = data.quoteCurrency;
-    this.quoteTokenMint = data.quoteTokenMint;
-    this.nftSwitchboardPriceAggregator = data.nftSwitchboardPriceAggregator;
-    this.updateAuthority = data.updateAuthority;
+    this.reserveList = reserveList;
+    this.owner = tMarket.owner;
+    this.marketAuthority = tMarket.marketAuthority;
+    this.quoteTokenMint = tMarket.quoteTokenMint;
+    this.nftSwitchboardPriceAggregator = tMarket.nftSwitchboardPriceAggregator;
+    this.nftCollectionCreator = tMarket.nftCollectionCreator;
   }
 
   async setFlags(flags: u64) {
@@ -151,14 +185,8 @@ export class HoneyMarket implements HoneyMarketData {
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: anchor.web3.SystemProgram.programId,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-
-        // nftDropletMint: params.nftDropletMint,
-        // nftDropletVault: nftDropletAccount,
-        // dexProgram: DEX_PID,
-        // instructions: [createReserveAccount],
       })
       .rpc();
-    console.log('initReserve tx', txid);
     return await HoneyReserve.load(this.client, account.publicKey, this);
   }
 }

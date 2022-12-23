@@ -55,7 +55,6 @@ export const useMarket = (
       );
       setHoneyUser(user);
     };
-    // load jet
     if (isConfigured && connection && honeyProgramId && honeyMarketId) {
       fetchHoneyClient();
     }

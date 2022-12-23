@@ -1,14 +1,11 @@
 import * as anchor from '@project-serum/anchor';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { Connection, Keypair, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
-import * as BL from '@solana/buffer-layout';
-
 import { HoneyClient } from './client';
 import { HoneyMarket } from './market';
-import * as util from './util';
 import { BN } from '@project-serum/anchor';
 import { DerivedAccount } from './derived-account';
-import { ReserveStateLayout, ReserveStateStruct, TReserve } from '../helpers';
+import { getOraclePrice, ReserveStateLayout, ReserveStateStruct, TReserve } from '../helpers';
 
 export interface ReserveConfig {
   utilizationRate1: number;
@@ -22,9 +19,6 @@ export interface ReserveConfig {
   manageFeeCollectionThreshold: anchor.BN;
   manageFeeRate: number;
   loanOriginationFee: number;
-  // liquidationSlippage: number;
-  // liquidationDexTradeMax: anchor.BN;
-  // confidenceThreshold: number;
 }
 
 export interface ReserveAccounts {
@@ -152,7 +146,10 @@ export class HoneyReserve {
     this.state = state;
   }
 
-  static async decodeReserve(client: HoneyClient, address: PublicKey) {
+  static async decodeReserve(
+    client: HoneyClient,
+    address: PublicKey,
+  ): Promise<{ data: TReserve; state: ReserveStateStruct }> {
     const reserveData = (await client.program.account.reserve.fetch(address)) as any as TReserve;
     const reserveState = ReserveStateLayout.decode(Buffer.from(reserveData.state)) as ReserveStateStruct;
     reserveData.reserveState = reserveState;
@@ -163,6 +160,10 @@ export class HoneyReserve {
   async sendRefreshTx(): Promise<string> {
     const tx = new Transaction().add(await this.makeRefreshIx());
     return await this.client.program.provider.sendAndConfirm(tx);
+  }
+
+  async fetchReserveValue(cluster: 'mainnet-beta' | 'devnet' = 'mainnet-beta'): Promise<any> {
+    return await getOraclePrice(cluster, this.conn, this.data.switchboardPriceAggregator);
   }
 
   async refreshOldReserves(): Promise<void> {
@@ -190,7 +191,8 @@ export class HoneyReserve {
       this.client.program.programId,
     );
 
-    return this.client.program.methods.refreshReserve()
+    return this.client.program.methods
+      .refreshReserve()
       .accounts({
         market: this.market.address,
         marketAuthority: this.market.marketAuthority,
@@ -201,7 +203,8 @@ export class HoneyReserve {
         switchboardPriceAggregator: this.data.switchboardPriceAggregator,
         nftSwitchboardPriceAggregator: this.market.nftSwitchboardPriceAggregator,
         tokenProgram: TOKEN_PROGRAM_ID,
-      }).instruction();
+      })
+      .instruction();
   }
 
   async updateReserveConfig(params: UpdateReserveConfigParams): Promise<void> {
