@@ -49,7 +49,7 @@ export interface NftPosition {
   ltv: number;
   is_healthy: string;
   highest_bid: number;
-  verifiedCreator: PublicKey;
+  verifiedCreator?: PublicKey;
 }
 
 export interface TMarket {

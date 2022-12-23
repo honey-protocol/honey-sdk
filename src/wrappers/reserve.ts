@@ -8,7 +8,7 @@ import { HoneyMarket } from './market';
 import * as util from './util';
 import { BN } from '@project-serum/anchor';
 import { DerivedAccount } from './derived-account';
-import { ReserveStateLayout, ReserveStateStruct, TReserve } from '../helpers';
+import { getOraclePrice, ReserveStateLayout, ReserveStateStruct, TReserve } from '../helpers';
 
 export interface ReserveConfig {
   utilizationRate1: number;
@@ -166,6 +166,10 @@ export class HoneyReserve {
   async sendRefreshTx(): Promise<string> {
     const tx = new Transaction().add(await this.makeRefreshIx());
     return await this.client.program.provider.sendAndConfirm(tx);
+  }
+
+  async fetchReserveValue(cluster: 'mainnet-beta' | 'devnet' = 'mainnet-beta'): Promise<any> {
+    return await getOraclePrice(cluster, this.conn, this.data.switchboardPriceAggregator);
   }
 
   async refreshOldReserves(): Promise<void> {

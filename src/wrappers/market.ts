@@ -1,9 +1,16 @@
 import * as anchor from '@project-serum/anchor';
 import { HoneyClient } from './client';
 import { CreateReserveParams, HoneyReserve } from './reserve';
-import { PublicKey, Keypair, Transaction } from '@solana/web3.js';
+import { PublicKey, Keypair, Transaction, Connection } from '@solana/web3.js';
 import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, u64 } from '@solana/spl-token';
-import { HoneyMarketReserveInfo, MarketReserveInfoList, ReserveStateStruct, TMarket, TReserve } from '../helpers';
+import {
+  getOraclePrice,
+  HoneyMarketReserveInfo,
+  MarketReserveInfoList,
+  ReserveStateStruct,
+  TMarket,
+  TReserve,
+} from '../helpers';
 
 export interface HoneyMarketData {
   quoteTokenMint: PublicKey;
@@ -14,6 +21,7 @@ export interface HoneyMarketData {
   market: TMarket;
   reserves: HoneyMarketReserveInfo[];
   reserveList: ReserveDataAndState[];
+  conn: Connection;
 }
 
 export interface ReserveDataAndState {
@@ -22,6 +30,8 @@ export interface ReserveDataAndState {
 }
 
 export class HoneyMarket implements HoneyMarketData {
+  conn: anchor.web3.Connection;
+
   private constructor(
     private client: HoneyClient,
     public address: PublicKey,
@@ -33,7 +43,9 @@ export class HoneyMarket implements HoneyMarketData {
     public reserveList: ReserveDataAndState[],
     public nftSwitchboardPriceAggregator: PublicKey,
     public nftCollectionCreator: PublicKey,
-  ) {}
+  ) {
+    this.conn = this.client.program.provider.connection;
+  }
 
   async fetchObligations(): Promise<any[]> {
     let obligations = await this.client.program.account.obligation?.all();
@@ -65,6 +77,10 @@ export class HoneyMarket implements HoneyMarketData {
     }
 
     return [tMarket, reserveInfoList, reservesList];
+  }
+
+  public async fetchNFTFloorPrice(cluster: 'mainnet-beta' | 'devnet' = 'mainnet-beta'): Promise<any> {
+    return await getOraclePrice(cluster, this.conn, this.market.nftSwitchboardPriceAggregator);
   }
 
   /**

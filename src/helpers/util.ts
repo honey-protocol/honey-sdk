@@ -3,46 +3,6 @@ import type { AccountInfo as TokenAccountInfo, MintInfo, u64 } from '@solana/spl
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { AggregatorAccount, loadSwitchboardProgram } from '@switchboard-xyz/switchboard-v2';
 
-// Check for localStorage dark theme preference
-// and set if necessary
-export const checkDarkTheme = async () => {
-  const darkTheme = localStorage.getItem('jetDark') === 'true';
-  if (darkTheme) {
-    setDark(darkTheme);
-  }
-};
-
-// Toggle dark theme root CSS attributes
-export const setDark = (darkTheme: boolean): void => {
-  if (darkTheme) {
-    document.documentElement.style.setProperty('--jet-green', '#53bd9f');
-    document.documentElement.style.setProperty('--jet-blue', '#32a5d3');
-    document.documentElement.style.setProperty('--black', '#ffffff');
-    document.documentElement.style.setProperty('--dark-grey', '#e1e7f1');
-    document.documentElement.style.setProperty('--grey', '#504f4f');
-    document.documentElement.style.setProperty('--light-grey', '#494848');
-    document.documentElement.style.setProperty('--white', '#444444');
-    document.documentElement.style.setProperty('--light-shadow', 'rgb(82, 82, 82)');
-    document.documentElement.style.setProperty('--dark-shadow', 'rgb(54, 54, 54)');
-    document.documentElement.style.setProperty('--input-color', 'rgba(255, 255, 255, 0.8)');
-    document.documentElement.style.setProperty('--range-slider-bg', 'rgba(0, 0, 0, 0.25)');
-  } else {
-    document.documentElement.style.setProperty('--jet-green', '#3d9e83');
-    document.documentElement.style.setProperty('--jet-blue', '#278db6');
-    document.documentElement.style.setProperty('--black', '#1a495e');
-    document.documentElement.style.setProperty('--dark-grey', '#949494');
-    document.documentElement.style.setProperty('--grey', '#d8dfec');
-    document.documentElement.style.setProperty('--light-grey', '#e1e7f1');
-    document.documentElement.style.setProperty('--white', '#e5ebf4');
-    document.documentElement.style.setProperty('--light-shadow', 'rgb(255, 255, 255)');
-    document.documentElement.style.setProperty('--dark-shadow', 'rgb(175, 186, 214)');
-    document.documentElement.style.setProperty('--input-color', 'rgba(26, 73, 94, 0.8)');
-    document.documentElement.style.setProperty('--range-slider-bg', 'rgba(255, 255, 255, 0.25)');
-  }
-
-  localStorage.setItem('jetDark', JSON.stringify(darkTheme));
-};
-
 // Format USD or crypto with default or desired decimals
 export const currencyFormatter = (value: number, usd: boolean, digits?: number) => {
   let currencyFormat: Intl.NumberFormat;
