@@ -26,7 +26,7 @@ const HoneyContext = React.createContext<HoneyContext>({
  * The useHoney hook is accesible throughout the application and provides on-chain data and methods to interact with the honey program.
  *
  * @example
- * ```ts 
+ * ```ts
  * import { useHoney } from '@honey-finance/sdk';
  * const { market, marketReserveInfo, parsedReserves, fetchMarket }  = useHoney();
  * ```
@@ -93,12 +93,9 @@ export const HoneyProvider: FC<HoneyProps> = ({ children, wallet, connection, ho
       if (reserve.reserve.equals(PublicKey.default)) {
         continue;
       }
-      console.log('reserve', reserve.reserve.toString());
-
       const { data, state } = await HoneyReserve.decodeReserve(honeyClient, reserve.reserve);
       reservesList.push(data);
     }
-    console.log('reserves list', reservesList);
     setReserves(reservesList);
   };
 

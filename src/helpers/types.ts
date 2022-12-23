@@ -42,31 +42,31 @@ export type TPool = {
 };
 
 export interface NftPosition {
-  obligation: string,
+  obligation: string;
   debt: number;
   nft_mint: PublicKey;
   owner: PublicKey;
   ltv: number;
   is_healthy: string;
   highest_bid: number;
+  verifiedCreator: PublicKey;
 }
 
-
 export interface TMarket {
-  version: 0,
-  quoteExponent: number,
-  quoteCurrency: number[],
-  authorityBumpSeed: number[],
-  authoritySeed: PublicKey,
-  marketAuthority: PublicKey,
-  owner: PublicKey,
-  quoteTokenMint: PublicKey,
-  nftSwitchboardPriceAggregator: PublicKey,
-  nftCollectionCreator: PublicKey,
-  flags: number,
-  marketOracleState: number[],
-  reserved: number[],
-  reserves: number[]
+  version: 0;
+  quoteExponent: number;
+  quoteCurrency: string;
+  authorityBumpSeed: number[];
+  authoritySeed: PublicKey;
+  marketAuthority: PublicKey;
+  owner: PublicKey;
+  quoteTokenMint: PublicKey;
+  nftSwitchboardPriceAggregator: PublicKey;
+  nftCollectionCreator: PublicKey;
+  flags: number;
+  marketOracleState: number[];
+  reserved: number[];
+  reserves: number[];
 }
 
 export interface TReserve {
@@ -81,14 +81,7 @@ export interface TReserve {
   vault: PublicKey;
   feeNoteVault: PublicKey;
   protocolFeeNoteVault: PublicKey;
-  // dexMarketA: PublicKey;
-  // dexMarketB: PublicKey;
-  // dexOpenOrdersA: PublicKey;
-  // dexOpenOrdersB: PublicKey;
-  // dexSwapTokens: PublicKey;
   config: any;
-  // nftDropletMint: PublicKey;
-  // nftDropletVault: PublicKey;
   reserved0: number[];
   reserved1: number[];
   state: number[];

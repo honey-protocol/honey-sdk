@@ -152,7 +152,10 @@ export class HoneyReserve {
     this.state = state;
   }
 
-  static async decodeReserve(client: HoneyClient, address: PublicKey) {
+  static async decodeReserve(
+    client: HoneyClient,
+    address: PublicKey,
+  ): Promise<{ data: TReserve; state: ReserveStateStruct }> {
     const reserveData = (await client.program.account.reserve.fetch(address)) as any as TReserve;
     const reserveState = ReserveStateLayout.decode(Buffer.from(reserveData.state)) as ReserveStateStruct;
     reserveData.reserveState = reserveState;
@@ -190,7 +193,8 @@ export class HoneyReserve {
       this.client.program.programId,
     );
 
-    return this.client.program.methods.refreshReserve()
+    return this.client.program.methods
+      .refreshReserve()
       .accounts({
         market: this.market.address,
         marketAuthority: this.market.marketAuthority,
@@ -201,7 +205,8 @@ export class HoneyReserve {
         switchboardPriceAggregator: this.data.switchboardPriceAggregator,
         nftSwitchboardPriceAggregator: this.market.nftSwitchboardPriceAggregator,
         tokenProgram: TOKEN_PROGRAM_ID,
-      }).instruction();
+      })
+      .instruction();
   }
 
   async updateReserveConfig(params: UpdateReserveConfigParams): Promise<void> {

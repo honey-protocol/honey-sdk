@@ -177,6 +177,7 @@ const fetchPositionsAndBids = async (
                 ltv: 40,
                 is_healthy: getHealthStatus(totalDebt, nftPrice),
                 highest_bid: highestBid,
+                verifiedCreator: honeyMarket.nftCollectionCreator,
               };
               arrPositions.push(position);
             }
