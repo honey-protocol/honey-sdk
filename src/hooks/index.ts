@@ -5,3 +5,5 @@ export { useBorrowPositions } from './useBorrowPositions';
 export { useMarket } from './useMarket';
 export { useAllPositions } from './useAllPositions';
 export { fetchAllMarkets, MarketBundle } from './fetchAllMarkets';
+
+export { waitForConfirmation } from './waitForConfirmation';

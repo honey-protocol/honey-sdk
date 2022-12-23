@@ -1,11 +1,8 @@
 import * as anchor from '@project-serum/anchor';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { Connection, Keypair, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
-import * as BL from '@solana/buffer-layout';
-
 import { HoneyClient } from './client';
 import { HoneyMarket } from './market';
-import * as util from './util';
 import { BN } from '@project-serum/anchor';
 import { DerivedAccount } from './derived-account';
 import { getOraclePrice, ReserveStateLayout, ReserveStateStruct, TReserve } from '../helpers';
@@ -22,9 +19,6 @@ export interface ReserveConfig {
   manageFeeCollectionThreshold: anchor.BN;
   manageFeeRate: number;
   loanOriginationFee: number;
-  // liquidationSlippage: number;
-  // liquidationDexTradeMax: anchor.BN;
-  // confidenceThreshold: number;
 }
 
 export interface ReserveAccounts {
