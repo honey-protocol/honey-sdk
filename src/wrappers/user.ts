@@ -489,12 +489,11 @@ export class HoneyUser implements User {
         this.address,
       );
 
-      supplementalTx.add(createWsolIx);
-      supplementalTx.add(initWsolIx);
+      tx.add(createWsolIx);
+      tx.add(initWsolIx);
       signer = [wsolKeypair] as Signer[];
     } else if (!walletTokenExists) {
       // Create the wallet token account if it doesn't exist
-      supplementalTx = new Transaction();
       createAssociatedTokenAccountIx = Token.createAssociatedTokenAccountInstruction(
         ASSOCIATED_TOKEN_PROGRAM_ID,
         TOKEN_PROGRAM_ID,
@@ -503,19 +502,9 @@ export class HoneyUser implements User {
         this.address,
         this.address,
       );
-      supplementalTx.add(createAssociatedTokenAccountIx);
+      tx.add(createAssociatedTokenAccountIx);
     }
 
-    const txids: string[] = [];
-    if (supplementalTx && signer) {
-      try {
-        const txid = await this.client.program.provider.sendAndConfirm(supplementalTx, signer);
-        txids.push(txid);
-      } catch (err) {
-        console.error(`Ata or wSOL account creation error: ${err}`);
-        return [TxnResponse.Failed, txids];
-      }
-    }
     tx.add(await reserve.makeRefreshIx());
     console.log('adding withdrawTokens instruction');
     tx.add(
@@ -546,12 +535,11 @@ export class HoneyUser implements User {
       tx.add(closeWsolIx);
     }
     try {
-      const txid = await this.client.program.provider.sendAndConfirm(tx, [], { skipPreflight: true });
-      txids.push(txid);
-      return [TxnResponse.Success, txids];
+      const txid = await this.client.program.provider.sendAndConfirm(tx, signer, { skipPreflight: true });
+      return [TxnResponse.Success, [txid]];
     } catch (err) {
       console.error(`Withdraw collateral error: ${err}`);
-      return [TxnResponse.Failed, txids];
+      return [TxnResponse.Failed, []];
     }
   }
 
