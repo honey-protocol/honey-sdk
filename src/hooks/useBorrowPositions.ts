@@ -1,8 +1,7 @@
 import { Metadata } from '@metaplex-foundation/mpl-token-metadata';
 import { Connection, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
 import { useEffect, useState } from 'react';
-import { getNFTAssociatedMetadata } from '..';
-import { ObligationAccount } from '../helpers/honeyTypes';
+import { getNFTAssociatedMetadata, ObligationAccount } from '..';
 import { ConnectedWallet } from '../helpers/walletType';
 import { useMarket } from './useMarket';
 

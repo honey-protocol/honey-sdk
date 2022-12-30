@@ -54,21 +54,6 @@ export interface CreateReserveParams {
   config: ReserveConfig;
 
   /**
-   * token mint for the solvent droplets
-   */
-  nftDropletMint?: PublicKey;
-
-  /**
-   * Dex market A
-   */
-  dexMarketA?: PublicKey;
-
-  /**
-   * dex market B
-   */
-  dexMarketB?: PublicKey;
-
-  /**
    * The account to use for the reserve data.
    *
    * If not provided an account will be generated.
@@ -77,7 +62,6 @@ export interface CreateReserveParams {
 }
 
 export interface ReserveData {
-  // index: number;
   market: PublicKey;
   switchBoardOracle: PublicKey;
   tokenMint: PublicKey;
@@ -86,11 +70,6 @@ export interface ReserveData {
   vault: PublicKey;
   feeNoteVault: PublicKey;
   protocolFeeNoteVault: PublicKey;
-  dexSwapTokens: PublicKey;
-  dexOpenOrdersA: PublicKey;
-  dexOpenOrdersB: PublicKey;
-  dexMarketA: PublicKey;
-  dexMarketB: PublicKey;
 }
 
 export interface ReserveStateData {
@@ -101,18 +80,6 @@ export interface ReserveStateData {
   totalDeposits: anchor.BN;
   totalDepositNotes: anchor.BN;
   totalLoanNotes: anchor.BN;
-}
-
-export interface ReserveDexMarketAccounts {
-  market: PublicKey;
-  openOrders: PublicKey;
-  requestQueue: PublicKey;
-  eventQueue: PublicKey;
-  bids: PublicKey;
-  asks: PublicKey;
-  coinVault: PublicKey;
-  pcVault: PublicKey;
-  vaultSigner: PublicKey;
 }
 
 export interface UpdateReserveConfigParams {
@@ -141,20 +108,16 @@ export class HoneyReserve {
 
   async refresh(): Promise<void> {
     await this.market.refresh();
-    const { data, state } = await HoneyReserve.decodeReserve(this.client, this.reserve);
+    const data = await HoneyReserve.decodeReserve(this.client, this.reserve);
     this.data = data;
-    this.state = state;
   }
 
-  static async decodeReserve(
-    client: HoneyClient,
-    address: PublicKey,
-  ): Promise<{ data: TReserve; state: ReserveStateStruct }> {
+  static async decodeReserve(client: HoneyClient, address: PublicKey): Promise<TReserve> {
     const reserveData = (await client.program.account.reserve.fetch(address)) as any as TReserve;
     const reserveState = ReserveStateLayout.decode(Buffer.from(reserveData.state)) as ReserveStateStruct;
     reserveData.reserveState = reserveState;
 
-    return { data: reserveData, state: reserveState };
+    return reserveData;
   }
 
   async sendRefreshTx(): Promise<string> {
@@ -162,8 +125,9 @@ export class HoneyReserve {
     return await this.client.program.provider.sendAndConfirm(tx);
   }
 
-  async fetchReserveValue(cluster: 'mainnet-beta' | 'devnet' = 'mainnet-beta'): Promise<any> {
-    return await getOraclePrice(cluster, this.conn, this.data.switchboardPriceAggregator);
+  async fetchReserveValue(cluster: 'mainnet-beta' | 'devnet' = 'mainnet-beta'): Promise<number> {
+    // @ts-ignore - switchboard doesn't export their big number type
+    return await getOraclePrice(cluster, this.conn, this.data.switchboardPriceAggregator).toNumber();
   }
 
   async refreshOldReserves(): Promise<void> {
@@ -219,7 +183,7 @@ export class HoneyReserve {
   }
 
   static async load(client: HoneyClient, address: PublicKey, maybeMarket?: HoneyMarket): Promise<HoneyReserve> {
-    const { data } = await HoneyReserve.decodeReserve(client, address);
+    const data = await HoneyReserve.decodeReserve(client, address);
     const market = maybeMarket || (await HoneyMarket.load(client, data.market));
     return new HoneyReserve(client, market, address, data);
   }

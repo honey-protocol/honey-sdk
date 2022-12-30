@@ -11,8 +11,8 @@ import {
   AccountLayout as TokenAccountLayout,
   Token,
 } from '@solana/spl-token';
-import { Amount, HoneyReserve } from '.';
-import { deposit, TxResponse } from '../actions';
+import { HoneyReserve } from '.';
+import { TxResponse } from '../actions';
 
 export interface PlaceBidParams {
   bid_limit: number;

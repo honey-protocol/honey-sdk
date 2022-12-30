@@ -1,5 +1,5 @@
 import { PublicKey } from '@solana/web3.js';
-import { TxnResponse } from '../helpers/honeyTypes';
+import { TxnResponse } from '../helpers';
 import { Amount, HoneyReserve, HoneyUser } from '../wrappers';
 import { deriveAssociatedTokenAccount } from './borrow';
 import { TxResponse } from './types';

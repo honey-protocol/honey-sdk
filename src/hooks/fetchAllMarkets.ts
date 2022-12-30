@@ -3,7 +3,7 @@ import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import {
   HoneyClient,
   HoneyMarket,
-  HoneyMarketReserveInfo,
+  CachedReserveInfo,
   HoneyReserve,
   HoneyUser,
   MarketReserveInfoList,
@@ -136,7 +136,7 @@ const fetchPositionsAndBids = async (
   // reserve info
   const marketReserves = await program.account.market.fetch(honeyMarket.address);
   const reserveInfoData = new Uint8Array(marketReserves.reserves as any as number[]);
-  const reserveInfoList = MarketReserveInfoList.decode(reserveInfoData) as HoneyMarketReserveInfo[];
+  const reserveInfoList = MarketReserveInfoList.decode(reserveInfoData) as CachedReserveInfo[];
 
   let obligations = await honeyMarket.fetchObligations();
   if (obligations && reserveInfoList) {

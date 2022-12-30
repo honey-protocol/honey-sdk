@@ -18,17 +18,17 @@ import {
   TransactionInstruction,
 } from '@solana/web3.js';
 import { Buffer } from 'buffer';
-import type {
+import { PositionInfoList } from './layout';
+import { TokenAmount } from './util';
+import {
   CustomProgramError,
   HasPublicKey,
   ObligationAccount,
   ObligationPositionStruct,
   ReserveConfigStruct,
   ToBytes,
-} from './honeyTypes';
-import { TxnResponse } from './honeyTypes';
-import { PositionInfoList } from './layout';
-import { TokenAmount } from './util';
+  TxnResponse,
+} from './types';
 
 export const SOL_DECIMALS = 9;
 export const NULL_PUBKEY = new PublicKey('11111111111111111111111111111111');
@@ -300,6 +300,10 @@ export const inDevelopment: boolean = true;
 export const explorerUrl = (txid: string) => {
   const clusterParam = inDevelopment ? `?cluster=devnet` : '';
   return `https://explorer.solana.com/transaction/${txid}${clusterParam}`;
+};
+
+export const oracleUrl = (aggId: string) => {
+  return `https://switchboard.xyz/explorer/3/${aggId}`;
 };
 
 let customProgramErrors: CustomProgramError[];

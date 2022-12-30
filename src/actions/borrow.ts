@@ -1,8 +1,7 @@
 import { Metadata } from '@metaplex-foundation/mpl-token-metadata';
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { Connection, PublicKey } from '@solana/web3.js';
-import { InstructionAndSigner } from '../helpers';
-import { TxnResponse } from '../helpers/honeyTypes';
+import { InstructionAndSigner, TxnResponse } from '../helpers';
 import { Amount, HoneyReserve, HoneyUser } from '../wrappers';
 import { TxResponse } from './types';
 
