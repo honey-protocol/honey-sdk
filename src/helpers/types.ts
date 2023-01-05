@@ -204,9 +204,6 @@ export interface ReserveConfigStruct {
   loanOriginationFee: number;
   /** Unused space */
   _reserved0: number;
-  // confidenceThreshhold: number;
-  // /** Maximum number of tokens to sell in a single DEX trade during liquidation */
-  // liquidationDexTradeMax: number;
   /** Unused space */
   _reserved1: number[];
   _reserved2: number[];
@@ -243,13 +240,39 @@ export interface ObligationPositionStruct {
 
 export interface NftPosition {
   obligation: string;
-  debt: number;
+  debt: BN;
   nft_mint: PublicKey;
   owner: PublicKey;
   ltv: number;
   is_healthy: string;
   highest_bid: number;
   verifiedCreator?: PublicKey;
+}
+
+export interface CollateralNFTPosition {
+  mint: PublicKey;
+  updateAuthority: PublicKey;
+  name: string;
+  symbol: string;
+  uri: string;
+  image: string;
+  verifiedCreator?: string | null;
+}
+
+export interface LoanPosition {
+  amount: BN;
+  tokenAccount: PublicKey;
+}
+
+export interface FungibleCollateralPosition {
+  amount: number;
+  tokenAccount: PublicKey;
+}
+
+export interface Bid {
+  bid: string;
+  bidder: string;
+  bidLimit: number;
 }
 
 export enum TxnResponse {

@@ -57,7 +57,7 @@ export class HoneyMarket implements HoneyMarketData {
   ): Promise<[MarketAccount, CachedReserveInfo[], TReserve[]]> {
     const market: MarketAccount = (await client.program.account.market.fetch(address)) as any as MarketAccount;
 
-    const reserveInfoData = new Uint8Array(market.reserves);
+    const reserveInfoData = new Uint8Array(market.reserves as any as number[]);
     const reserveInfoList = MarketReserveInfoList.decode(reserveInfoData) as CachedReserveInfo[];
 
     const reservesList = [] as TReserve[];

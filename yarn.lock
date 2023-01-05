@@ -327,7 +327,7 @@
 
 "@solana/buffer-layout@^3.0.0":
   version "3.0.0"
-  resolved "https://registry.npmjs.org/@solana/buffer-layout/-/buffer-layout-3.0.0.tgz"
+  resolved "https://registry.yarnpkg.com/@solana/buffer-layout/-/buffer-layout-3.0.0.tgz#b9353caeb9a1589cb77a1b145bcb1a9a93114326"
   integrity sha512-MVdgAKKL39tEs0l8je0hKaXLQFb7Rdfb0Xg2LjFZd8Lfdazkg6xiS98uAZrEKvaoF3i4M95ei9RydkGIDMeo3w==
   dependencies:
     buffer "~6.0.3"

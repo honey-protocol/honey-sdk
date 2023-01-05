@@ -1,4 +1,5 @@
 import { Metadata } from '@metaplex-foundation/mpl-token-metadata';
+import { BN } from '@project-serum/anchor';
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { InstructionAndSigner, TxnResponse } from '../helpers';
@@ -108,10 +109,13 @@ export const withdrawNFT = async (
 
 export const borrow = async (
   honeyUser: HoneyUser,
-  borrowAmount: number,
+  borrowAmount: number | BN,
   borrowTokenMint: PublicKey,
   borrowReserves: HoneyReserve[],
 ): Promise<TxResponse> => {
+  if (typeof borrowAmount === 'number') {
+    borrowAmount = new BN(borrowAmount);
+  }
   const amount = Amount.tokens(borrowAmount);
   const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(
     borrowTokenMint,
@@ -131,10 +135,13 @@ export const borrow = async (
 
 export const borrowAndRefresh = async (
   honeyUser: HoneyUser,
-  borrowAmount: number,
+  borrowAmount: number | BN,
   borrowTokenMint: PublicKey,
   borrowReserves: HoneyReserve[],
 ): Promise<TxResponse> => {
+  if (typeof borrowAmount === 'number') {
+    borrowAmount = new BN(borrowAmount);
+  }
   const amount = Amount.tokens(borrowAmount);
   const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(
     borrowTokenMint,

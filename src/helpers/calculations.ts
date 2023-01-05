@@ -1,21 +1,21 @@
 import BN from 'bn.js';
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { HoneyMarketReserveInfo, HoneyUser, TReserve } from '@honey-finance/sdk';
 import { getOraclePrice, RoundHalfDown, RoundHalfUp } from './util';
-import { MarketAccount, ReserveConfigStruct } from './types';
+import { CachedReserveInfo, MarketAccount, ReserveConfigStruct, TReserve } from './types';
 import { getCcRate } from './programUtil';
+import { HoneyUser } from '../wrappers';
 
 /**
  * @typedef {Function} calculateUserDeposits
- * @param {HoneyMarketReserveInfo} marketReserveInfo
+ * @param {CachedReserveInfo[]} reserveInfo
  * @param {HoneyUser} honeyUser
  * @returns {number} totalDeposits
  */
-export async function calculateUserDeposits(marketReserveInfo: HoneyMarketReserveInfo, honeyUser: HoneyUser) {
-  if (!marketReserveInfo || !honeyUser) return;
+export async function calculateUserDeposits(reserveInfo: CachedReserveInfo[], honeyUser: HoneyUser) {
+  if (!reserveInfo || !honeyUser) return;
 
   await honeyUser.refresh();
-  let depositNoteExchangeRate = BnToDecimal(marketReserveInfo[0].depositNoteExchangeRate, 15, 5);
+  let depositNoteExchangeRate = BnToDecimal(reserveInfo[0].depositNoteExchangeRate, 15, 5);
   let depositValue = (await honeyUser.deposits().length) > 0;
   if (depositValue == false) {
     return 0;
@@ -75,7 +75,7 @@ export async function fetchAllowanceLtvAndDebt(
   nftPrice: number,
   collateralNFTPositions: any,
   honeyUser: HoneyUser,
-  marketReserveInfo: HoneyMarketReserveInfo,
+  marketReserveInfo: CachedReserveInfo,
   ltv: number,
 ): Promise<{ sumOfAllowance: number; sumOfTotalDebt: number }> {
   try {
@@ -131,13 +131,13 @@ export async function calcNFT(reserve: TReserve, market: MarketAccount, connecti
 }
 
 /**
- * fetches the onchain price of SOL in USD
+ * fetches the onchain price of Reserve in USD
  * @param reserve reserve account data
  * @param connection to the cluster
  * @param devnet flag to determine if devnet or mainnet
- * @returns sol price as seen by the oracle
+ * @returns reserve price as seen by the oracle
  */
-export async function fetchSolPrice(reserve: TReserve, connection: Connection, devnet?: boolean) {
+export async function fetchReservePrice(reserve: TReserve, connection: Connection, devnet?: boolean) {
   if (reserve && connection) {
     try {
       let solPrice = await getOraclePrice(

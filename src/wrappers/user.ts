@@ -84,48 +84,6 @@ export class HoneyUser implements User {
     return parsed;
   }
 
-  async liquidate(
-    loanReserve: HoneyReserve,
-    collateralReserve: HoneyReserve,
-    payerAccount: PublicKey,
-    receiverAccount: PublicKey,
-    amount: Amount,
-  ): Promise<string> {
-    const tx = await this.makeLiquidateTx(loanReserve, collateralReserve, payerAccount, receiverAccount, amount);
-    return await this.client.program.provider.sendAndConfirm(tx);
-  }
-
-  async makeLiquidateTx(
-    _loanReserve: HoneyReserve,
-    _collateralReserve: HoneyReserve,
-    _payerAccount: PublicKey,
-    _receiverAccount: PublicKey,
-    _amount: Amount,
-  ): Promise<Transaction> {
-    throw new Error('not yet implemented');
-  }
-
-  async liquidateSolvent(
-    loanReserve: HoneyReserve,
-    collateralReserve: HoneyReserve,
-    payerAccount: PublicKey,
-    receiverAccount: PublicKey,
-    amount: Amount,
-  ): Promise<string> {
-    const tx = await this.makeLiquidateSolventTx(loanReserve, collateralReserve, payerAccount, receiverAccount, amount);
-    return await this.client.program.provider.sendAndConfirm(tx);
-  }
-
-  async makeLiquidateSolventTx(
-    _loanReserve: HoneyReserve,
-    _collateralReserve: HoneyReserve,
-    _payerAccount: PublicKey,
-    _receiverAccount: PublicKey,
-    _amount: Amount,
-  ): Promise<Transaction> {
-    throw new Error('not yet implemented');
-  }
-
   async repay(reserve: HoneyReserve, tokenAccount: PublicKey, amount: Amount): Promise<TxResponse> {
     const ixs = await this.makeRepayTx(reserve, tokenAccount, amount);
     try {

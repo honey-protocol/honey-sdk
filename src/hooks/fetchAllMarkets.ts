@@ -12,13 +12,22 @@ import {
 } from '..';
 import * as anchor from '@project-serum/anchor';
 import { BN, Program } from '@project-serum/anchor';
-import { NftPosition } from '../helpers/types';
+import { Bid, NftPosition } from '../helpers/types';
 import { getHealthStatus, getOraclePrice } from '../helpers/util';
-import { Bid } from './useAllPositions';
 import devnetIdl from '../idl/devnet/honey.json';
 import mainnetBetaIdl from '../idl/mainnet-beta/honey.json';
 import NodeWallet from '@project-serum/anchor/dist/cjs/nodewallet';
 
+/**
+ * Main data component for the honey program. Will fetch the market, reserves, user, and positions for a market.
+ * @typedef {Object} MarketBundle
+ * @property {HoneyClient} client - the honey client
+ * @property {HoneyMarket} market - the market
+ * @property {HoneyReserve[]} reserves - the reserves
+ * @property {HoneyUser} user - the user
+ * @property {NftPosition[]} positions - the positions
+ * @property {Bid[]} bids - the bids
+ */
 export interface MarketBundle {
   client: HoneyClient;
   market: HoneyMarket;
@@ -28,6 +37,15 @@ export interface MarketBundle {
   bids?: Bid[];
 }
 
+/**
+ * Fetches all the markets for a given program
+ * @param connection to the cluster
+ * @param wallet connected wallet adapter (or null for read-only)
+ * @param honeyId of the program
+ * @param honeyMarketIds array of market ids to fetch
+ * @param devnet fetch devnet or mainnet-beta idl
+ * @returns {Object} MarketBundle
+ */
 export const fetchAllMarkets = async (
   connection: Connection,
   wallet: ConnectedWallet | null,
@@ -108,7 +126,6 @@ const fetchPositionsAndBids = async (
     isDevnet
       ? `https://honey-nft-api.herokuapp.com/bids/${honeyMarketId}`
       : `https://honey-mainnet-api.herokuapp.com/bids/${honeyMarketId}`,
-    // 'http://localhost:3001/bids',
     { mode: 'cors' },
   );
   const arrBids = await resBids.json();
@@ -135,6 +152,7 @@ const fetchPositionsAndBids = async (
 
   // reserve info
   const marketReserves = await program.account.market.fetch(honeyMarket.address);
+
   const reserveInfoData = new Uint8Array(marketReserves.reserves as any as number[]);
   const reserveInfoList = MarketReserveInfoList.decode(reserveInfoData) as CachedReserveInfo[];
 
@@ -161,21 +179,19 @@ const fetchPositionsAndBids = async (
         await Promise.all(
           nftMints.map(async (nft) => {
             if (nft.toString() != '11111111111111111111111111111111') {
-              const totalDebt =
-                reserveInfoList[0].loanNoteExchangeRate
-                  .mul(item.account?.loans[0]?.amount)
-                  .div(new BN(10 ** 15))
-                  .div(new BN(10 ** 6)) //!!
-                  .div(new BN(10 ** 5))
-                  .toNumber() /
-                10 ** 4; //dividing lamport
+              const totalDebt: BN = reserveInfoList[0].loanNoteExchangeRate
+                .mul(item.account?.loans[0]?.amount)
+                .div(new BN(10 ** 15))
+                .div(new BN(10 ** 6))
+                .div(new BN(10 ** 5))
+                .div(new BN(10 ** 4));
               let position: NftPosition = {
                 obligation: item.publicKey.toString(),
                 debt: totalDebt,
                 nft_mint: new PublicKey(nft),
                 owner: item.account.owner,
                 ltv: 40,
-                is_healthy: getHealthStatus(totalDebt, nftPrice),
+                is_healthy: getHealthStatus(totalDebt, new BN(nftPrice)),
                 highest_bid: highestBid,
                 verifiedCreator: honeyMarket.nftCollectionCreator,
               };

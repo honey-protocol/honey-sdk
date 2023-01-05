@@ -1,32 +1,27 @@
 import { Metadata } from '@metaplex-foundation/mpl-token-metadata';
-import { Connection, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
+import { BN } from '@project-serum/anchor';
+import { Connection, PublicKey } from '@solana/web3.js';
 import { useEffect, useState } from 'react';
-import { getNFTAssociatedMetadata, ObligationAccount } from '..';
+import {
+  CollateralNFTPosition,
+  FungibleCollateralPosition,
+  getNFTAssociatedMetadata,
+  LoanPosition,
+  ObligationAccount,
+} from '..';
 import { ConnectedWallet } from '../helpers/walletType';
 import { useMarket } from './useMarket';
 
 export const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
 
-export interface CollateralNFTPosition {
-  mint: PublicKey;
-  updateAuthority: PublicKey;
-  name: string;
-  symbol: string;
-  uri: string;
-  image: string;
-  verifiedCreator?: string | null;
-}
-
-export interface LoanPosition {
-  amount: number;
-  tokenAccount: PublicKey;
-}
-
-export interface FungibleCollateralPosition {
-  amount: number;
-  tokenAccount: PublicKey;
-}
-
+/**
+ * mostly deprecated, use fetchAllMarkets instead
+ * @param connection to the cluster
+ * @param wallet wallet adapter or null for read-only
+ * @param honeyId of the program
+ * @param honeyMarketId of the market
+ * @returns list of collateral nft positions and loan positions
+ */
 export const useBorrowPositions = (
   connection: Connection,
   wallet: ConnectedWallet,
@@ -37,7 +32,6 @@ export const useBorrowPositions = (
     loading: boolean;
     collateralNFTPositions?: CollateralNFTPosition[];
     loanPositions?: LoanPosition[];
-    fungibleCollateralPosition?: FungibleCollateralPosition[];
     error?: Error;
   }>({ loading: false });
 
@@ -88,7 +82,7 @@ export const useBorrowPositions = (
     obligation.loans.map((loan: any) => {
       if (loan.account.equals(PublicKey.default)) return;
       loanPositions.push({
-        amount: loan.amount.toNumber() / 10 ** 15,
+        amount: loan.amount.div(new BN(10 ** 15)),
         tokenAccount: loan.account,
       });
     });
