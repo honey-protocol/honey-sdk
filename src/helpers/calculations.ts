@@ -1,6 +1,6 @@
 import BN from 'bn.js';
-import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { getOraclePrice, RoundHalfDown, RoundHalfUp } from './util';
+import { Connection, PublicKey } from '@solana/web3.js';
+import { getOraclePrice } from './util';
 import { CachedReserveInfo, MarketAccount, ReserveConfigStruct, TReserve } from './types';
 import { getCcRate } from './programUtil';
 import { HoneyUser } from '../wrappers';
@@ -42,7 +42,7 @@ export async function calculateMarketDebt(honeyReserves: TReserve[], depositToke
       if (reserveState?.outstandingDebt) {
         let marketDebt = reserveState?.outstandingDebt.div(new BN(10 ** 15));
         if (marketDebt) {
-          return marketDebt.div(new BN(10 ** depositReserve.exponent));
+          return marketDebt.div(new BN(10 ** 15)).div(new BN(10 ** depositReserve.exponent));
         }
         return marketDebt;
       }
