@@ -6,7 +6,5 @@ import { Connection } from '@solana/web3.js';
  * @param txid to wait for confirmation
  */
 export const waitForConfirmation = async (connection: Connection, txid: string) => {
-  const latestBlockHash = await connection.getLatestBlockhash();
-
   await connection.confirmTransaction(txid);
 };

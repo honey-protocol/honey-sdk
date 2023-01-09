@@ -95,6 +95,8 @@ export class HoneyUser implements User {
   }
 
   async repayAndRefresh(reserve: HoneyReserve, tokenAccount: PublicKey, amount: Amount): Promise<TxResponse> {
+    await reserve.refreshOldReserves();
+
     const ixs = await this.makeRepayTx(reserve, tokenAccount, amount);
     ixs.push({ ix: [await reserve.makeRefreshIx()], signers: [] });
     try {
@@ -403,6 +405,8 @@ export class HoneyUser implements User {
   }
 
   async withdraw(reserve: HoneyReserve, tokenAccount: PublicKey, amount: Amount): Promise<TxResponse> {
+    await reserve.refreshOldReserves();
+
     return await this.makeWithdrawTx(reserve, tokenAccount, amount);
   }
 
@@ -604,6 +608,8 @@ export class HoneyUser implements User {
   }
 
   async borrowAndRefresh(reserve: HoneyReserve, receiver: PublicKey, amount: Amount): Promise<TxResponse> {
+    await reserve.refreshOldReserves();
+
     const ixs = await this.makeBorrowTx(reserve, receiver, amount);
     ixs.push({ ix: [await reserve.makeRefreshIx()] });
 
