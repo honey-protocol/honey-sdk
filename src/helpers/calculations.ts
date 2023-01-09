@@ -9,52 +9,45 @@ import { HoneyUser } from '../wrappers';
  * @typedef {Function} calculateUserDeposits
  * @param {CachedReserveInfo[]} reserveInfo
  * @param {HoneyUser} honeyUser
- * @returns {number} totalDeposits
+ * @returns {number} totalDeposits / decimals
  */
-export async function calculateUserDeposits(reserveInfo: CachedReserveInfo[], honeyUser: HoneyUser) {
+export async function calculateUserDeposits(reserveInfo: CachedReserveInfo[], honeyUser: HoneyUser, reserve: TReserve) {
   if (!reserveInfo || !honeyUser) return;
 
   await honeyUser.refresh();
-  let depositNoteExchangeRate = BnToDecimal(reserveInfo[0].depositNoteExchangeRate, 15, 5);
   let depositValue = (await honeyUser.deposits().length) > 0;
   if (depositValue == false) {
     return 0;
   } else {
-    let totalDeposits =
-      (honeyUser
-        .deposits()[0]
-        .amount.div(new BN(10 ** 5))
-        .toNumber() *
-        depositNoteExchangeRate) /
-      10 ** 4;
+    let totalDeposits = honeyUser
+      .deposits()[0]
+      .amount.mul(reserveInfo[0].depositNoteExchangeRate)
+      .div(new BN(10 ** reserve.exponent));
     return totalDeposits;
   }
 }
 
 /**
- * @typedef {Function} calculateUserBorrows
+ * @typedef {Function} calculateMarketDebt
  * @param {TReserve} honeyReserves
  * @returns {number} totalBorrows
  */
-export async function calculateMarketDebt(honeyReserves: TReserve[]) {
+export async function calculateMarketDebt(honeyReserves: TReserve[], depositTokenMint: PublicKey): Promise<BN> {
   try {
-    const depositTokenMint = new PublicKey('So11111111111111111111111111111111111111112');
-
     if (honeyReserves) {
       const depositReserve = honeyReserves.filter((reserve: any) =>
         reserve?.data?.tokenMint?.equals(depositTokenMint),
       )[0];
       const reserveState = depositReserve.reserveState;
       if (reserveState?.outstandingDebt) {
-        let marketDebt = reserveState?.outstandingDebt.div(new BN(10 ** 15)).toNumber();
+        let marketDebt = reserveState?.outstandingDebt.div(new BN(10 ** 15));
         if (marketDebt) {
-          let sum = Number(marketDebt / LAMPORTS_PER_SOL);
-          return (marketDebt = RoundHalfDown(sum));
+          return marketDebt.div(new BN(10 ** depositReserve.exponent));
         }
         return marketDebt;
       }
     } else {
-      return 0;
+      return new BN(0);
     }
   } catch (error) {
     throw error;
@@ -62,45 +55,41 @@ export async function calculateMarketDebt(honeyReserves: TReserve[]) {
 }
 
 /**
- * @typedef {Function} fetchAllowanceLtvAndDebt
+ * @typedef {Function} fetchAllowanceAndDebt
  * @param nftPrice floor price of nft
  * @param collateralNFTPositions number of positions
  * @param honeyUser honey user object
  * @param marketReserveInfo market reserve info object
- * @param ltv ltv from reserve config
+ * @param reserve reserve account data
  * @returns sumOfAllowance
  * @returns sumOfTotalDebt
  */
-export async function fetchAllowanceLtvAndDebt(
+export async function fetchAllowanceAndDebt(
   nftPrice: number,
-  collateralNFTPositions: any,
+  collateralNFTPositions: number,
   honeyUser: HoneyUser,
   marketReserveInfo: CachedReserveInfo,
-  ltv: number,
-): Promise<{ sumOfAllowance: number; sumOfTotalDebt: number }> {
+  reserve: TReserve,
+): Promise<{ sumOfAllowance: BN; sumOfTotalDebt: BN }> {
   try {
-    let totalDebt = 0;
-    let userLoans = 0;
-    let nftCollateralValue = nftPrice * collateralNFTPositions;
+    let userLoans = new BN(0);
+    let nftCollateralValue = new BN(nftPrice * collateralNFTPositions);
+
+    honeyUser.refresh();
 
     if (honeyUser?.loans().length > 0) {
       if (honeyUser?.loans().length > 0 && marketReserveInfo) {
-        userLoans =
-          (marketReserveInfo[0].loanNoteExchangeRate
-            .mul(honeyUser?.loans()[0]?.amount)
-            .div(new BN(10 ** 15))
-            .toNumber() *
-            1.002) /
-          LAMPORTS_PER_SOL;
-        totalDebt =
-          marketReserveInfo[0].loanNoteExchangeRate
-            .mul(honeyUser?.loans()[0]?.amount)
-            .div(new BN(10 ** 15))
-            .toNumber() / LAMPORTS_PER_SOL;
+        userLoans = marketReserveInfo.loanNoteExchangeRate
+          .mul(honeyUser?.loans()[0]?.amount)
+          .div(new BN(10 ** 15))
+          .div(new BN(10 ** reserve.exponent));
       }
     }
-    let sumOfAllowance = RoundHalfDown(nftCollateralValue * ltv - userLoans, 4);
-    let sumOfTotalDebt = RoundHalfUp(totalDebt);
+    let sumOfTotalDebt = userLoans;
+    let sumOfAllowance = sumOfTotalDebt.sub(
+      nftCollateralValue.mul(new BN(marketReserveInfo.minCollateralRatio).div(new BN(100))),
+    );
+
     return {
       sumOfAllowance,
       sumOfTotalDebt,
@@ -115,15 +104,15 @@ export async function fetchAllowanceLtvAndDebt(
  * @param reserve reserve account data
  * @param market market account data
  * @param connection to the cluster
- * @returns
+ * @returns nft floor price divided by reserve switchboard price
  */
 export async function calcNFT(reserve: TReserve, market: MarketAccount, connection: Connection) {
   try {
     if (reserve && market) {
-      let solPrice = await getOraclePrice('mainnet-beta', connection, reserve.switchboardPriceAggregator); //in sol
-      let nftPrice = await getOraclePrice('mainnet-beta', connection, market.nftSwitchboardPriceAggregator); //in usd
+      let reservePrice = await getOraclePrice('mainnet-beta', connection, reserve.switchboardPriceAggregator);
+      let floor = await getOraclePrice('mainnet-beta', connection, market.nftSwitchboardPriceAggregator);
 
-      return nftPrice / solPrice;
+      return floor / reservePrice;
     }
   } catch (error) {
     throw error;
