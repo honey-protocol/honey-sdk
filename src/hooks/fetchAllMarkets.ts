@@ -13,7 +13,7 @@ import {
 import * as anchor from '@project-serum/anchor';
 import { BN, Program } from '@project-serum/anchor';
 import { NftPosition } from '../helpers/types';
-import { getHealthStatus, getOraclePrice } from '../helpers/util';
+import { getHealthStatus, getOraclePrice, TokenAmount } from '../helpers/util';
 import { Bid } from './useAllPositions';
 import devnetIdl from '../idl/devnet/honey.json';
 import mainnetBetaIdl from '../idl/mainnet-beta/honey.json';
@@ -161,21 +161,18 @@ const fetchPositionsAndBids = async (
         await Promise.all(
           nftMints.map(async (nft) => {
             if (nft.toString() != '11111111111111111111111111111111') {
-              const totalDebt =
-                reserveInfoList[0].loanNoteExchangeRate
-                  .mul(item.account?.loans[0]?.amount)
-                  .div(new BN(10 ** 15))
-                  .div(new BN(10 ** 6)) //!!
-                  .div(new BN(10 ** 5))
-                  .toNumber() /
-                10 ** 4; //dividing lamport
+
+              const loanNoteBalance: TokenAmount = new TokenAmount(item.account?.loans[0]?.amount, -honeyReserves[0].data.exponent);
+              
+              const totalDebt = loanNoteBalance.mulb(reserveInfoList[0].loanNoteExchangeRate).divb(new BN(Math.pow(10, 15)).mul(new BN(Math.pow(10, 6))));
+
               let position: NftPosition = {
                 obligation: item.publicKey.toString(),
-                debt: totalDebt,
+                debt: totalDebt.uiAmountFloat,
                 nft_mint: new PublicKey(nft),
                 owner: item.account.owner,
                 ltv: 40,
-                is_healthy: getHealthStatus(totalDebt, nftPrice),
+                is_healthy: getHealthStatus(totalDebt.uiAmountFloat, nftPrice),
                 highest_bid: highestBid,
                 verifiedCreator: honeyMarket.nftCollectionCreator,
               };
