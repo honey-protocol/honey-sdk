@@ -129,12 +129,12 @@ export async function calcNFT(reserve: TReserve, market: MarketAccount, connecti
 export async function fetchReservePrice(reserve: TReserve, connection: Connection, devnet?: boolean) {
   if (reserve && connection) {
     try {
-      let solPrice = await getOraclePrice(
+      let reservePrice = await getOraclePrice(
         devnet ? 'devnet' : 'mainnet-beta',
         connection,
         reserve.switchboardPriceAggregator,
       );
-      return solPrice;
+      return reservePrice;
     } catch (error) {
       throw error;
     }

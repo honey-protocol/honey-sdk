@@ -193,7 +193,7 @@ export const makeBorrowTx = async (
  */
 export const repay = async (
   honeyUser: HoneyUser,
-  repayAmount: number,
+  repayAmount: BN,
   repayTokenMint: PublicKey,
   repayReserves: HoneyReserve[],
 ): Promise<TxResponse> => {
@@ -214,7 +214,7 @@ export const repay = async (
 
 export const repayAndRefresh = async (
   honeyUser: HoneyUser,
-  repayAmount: number,
+  repayAmount: BN,
   repayTokenMint: PublicKey,
   repayReserves: HoneyReserve[],
 ): Promise<TxResponse> => {
@@ -235,7 +235,7 @@ export const repayAndRefresh = async (
 
 export const makeRepayTx = async (
   honeyUser: HoneyUser,
-  repayAmount: number,
+  repayAmount: BN,
   repayTokenMint: PublicKey,
   repayReserves: HoneyReserve[],
 ): Promise<InstructionAndSigner[]> => {
