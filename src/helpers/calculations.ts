@@ -86,9 +86,7 @@ export async function fetchAllowanceAndDebt(
       }
     }
     let sumOfTotalDebt = userLoans;
-    let sumOfAllowance = sumOfTotalDebt.sub(
-      nftCollateralValue.mul(new BN(marketReserveInfo.minCollateralRatio).div(new BN(100))),
-    );
+    let sumOfAllowance = nftCollateralValue.mul(new BN(marketReserveInfo.minCollateralRatio).div(new BN(100))).sub(userLoans)
 
     return {
       sumOfAllowance,
