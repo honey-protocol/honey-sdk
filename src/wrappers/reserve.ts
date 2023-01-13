@@ -5,7 +5,16 @@ import { HoneyClient } from './client';
 import { HoneyMarket } from './market';
 import { BN } from '@project-serum/anchor';
 import { DerivedAccount } from './derived-account';
-import { getOraclePrice, ReserveStateLayout, ReserveStateStruct, TReserve } from '../helpers';
+import {
+  getCcRate,
+  getInterestRate,
+  getOraclePrice,
+  ReserveState,
+  ReserveStateLayout,
+  ReserveStateStruct,
+  TotalReserveState,
+  TReserve,
+} from '../helpers';
 
 export interface ReserveConfig {
   utilizationRate1: number;
@@ -25,9 +34,6 @@ export interface ReserveAccounts {
   vault: DerivedAccount;
   feeNoteVault: DerivedAccount;
   protocolFeeNoteVault: DerivedAccount;
-  dexSwapTokens: DerivedAccount;
-  dexOpenOrdersA: DerivedAccount;
-  dexOpenOrdersB: DerivedAccount;
   loanNoteMint: DerivedAccount;
   depositNoteMint: DerivedAccount;
 }
@@ -94,6 +100,7 @@ const SECONDS_PER_DAY: BN = SECONDS_PER_HOUR.muln(24);
 const SECONDS_PER_WEEK: BN = SECONDS_PER_DAY.muln(7);
 const MAX_ACCRUAL_SECONDS: BN = SECONDS_PER_WEEK;
 export class HoneyReserve {
+  private JET_NUMBER: BN = new BN(10).pow(new BN(15));
   private conn: Connection;
 
   constructor(
@@ -101,7 +108,6 @@ export class HoneyReserve {
     private market: HoneyMarket,
     public reserve: PublicKey,
     public data?: TReserve,
-    public state?: ReserveStateStruct,
   ) {
     this.conn = this.client.program.provider.connection;
   }
@@ -120,6 +126,76 @@ export class HoneyReserve {
     return reserveData;
   }
 
+  /**
+   *
+   * @returns {TotalReserveState} gathers all of the state information for the reserve from the chain and converts
+   * it into human readable format useable by the front end.
+   */
+  gatherReserveState(): TotalReserveState {
+    const { utilization, interestRate } = this.getUtilizationAndInterestRate();
+    return {
+      config: this.getReserveConfig(),
+      state: this.getReserveState(),
+      utilization,
+      interestRate,
+    };
+  }
+
+  /**
+   * Get specific information about the configuration of the reserve.
+   * Example include fees charges, expected collateralization ratios and interest rate.
+   * @returns {ReserveConfig} The reserve config
+   */
+  getReserveConfig(): ReserveConfig {
+    return this.data[0].reserves[0].data.config;
+  }
+
+  /**
+   * Get the top level information needed for each reserve.
+   * outstandingDebt, uncollectedFees and protocolUncollectedFees are stored as a special Number type on the
+   * backend and therefore need to be converted by dividing by 10^15.
+   * @returns {ReserveState} The latest state of the total reserve in string format
+   */
+  getReserveState(): ReserveState {
+    const decimals = new anchor.BN(10 ** (this.data.exponent * -1));
+
+    const outstandingAsUnderlying = this.onChainNumberToBN(this.data.reserveState.outstandingDebt)
+      .div(decimals)
+      .toString();
+    const uncollectedAsUnderlying = this.onChainNumberToBN(this.data.reserveState.uncollectedFees)
+      .div(decimals)
+      .toString();
+    const protocolUncollectedAsUnderlying = this.onChainNumberToBN(this.data.reserveState.protocolUncollectedFees)
+      .div(decimals)
+      .toString();
+
+    return {
+      accruedUntil: this.data.reserveState.outstandingDebt.toString(),
+      outstandingDebt: outstandingAsUnderlying,
+      uncollectedFees: uncollectedAsUnderlying,
+      protocolUncollectedFees: protocolUncollectedAsUnderlying,
+      totalDeposits: this.data.reserveState.totalDeposits.toString(),
+      totalDepositNotes: this.data.reserveState.totalDepositNotes.toString(),
+      totalLoanNotes: this.data.reserveState.totalLoanNotes.toString(),
+    };
+  }
+
+  /**
+   * Takes the reserve level state and calculates the current utilization
+   * and interest rate based on the utilization.
+   */
+  getUtilizationAndInterestRate(): { utilization: number; interestRate: number } {
+    const outstandingDebt = this.onChainNumberToBN(this.data.reserveState.outstandingDebt);
+    const totalDeposits = this.data.reserveState.totalDeposits;
+    const util = outstandingDebt.div(totalDeposits.add(outstandingDebt)).toNumber();
+    const interestRate = getCcRate(this.data.config, util);
+    return { utilization: util, interestRate: interestRate };
+  }
+
+  onChainNumberToBN(state: anchor.BN): anchor.BN {
+    return state.div(this.JET_NUMBER);
+  }
+
   async sendRefreshTx(): Promise<string> {
     const tx = new Transaction().add(await this.makeRefreshIx());
     return await this.client.program.provider.sendAndConfirm(tx);
@@ -131,11 +207,11 @@ export class HoneyReserve {
   }
 
   async refreshOldReserves(): Promise<void> {
-    if (!this.state) {
+    if (!this.data.reserveState) {
       console.log('State is not set, call refresh');
       return;
     }
-    let accruedUntil = new BN(this.state.accruedUntil);
+    let accruedUntil = new BN(this.data.reserveState.accruedUntil);
     while (accruedUntil.add(MAX_ACCRUAL_SECONDS).lt(new BN(Math.floor(Date.now() / 1000)))) {
       await this.sendRefreshTx();
       accruedUntil = accruedUntil.add(MAX_ACCRUAL_SECONDS);
@@ -199,9 +275,6 @@ export class HoneyReserve {
       vault: await client.findDerivedAccount(['vault', address]),
       feeNoteVault: await client.findDerivedAccount(['fee-vault', address]),
       protocolFeeNoteVault: await client.findDerivedAccount(['protocol-fee-vault', address]),
-      dexSwapTokens: await client.findDerivedAccount(['dex-swap-tokens', address]),
-      dexOpenOrdersA: await client.findDerivedAccount(['dex-open-orders-a', address]),
-      dexOpenOrdersB: await client.findDerivedAccount(['dex-open-orders-b', address]),
       loanNoteMint: await client.findDerivedAccount(['loans', address, tokenMint]),
       depositNoteMint: await client.findDerivedAccount(['deposits', address, tokenMint]),
     };

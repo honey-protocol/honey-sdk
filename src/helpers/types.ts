@@ -141,6 +141,20 @@ export type ReserveStateStruct = CacheStruct & {
   _reserved: number[];
 };
 
+/**
+ * The data structure for a reserve config in front-end consumable format
+ * @notice due to the size limitations of numbers in JS, the values are stored as strings
+ */
+export interface ReserveState {
+  accruedUntil: string;
+  outstandingDebt: string;
+  uncollectedFees: string;
+  protocolUncollectedFees: string;
+  totalDeposits: string;
+  totalDepositNotes: string;
+  totalLoanNotes: string;
+}
+
 export interface CacheStruct {
   /** The last slot that this information was updated in */
   lastUpdated: BN;
@@ -156,25 +170,6 @@ export interface CustomProgramError {
   name: string;
   msg: string;
 }
-
-export type CacheReserveInfoStruct = CacheStruct & {
-  /** The price of the asset being stored in the reserve account.
-  USD per smallest unit (1u64) of a token
-  */
-  price: BN;
-  /** The value of the deposit note (unit: reserve tokens per note token) */
-  depositNoteExchangeRate: BN;
-  /** The value of the loan note (unit: reserve tokens per note token) */
-  loanNoteExchangeRate: BN;
-  /** The minimum allowable collateralization ratio for a loan on this reserve */
-  minCollateralRatio: number;
-  /** The bonus awarded to liquidators when repaying a loan in exchange for a
-  collateral asset.
-  */
-  liquidationBonus: number;
-  /** Unused space */
-  _reserved: number[];
-};
 
 export interface ReserveConfigStruct {
   /** The utilization rate at which we switch from the first to second regime. */
