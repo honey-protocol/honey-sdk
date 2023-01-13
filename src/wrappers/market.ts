@@ -11,6 +11,8 @@ import {
   MarketAccount,
   TReserve,
   oracleUrl,
+  onChainNumberToBN,
+  ReserveInfoState,
 } from '../helpers';
 
 export class HoneyMarket implements HoneyMarketData {
@@ -23,7 +25,7 @@ export class HoneyMarket implements HoneyMarketData {
     public marketAuthority: PublicKey,
     public owner: PublicKey,
     public market: MarketAccount,
-    public reserves: CachedReserveInfo[],
+    public cachedReserveInfo: CachedReserveInfo[],
     public reserveList: TReserve[],
     public nftSwitchboardPriceAggregator: PublicKey,
     public nftCollectionCreator: PublicKey,
@@ -72,7 +74,22 @@ export class HoneyMarket implements HoneyMarketData {
     return [market, reserveInfoList, reservesList];
   }
 
-  public async fetchNFTFloorPrice(cluster: 'mainnet-beta' | 'devnet' = 'mainnet-beta'): Promise<number> {
+  /**
+   * @param index of the reserve
+   * @returns ReserveInfoState: price, depositNoteExchangeRate, loanNoteExchangeRate, minCollateralRatio in number format
+   */
+  getCachedReserveInfo(index: number): ReserveInfoState {
+    return {
+      price: onChainNumberToBN(this.cachedReserveInfo[index].price).toNumber(),
+      depositNoteExchangeRate: onChainNumberToBN(this.cachedReserveInfo[index].depositNoteExchangeRate).toNumber(),
+      loanNoteExchangeRate: onChainNumberToBN(this.cachedReserveInfo[index].loanNoteExchangeRate).toNumber(),
+      minCollateralRatio: onChainNumberToBN(this.cachedReserveInfo[index].minCollateralRatio).toNumber(),
+    };
+  }
+
+  public async fetchNFTFloorPrice(
+    cluster: 'mainnet-beta' | 'devnet' | 'localnet' | 'testnet' = 'mainnet-beta',
+  ): Promise<number> {
     // @ts-ignore - switchboard doesn't export their big number type
     return await getOraclePrice(cluster, this.conn, this.market.nftSwitchboardPriceAggregator).toNumber();
   }
@@ -121,7 +138,7 @@ export class HoneyMarket implements HoneyMarketData {
     const [market, reserveInfoList, reserveList] = await HoneyMarket.fetchMarket(this.client, this.address);
 
     this.market = market;
-    this.reserves = reserveInfoList;
+    this.cachedReserveInfo = reserveInfoList;
     this.reserveList = reserveList;
     this.owner = market.owner;
     this.marketAuthority = market.marketAuthority;
@@ -162,9 +179,6 @@ export class HoneyMarket implements HoneyMarketData {
       vault: derivedAccounts.vault.bumpSeed,
       feeNoteVault: feeAccountBump,
       protocolFeeNoteVault: protocolFeeAccountBump,
-      dexOpenOrdersA: derivedAccounts.dexOpenOrdersA.bumpSeed,
-      dexOpenOrdersB: derivedAccounts.dexOpenOrdersB.bumpSeed,
-      dexSwapTokens: derivedAccounts.dexSwapTokens.bumpSeed,
       loanNoteMint: derivedAccounts.loanNoteMint.bumpSeed,
       depositNoteMint: derivedAccounts.depositNoteMint.bumpSeed,
     };

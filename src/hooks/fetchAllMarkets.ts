@@ -91,7 +91,9 @@ const buildMarketBundle = async (
   // pull latest reserve data
   market.refresh();
 
-  const reserves: HoneyReserve[] = market.reserves.map((reserve) => new HoneyReserve(client, market, reserve.reserve));
+  const reserves: HoneyReserve[] = market.cachedReserveInfo.map(
+    (reserve) => new HoneyReserve(client, market, reserve.reserve),
+  );
 
   // pull latest reserve state
   await Promise.all(

@@ -24,7 +24,7 @@ import { HoneyReserve } from './reserve';
 import { InstructionAndSigner, parseObligationAccount, sendAllTransactions } from '../helpers/programUtil';
 import { TxResponse } from '../actions/types';
 import { TokenAmount } from './token-amount';
-import { ObligationAccount, TxnResponse, CachedReserveInfo } from '../helpers';
+import { ObligationAccount, TxnResponse, CachedReserveInfo, onChainNumberToBN } from '../helpers';
 
 export const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
 export const SOLVENT_PROGRAM = new PublicKey('GwRvoU6vTXQAbS75KaMbm7o2iTYVtdEnF4mFUbZr9Cmb');
@@ -75,6 +75,25 @@ export class HoneyUser implements User {
     const user = new HoneyUser(client, market, address, obligationAccount, reserves);
     user.refresh();
     return user;
+  }
+
+  async fetchAllowanceAndDebt(
+    index: number,
+    cluster: 'mainnet-beta' | 'devnet' | 'testnet' | 'localnet' = 'mainnet-beta',
+  ): Promise<{ allowance: anchor.BN; debt: anchor.BN }> {
+    await this.refresh();
+    if (this.loans().length == 0) return;
+    const debt = onChainNumberToBN(this.market.cachedReserveInfo[index].loanNoteExchangeRate)
+      .mul(this.loans()[0].amount)
+      .div(new anchor.BN(10 ** (this.reserves[index].data.exponent * -1)));
+
+    const nftValue = await this.market.fetchNFTFloorPrice(cluster);
+    const minCollateralRatio = onChainNumberToBN(this.market.cachedReserveInfo[index].minCollateralRatio);
+    const allowance = new anchor.BN(nftValue)
+      .div(new anchor.BN(minCollateralRatio).mul(new anchor.BN(10000)))
+      .sub(debt);
+
+    return { allowance, debt };
   }
 
   async getObligationData(): Promise<ObligationAccount | Error> {
@@ -799,7 +818,7 @@ export class HoneyUser implements User {
     this._loans = [];
     this._deposits = [];
 
-    for (const reserve of this.market.reserves) {
+    for (const reserve of this.market.cachedReserveInfo) {
       if (reserve.reserve.toBase58() === PublicKey.default.toBase58()) {
         continue;
       }

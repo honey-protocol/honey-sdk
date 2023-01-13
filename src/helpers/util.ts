@@ -3,6 +3,11 @@ import type { AccountInfo as TokenAccountInfo, MintInfo, u64 } from '@solana/spl
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { AggregatorAccount, loadSwitchboardProgram } from '@switchboard-xyz/switchboard-v2';
 
+const JET_NUMBER: BN = new BN(10).pow(new BN(15));
+export function onChainNumberToBN(state: BN): BN {
+  return state.div(this.JET_NUMBER);
+}
+
 export const RoundHalfDown = (val: number, decimals: number = 2): number => {
   return Math.floor(val * 10 ** decimals) / 10 ** decimals;
 };

@@ -1,5 +1,6 @@
 import { Connection, PublicKey } from '@solana/web3.js';
 import type BN from 'bn.js';
+import { ReserveConfig } from '../wrappers';
 
 /**
  * The data structure for a market account
@@ -22,7 +23,7 @@ export interface HoneyMarketData {
   nftCollectionCreator: PublicKey;
   conn: Connection;
   market: MarketAccount;
-  reserves: CachedReserveInfo[];
+  cachedReserveInfo: CachedReserveInfo[];
   reserveList: TReserve[];
 }
 
@@ -83,6 +84,13 @@ export interface CachedReserveInfo {
   invalidated: number;
 }
 
+export interface ReserveInfoState {
+  price: number;
+  depositNoteExchangeRate: number;
+  loanNoteExchangeRate: number;
+  minCollateralRatio: number;
+}
+
 /**
  * The data structure for a reserve account
  * @typedef {Object} TReserve
@@ -120,6 +128,13 @@ export interface TReserve {
   reserved1: number[];
   state: number[];
   reserveState: ReserveStateStruct;
+}
+
+export interface TotalReserveState {
+  config: ReserveConfig;
+  state: ReserveState;
+  utilization: number;
+  interestRate: number;
 }
 
 // Web3

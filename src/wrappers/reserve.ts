@@ -7,13 +7,13 @@ import { BN } from '@project-serum/anchor';
 import { DerivedAccount } from './derived-account';
 import {
   getCcRate,
-  getInterestRate,
   getOraclePrice,
   ReserveState,
   ReserveStateLayout,
   ReserveStateStruct,
-  TotalReserveState,
   TReserve,
+  TotalReserveState,
+  onChainNumberToBN,
 } from '../helpers';
 
 export interface ReserveConfig {
@@ -100,7 +100,6 @@ const SECONDS_PER_DAY: BN = SECONDS_PER_HOUR.muln(24);
 const SECONDS_PER_WEEK: BN = SECONDS_PER_DAY.muln(7);
 const MAX_ACCRUAL_SECONDS: BN = SECONDS_PER_WEEK;
 export class HoneyReserve {
-  private JET_NUMBER: BN = new BN(10).pow(new BN(15));
   private conn: Connection;
 
   constructor(
@@ -159,13 +158,9 @@ export class HoneyReserve {
   getReserveState(): ReserveState {
     const decimals = new anchor.BN(10 ** (this.data.exponent * -1));
 
-    const outstandingAsUnderlying = this.onChainNumberToBN(this.data.reserveState.outstandingDebt)
-      .div(decimals)
-      .toString();
-    const uncollectedAsUnderlying = this.onChainNumberToBN(this.data.reserveState.uncollectedFees)
-      .div(decimals)
-      .toString();
-    const protocolUncollectedAsUnderlying = this.onChainNumberToBN(this.data.reserveState.protocolUncollectedFees)
+    const outstandingAsUnderlying = onChainNumberToBN(this.data.reserveState.outstandingDebt).div(decimals).toString();
+    const uncollectedAsUnderlying = onChainNumberToBN(this.data.reserveState.uncollectedFees).div(decimals).toString();
+    const protocolUncollectedAsUnderlying = onChainNumberToBN(this.data.reserveState.protocolUncollectedFees)
       .div(decimals)
       .toString();
 
@@ -185,15 +180,11 @@ export class HoneyReserve {
    * and interest rate based on the utilization.
    */
   getUtilizationAndInterestRate(): { utilization: number; interestRate: number } {
-    const outstandingDebt = this.onChainNumberToBN(this.data.reserveState.outstandingDebt);
+    const outstandingDebt = onChainNumberToBN(this.data.reserveState.outstandingDebt);
     const totalDeposits = this.data.reserveState.totalDeposits;
     const util = outstandingDebt.div(totalDeposits.add(outstandingDebt)).toNumber();
     const interestRate = getCcRate(this.data.config, util);
     return { utilization: util, interestRate: interestRate };
-  }
-
-  onChainNumberToBN(state: anchor.BN): anchor.BN {
-    return state.div(this.JET_NUMBER);
   }
 
   async sendRefreshTx(): Promise<string> {
