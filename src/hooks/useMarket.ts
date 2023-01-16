@@ -45,7 +45,7 @@ export const useMarket = (
       // pull latest reserve data
       market.refresh();
 
-      const reserves: HoneyReserve[] = market.reserves.map(
+      const reserves: HoneyReserve[] = market.cachedReserveInfo.map(
         (reserve) => new HoneyReserve(client, market, reserve.reserve),
       );
       await Promise.all(

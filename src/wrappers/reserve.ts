@@ -146,7 +146,7 @@ export class HoneyReserve {
    * @returns {ReserveConfig} The reserve config
    */
   getReserveConfig(): ReserveConfig {
-    return this.data[0].reserves[0].data.config;
+    return this.data.config;
   }
 
   /**
@@ -194,7 +194,8 @@ export class HoneyReserve {
 
   async fetchReserveValue(cluster: 'mainnet-beta' | 'devnet' = 'mainnet-beta'): Promise<number> {
     // @ts-ignore - switchboard doesn't export their big number type
-    return await getOraclePrice(cluster, this.conn, this.data.switchboardPriceAggregator).toNumber();
+    const bigNumber = await getOraclePrice(cluster, this.conn, this.data.switchboardPriceAggregator);
+    return bigNumber.toNumber();
   }
 
   async refreshOldReserves(): Promise<void> {

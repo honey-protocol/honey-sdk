@@ -70,6 +70,43 @@
   dependencies:
     "@hapi/hoek" "^9.0.0"
 
+"@honey-finance/sdk@^1.1.46":
+  version "1.1.46"
+  resolved "https://registry.yarnpkg.com/@honey-finance/sdk/-/sdk-1.1.46.tgz#a6220af889d72f03f6983442f9e83cfb4af1436d"
+  integrity sha512-MDh5zSxl8a3pCo3ORBtbfYngWZI1VTvfS8IXm5mn7vrEb5DWvpNJd6ZhTJs16eYWKrD+lrOQ8v7f+O00QYKepA==
+  dependencies:
+    "@metaplex-foundation/mpl-token-metadata" "^1.2.0"
+    "@project-serum/anchor" "^0.25.0"
+    "@project-serum/serum" "^0.13.61"
+    "@pythnetwork/client" "^2.5.3"
+    "@rollup/plugin-commonjs" "^21.1.0"
+    "@solana/buffer-layout" "^3.0.0"
+    "@solana/spl-token" "^0.1.8"
+    "@solana/web3.js" "^1.32.1"
+    "@switchboard-xyz/switchboard-v2" "^0.0.127"
+    "@types/chai" "^4.3.0"
+    "@types/chai-as-promised" "^7.1.5"
+    "@types/mocha" "^9.1.0"
+
+"@honey-finance/sdk@^1.1.48":
+  version "1.1.48"
+  resolved "https://registry.yarnpkg.com/@honey-finance/sdk/-/sdk-1.1.48.tgz#40559d322d976638458ba46a2bda09e7eefdd251"
+  integrity sha512-tY0c2857lYwxk0FYHNMzzcoeaXzoWUjJLZVBCdITVUikW1dqSWBdZNL5OrmBGvvgCtDJPnaujcusWSqd/+LTsA==
+  dependencies:
+    "@honey-finance/sdk" "^1.1.46"
+    "@metaplex-foundation/mpl-token-metadata" "^1.2.0"
+    "@project-serum/anchor" "^0.25.0"
+    "@project-serum/serum" "^0.13.61"
+    "@pythnetwork/client" "^2.5.3"
+    "@rollup/plugin-commonjs" "^21.1.0"
+    "@solana/buffer-layout" "^3.0.0"
+    "@solana/spl-token" "^0.1.8"
+    "@solana/web3.js" "^1.32.1"
+    "@switchboard-xyz/switchboard-v2" "^0.0.127"
+    "@types/chai" "^4.3.0"
+    "@types/chai-as-promised" "^7.1.5"
+    "@types/mocha" "^9.1.0"
+
 "@jest/types@^27.5.1":
   version "27.5.1"
   resolved "https://registry.npmjs.org/@jest/types/-/types-27.5.1.tgz"

@@ -56,7 +56,7 @@ export class HoneyUser implements User {
   private conn: Connection;
 
   private constructor(
-    private client: HoneyClient,
+    public client: HoneyClient,
     public market: HoneyMarket,
     public address: PublicKey,
     private obligation: DerivedAccount,
@@ -77,23 +77,44 @@ export class HoneyUser implements User {
     return user;
   }
 
+  /**
+   * @typedef {Function} calculateUserDeposits
+   * @param {CachedReserveInfo[]} reserveInfo
+   * @param {HoneyUser} honeyUser
+   * @returns {number} totalDeposits / decimals
+   */
+  async fetchUserDeposits(index: number): Promise<anchor.BN> {
+    await this.refresh();
+    if (this.deposits().length == 0) return new anchor.BN(0);
+    const deposits = onChainNumberToBN(this.market.cachedReserveInfo[index].depositNoteExchangeRate)
+      .mul(this.deposits()[0].amount)
+      .div(new anchor.BN(10 ** (this.reserves[index].data.exponent * -1)));
+
+    return deposits;
+  }
+
   async fetchAllowanceAndDebt(
     index: number,
     cluster: 'mainnet-beta' | 'devnet' | 'testnet' | 'localnet' = 'mainnet-beta',
-  ): Promise<{ allowance: anchor.BN; debt: anchor.BN }> {
+  ): Promise<{ allowance: anchor.BN; debt: anchor.BN; exponent: number }> {
     await this.refresh();
     if (this.loans().length == 0) return;
-    const debt = onChainNumberToBN(this.market.cachedReserveInfo[index].loanNoteExchangeRate)
-      .mul(this.loans()[0].amount)
-      .div(new anchor.BN(10 ** (this.reserves[index].data.exponent * -1)));
+    let debt = onChainNumberToBN(this.market.cachedReserveInfo[index].loanNoteExchangeRate).mul(this.loans()[0].amount);
+    const exponent = this.reserves[index].data.exponent * -1;
 
-    const nftValue = await this.market.fetchNFTFloorPrice(cluster);
-    const minCollateralRatio = onChainNumberToBN(this.market.cachedReserveInfo[index].minCollateralRatio);
-    const allowance = new anchor.BN(nftValue)
-      .div(new anchor.BN(minCollateralRatio).mul(new anchor.BN(10000)))
-      .sub(debt);
+    // default debt to 1 if its less than 1 whole token
+    if (debt.lt(new anchor.BN(10 ** exponent))) {
+      debt = new anchor.BN(1);
+    } else {
+      debt = debt.div(new anchor.BN(10 ** exponent));
+    }
 
-    return { allowance, debt };
+    const nftValue = await this.market.fetchNFTFloorPriceInReserve(index);
+    const minCollateralRatio = this.market.cachedReserveInfo[index].minCollateralRatio;
+    const convertedCollatRatio = new anchor.BN(minCollateralRatio).div(new anchor.BN(10 ** 11));
+    const allowance = new anchor.BN(nftValue).div(convertedCollatRatio).mul(new anchor.BN(10000)).sub(debt);
+
+    return { allowance, debt, exponent };
   }
 
   async getObligationData(): Promise<ObligationAccount | Error> {
@@ -341,15 +362,23 @@ export class HoneyUser implements User {
   }
 
   async depositNFT(tokenAccount: PublicKey, tokenMint: PublicKey, updateAuthority: PublicKey): Promise<TxResponse> {
-    return await this.makeNFTDepositTx(tokenAccount, tokenMint, updateAuthority);
+    const tx = await this.makeNFTDepositTx(tokenAccount, tokenMint, updateAuthority);
+    try {
+      const txid = await this.client.program.provider.sendAndConfirm(tx, [], { skipPreflight: true });
+      return [TxnResponse.Success, [txid]];
+    } catch (err) {
+      console.error(`Deposit NFT error: ${err}`);
+      return [TxnResponse.Failed, []];
+    }
   }
 
   async makeNFTDepositTx(
     tokenAccount: PublicKey,
     tokenMint: PublicKey,
     updateAuthority: PublicKey,
-  ): Promise<TxResponse> {
-    const txids = [];
+  ): Promise<Transaction> {
+    const tx = new Transaction();
+
     const [obligationAddress, obligationBump] = await PublicKey.findProgramAddress(
       [Buffer.from('obligation'), this.market.address.toBuffer(), this.address.toBuffer()],
       this.client.program.programId,
@@ -358,28 +387,19 @@ export class HoneyUser implements User {
     const obligationAccountData = await this.conn.getAccountInfo(obligationAddress);
     if (!obligationAccountData) {
       console.log('adding obligationAccountData', obligationAccountData);
-      try {
-        const obligationTx = new Transaction();
-        const ix = await this.client.program.methods
-          .initObligation(obligationBump)
-          .accounts({
-            market: this.market.address,
-            marketAuthority: this.market.marketAuthority,
-            obligation: obligationAddress,
-            borrower: this.address,
-            tokenProgram: TOKEN_PROGRAM_ID,
-            systemProgram: anchor.web3.SystemProgram.programId,
-          })
-          .instruction();
 
-        obligationTx.add(ix);
-        const txid = await this.client.program.provider.sendAndConfirm(obligationTx, [], { skipPreflight: true });
-        txids.push(txid);
-        console.log('added obligation account', txid);
-      } catch (err) {
-        console.error(`Obligation account: ${err}`);
-        return [TxnResponse.Failed, []];
-      }
+      const ix = await this.client.program.methods
+        .initObligation(obligationBump)
+        .accounts({
+          market: this.market.address,
+          marketAuthority: this.market.marketAuthority,
+          obligation: obligationAddress,
+          borrower: this.address,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .instruction();
+      tx.add(ix);
     }
 
     const collateralAddress = await Token.getAssociatedTokenAddress(
@@ -392,7 +412,6 @@ export class HoneyUser implements User {
 
     const derivedMetadata = await this.findNftMetadata(tokenMint);
 
-    const tx = new Transaction();
     const depositNFTIx = await this.client.program.methods
       .depositNft(derivedMetadata.bumpSeed)
       .accounts({
@@ -413,14 +432,8 @@ export class HoneyUser implements User {
       .instruction();
 
     tx.add(depositNFTIx);
-    try {
-      const txid = await this.client.program.provider.sendAndConfirm(tx, [], { skipPreflight: true });
-      txids.push(txid);
-      return [TxnResponse.Success, txids];
-    } catch (err) {
-      console.error(`Deposit NFT error: ${err}`);
-      return [TxnResponse.Failed, txids];
-    }
+
+    return tx;
   }
 
   async withdraw(reserve: HoneyReserve, tokenAccount: PublicKey, amount: Amount): Promise<TxResponse> {

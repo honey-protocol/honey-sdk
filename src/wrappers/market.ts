@@ -91,7 +91,18 @@ export class HoneyMarket implements HoneyMarketData {
     cluster: 'mainnet-beta' | 'devnet' | 'localnet' | 'testnet' = 'mainnet-beta',
   ): Promise<number> {
     // @ts-ignore - switchboard doesn't export their big number type
-    return await getOraclePrice(cluster, this.conn, this.market.nftSwitchboardPriceAggregator).toNumber();
+    return (await getOraclePrice(cluster, this.conn, this.market.nftSwitchboardPriceAggregator)).toNumber();
+  }
+
+  public async fetchNFTFloorPriceInReserve(index: number): Promise<number> {
+    let reservePrice = await getOraclePrice(
+      'mainnet-beta',
+      this.conn,
+      this.reserveList[index].switchboardPriceAggregator,
+    );
+    let floor = await getOraclePrice('mainnet-beta', this.conn, this.market.nftSwitchboardPriceAggregator);
+
+    return floor / reservePrice;
   }
 
   /**
@@ -127,8 +138,8 @@ export class HoneyMarket implements HoneyMarketData {
   /**
    * @returns approx LTV given the min collateral ratio config
    */
-  fetchLTV(): number {
-    return 10000 / this.reserveList[0].config.minCollateralRatio;
+  fetchLTV(index: number = 0): number {
+    return 10000 / this.reserveList[index].config.minCollateralRatio;
   }
 
   /**

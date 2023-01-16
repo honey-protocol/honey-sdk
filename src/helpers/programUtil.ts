@@ -427,6 +427,33 @@ export const simulateAllTransactions = async (
   return [res, txids];
 };
 
+export const combineAllTransactions = async (
+  provider: anchor.AnchorProvider,
+  transactions: InstructionAndSigner[],
+): Promise<Transaction> => {
+  if (!provider.wallet?.publicKey) {
+    throw new Error('Wallet is not connected');
+  }
+
+  // Building and partial sign phase
+  const recentBlockhash = await provider.connection.getRecentBlockhash();
+  let transaction = new Transaction();
+  for (const tx of transactions) {
+    if (tx.ix.length == 0) {
+      continue;
+    }
+    transaction.add(...tx.ix);
+
+    transaction.recentBlockhash = recentBlockhash.blockhash;
+    transaction.feePayer = provider.wallet.publicKey;
+    if (tx.signers && tx.signers.length > 0) {
+      transaction.partialSign(...tx.signers);
+    }
+  }
+  return transaction;
+  // return await provider.wallet.signTransaction(transaction);
+};
+
 export const sendAllTransactions = async (
   provider: anchor.AnchorProvider,
   transactions: InstructionAndSigner[],

@@ -4,8 +4,9 @@ import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { AggregatorAccount, loadSwitchboardProgram } from '@switchboard-xyz/switchboard-v2';
 
 const JET_NUMBER: BN = new BN(10).pow(new BN(15));
+
 export function onChainNumberToBN(state: BN): BN {
-  return state.div(this.JET_NUMBER);
+  return state.div(JET_NUMBER);
 }
 
 export const RoundHalfDown = (val: number, decimals: number = 2): number => {
@@ -247,7 +248,7 @@ export const getHealthStatus = (debt: BN, collaterl: BN): string => {
 };
 
 export async function getOraclePrice(
-  cluster: 'devnet' | 'mainnet-beta' = 'devnet',
+  cluster: 'mainnet-beta' | 'devnet' = 'mainnet-beta',
   connection: Connection,
   aggregatorKey: PublicKey,
 ): Promise<any> {
