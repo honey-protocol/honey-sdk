@@ -337,6 +337,20 @@ export class HoneyUser implements User {
   ): Promise<Transaction> {
     const tx = new Transaction();
 
+    const info = await this.client.program.provider.connection.getAccountInfo(tokenAccount);
+    if (info === null || !info.owner.equals(TOKEN_PROGRAM_ID)) {
+      tx.add(
+        Token.createAssociatedTokenAccountInstruction(
+          ASSOCIATED_TOKEN_PROGRAM_ID,
+          TOKEN_PROGRAM_ID,
+          tokenMint,
+          tokenAccount,
+          this.address,
+          this.address
+        )
+      );
+    }
+
     const [obligationAddress, obligationBump] = await PublicKey.findProgramAddress(
       [Buffer.from('obligation'), this.market.address.toBuffer(), this.address.toBuffer()],
       this.client.program.programId,
