@@ -7,7 +7,7 @@ import { useMarket } from './useMarket';
 import * as anchor from '@project-serum/anchor';
 import { BN } from '@project-serum/anchor';
 import { Bid, NftPosition } from '../helpers/types';
-import { getHealthStatus, getOraclePrice } from '../helpers/util';
+import { getHealthStatus, getOraclePrice, TokenAmount } from '../helpers/util';
 import NodeWallet from '@project-serum/anchor/dist/cjs/nodewallet';
 
 export const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
@@ -99,19 +99,21 @@ export const useAllPositions = (
           await Promise.all(
             nftMints.map(async (nft) => {
               if (nft.toString() != '11111111111111111111111111111111') {
-                const totalDebt: BN = marketReserveInfo[0].loanNoteExchangeRate
-                  .mul(item.account?.loans[0]?.amount)
-                  .div(new BN(10 ** 15))
-                  .div(new BN(10 ** 6))
-                  .div(new BN(10 ** 5))
-                  .div(new BN(10 ** 4));
+                const loanNoteBalance: TokenAmount = new TokenAmount(
+                  item.account?.loans[0]?.amount,
+                  -honeyReserves[0].data.exponent,
+                );
+                const totalDebt = loanNoteBalance
+                  .mulb(marketReserveInfo[0].loanNoteExchangeRate)
+                  .divb(new BN(Math.pow(10, 15)).mul(new BN(Math.pow(10, 6))));
+
                 let position: NftPosition = {
                   obligation: item.publicKey.toString(),
-                  debt: totalDebt,
+                  debt: new BN(totalDebt.uiAmountFloat),
                   nft_mint: new PublicKey(nft),
                   owner: item.account.owner,
                   ltv: 40,
-                  is_healthy: getHealthStatus(totalDebt, new BN(nftPrice)),
+                  is_healthy: getHealthStatus(new BN(totalDebt.uiAmountFloat), new BN(nftPrice)),
                   highest_bid: highestBid,
                 };
                 arrPositions.push(position);
