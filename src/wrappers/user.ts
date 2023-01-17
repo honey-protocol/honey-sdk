@@ -4,6 +4,7 @@ import {
   PublicKey,
   Signer,
   SystemProgram,
+  SYSVAR_CLOCK_PUBKEY,
   SYSVAR_RENT_PUBKEY,
   Transaction,
   TransactionInstruction,
@@ -771,6 +772,7 @@ export class HoneyUser implements User {
         receiverAccount,
         nftSwitchboardPriceAggregator: this.market.nftSwitchboardPriceAggregator,
         tokenProgram: TOKEN_PROGRAM_ID,
+        clock: SYSVAR_CLOCK_PUBKEY
       }).instruction();
 
     if (reserve.data.tokenMint.equals(NATIVE_MINT)) {
