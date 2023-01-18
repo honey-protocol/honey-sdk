@@ -98,17 +98,20 @@ export class HoneyUser implements User {
     cluster: 'mainnet-beta' | 'devnet' | 'testnet' | 'localnet' = 'mainnet-beta',
   ): Promise<{ allowance: anchor.BN; debt: anchor.BN; exponent: number }> {
     await this.refresh();
-    if (this.loans().length == 0) return;
-    let debt = onChainNumberToBN(this.market.cachedReserveInfo[index].loanNoteExchangeRate).mul(this.loans()[0].amount);
-    const exponent = this.reserves[index].data.exponent * -1;
-
-    // default debt to 1 if its less than 1 whole token
-    if (debt.lt(new anchor.BN(10 ** exponent))) {
-      debt = new anchor.BN(1);
+    let debt, exponent;
+    if (this.loans().length == 0) {
+      debt = new anchor.BN(0);
     } else {
-      debt = debt.div(new anchor.BN(10 ** exponent));
-    }
+      debt = onChainNumberToBN(this.market.cachedReserveInfo[index].loanNoteExchangeRate).mul(this.loans()[0].amount);
+      exponent = this.reserves[index].data.exponent * -1;
 
+      // default debt to 0 if its less than 1 whole token
+      if (debt.lt(new anchor.BN(10 ** exponent))) {
+        debt = new anchor.BN(0);
+      } else {
+        debt = debt.div(new anchor.BN(10 ** exponent));
+      }
+    }
     const nftValue = await this.market.fetchNFTFloorPriceInReserve(index);
     const minCollateralRatio = this.market.cachedReserveInfo[index].minCollateralRatio;
     const convertedCollatRatio = new anchor.BN(minCollateralRatio).div(new anchor.BN(10 ** 11));
