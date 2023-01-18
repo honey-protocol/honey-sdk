@@ -139,7 +139,7 @@ export class HoneyMarket implements HoneyMarketData {
    * @returns approx LTV given the min collateral ratio config
    */
   fetchLTV(index: number = 0): number {
-    return 10000 / this.reserveList[index].config.minCollateralRatio;
+    return 100000 / this.reserveList[index].config.minCollateralRatio;
   }
 
   /**
