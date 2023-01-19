@@ -113,7 +113,7 @@ export class HoneyUser implements User {
       }
     }
     const nftValue = await this.market.fetchNFTFloorPriceInReserve(index);
-    const ltv = debt.div(new anchor.BN(nftValue));
+    const ltv = debt.mul(new anchor.BN(10)).div(new anchor.BN(nftValue));
     const minCollateralRatio = this.market.cachedReserveInfo[index].minCollateralRatio;
     const convertedCollatRatio = new anchor.BN(minCollateralRatio).div(new anchor.BN(10 ** 10));
     const allowance = new anchor.BN(nftValue).div(convertedCollatRatio).mul(new anchor.BN(100000)).sub(debt);
