@@ -169,9 +169,9 @@ export class HoneyReserve {
       outstandingDebt: outstandingAsUnderlying,
       uncollectedFees: uncollectedAsUnderlying,
       protocolUncollectedFees: protocolUncollectedAsUnderlying,
-      totalDeposits: this.data.reserveState.totalDeposits.toString(),
-      totalDepositNotes: this.data.reserveState.totalDepositNotes.toString(),
-      totalLoanNotes: this.data.reserveState.totalLoanNotes.toString(),
+      totalDeposits: this.data.reserveState.totalDeposits.div(decimals).toString(),
+      totalDepositNotes: this.data.reserveState.totalDepositNotes.div(decimals).toString(),
+      totalLoanNotes: this.data.reserveState.totalLoanNotes.div(decimals).toString(),
     };
   }
 
