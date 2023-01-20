@@ -360,6 +360,7 @@ export class HoneyUser implements User {
         if (!reserve.reserve.equals(PublicKey.default)) tx.add(await reserve.makeRefreshIx());
       }),
     );
+    await this.reserves[0].refreshOldReserves();
 
     tx.add(
       await this.client.program.methods.withdrawNft(metadataBump)
@@ -571,6 +572,8 @@ export class HoneyUser implements User {
   }
 
   async deposit(reserve: HoneyReserve, tokenAccount: PublicKey, amount: Amount): Promise<TxResponse> {
+    await reserve.refreshOldReserves();
+    
     const [transaction, signers] = await this.makeDepositTx(reserve, tokenAccount, amount);
     try {
       const txid = await this.client.program.provider.sendAndConfirm(transaction, signers, { skipPreflight: true });
