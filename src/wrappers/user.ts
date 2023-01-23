@@ -96,7 +96,14 @@ export class HoneyUser implements User {
   async fetchAllowanceAndDebt(
     index: number,
     cluster: 'mainnet-beta' | 'devnet' | 'testnet' | 'localnet' = 'mainnet-beta',
-  ): Promise<{ allowance: anchor.BN; debt: anchor.BN; exponent: number; ltv: anchor.BN }> {
+  ): Promise<{
+    valueMinusDebt: anchor.BN;
+    ratio: anchor.BN;
+    debt: anchor.BN;
+    exponent: number;
+    ltv: anchor.BN;
+    allowance: number;
+  }> {
     await this.refresh();
     let debt, exponent;
     if (this.loans().length == 0) {
@@ -116,9 +123,11 @@ export class HoneyUser implements User {
     const ltv = debt.mul(new anchor.BN(100)).div(new anchor.BN(nftValue));
     const minCollateralRatio = this.market.cachedReserveInfo[index].minCollateralRatio;
     const convertedCollatRatio = new anchor.BN(minCollateralRatio).div(new anchor.BN(10 ** 10));
-    const allowance = new anchor.BN(nftValue).div(convertedCollatRatio).mul(new anchor.BN(100000)).sub(debt);
+    const ratio = new anchor.BN(100000).mul(new anchor.BN(100)).div(convertedCollatRatio);
+    const valueMinusDebt = new anchor.BN(nftValue).sub(debt);
+    const allowance = valueMinusDebt.toNumber() / (ratio.toNumber() / 100);
 
-    return { allowance, debt, exponent, ltv };
+    return { valueMinusDebt, ratio, debt, exponent, ltv, allowance };
   }
 
   async getObligationData(): Promise<ObligationAccount | Error> {
