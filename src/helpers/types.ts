@@ -162,12 +162,12 @@ export type ReserveStateStruct = CacheStruct & {
  */
 export interface ReserveState {
   accruedUntil: string;
-  outstandingDebt: string;
-  uncollectedFees: string;
-  protocolUncollectedFees: string;
-  totalDeposits: string;
-  totalDepositNotes: string;
-  totalLoanNotes: string;
+  outstandingDebt: number;
+  uncollectedFees: number;
+  protocolUncollectedFees: number;
+  totalDeposits: number;
+  totalDepositNotes: number;
+  totalLoanNotes: number;
 }
 
 export interface CacheStruct {
@@ -250,7 +250,7 @@ export interface ObligationPositionStruct {
 
 export interface NftPosition {
   obligation: string;
-  debt: BN;
+  debt: number;
   nft_mint: PublicKey;
   owner: PublicKey;
   ltv: number;

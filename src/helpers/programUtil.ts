@@ -609,7 +609,8 @@ const interpolate = (x: number, x0: number, x1: number, y0: number, y1: number):
   return y0 + ((x - x0) * (y1 - y0)) / (x1 - x0);
 };
 
-/** Continuous Compounding Rate
+/**
+ * Continuous Compounding Rate
  */
 export const getCcRate = (reserveConfig: ReserveConfigStruct, utilRate: number): number => {
   const basisPointFactor = 10000;

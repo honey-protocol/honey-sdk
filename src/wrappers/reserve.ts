@@ -99,6 +99,7 @@ const SECONDS_PER_HOUR: BN = new BN(3600);
 const SECONDS_PER_DAY: BN = SECONDS_PER_HOUR.muln(24);
 const SECONDS_PER_WEEK: BN = SECONDS_PER_DAY.muln(7);
 const MAX_ACCRUAL_SECONDS: BN = SECONDS_PER_WEEK;
+export const mantissa = 9;
 export class HoneyReserve {
   private conn: Connection;
 
@@ -156,22 +157,21 @@ export class HoneyReserve {
    * @returns {ReserveState} The latest state of the total reserve in string format
    */
   getReserveState(): ReserveState {
-    const decimals = new anchor.BN(10 ** (this.data.exponent * -1));
+    const decimals = 10 ** (this.data.exponent * -1);
 
-    const outstandingAsUnderlying = onChainNumberToBN(this.data.reserveState.outstandingDebt).div(decimals).toString();
-    const uncollectedAsUnderlying = onChainNumberToBN(this.data.reserveState.uncollectedFees).div(decimals).toString();
-    const protocolUncollectedAsUnderlying = onChainNumberToBN(this.data.reserveState.protocolUncollectedFees)
-      .div(decimals)
-      .toString();
+    const outstandingAsUnderlying = onChainNumberToBN(this.data.reserveState.outstandingDebt).toNumber() / decimals;
+    const uncollectedAsUnderlying = onChainNumberToBN(this.data.reserveState.uncollectedFees).toNumber() / decimals;
+    const protocolUncollectedAsUnderlying =
+      onChainNumberToBN(this.data.reserveState.protocolUncollectedFees).toNumber() / decimals;
 
     return {
-      accruedUntil: this.data.reserveState.outstandingDebt.toString(),
+      accruedUntil: this.data.reserveState.accruedUntil.toString(),
       outstandingDebt: outstandingAsUnderlying,
       uncollectedFees: uncollectedAsUnderlying,
       protocolUncollectedFees: protocolUncollectedAsUnderlying,
-      totalDeposits: this.data.reserveState.totalDeposits.div(decimals).toString(),
-      totalDepositNotes: this.data.reserveState.totalDepositNotes.div(decimals).toString(),
-      totalLoanNotes: this.data.reserveState.totalLoanNotes.div(decimals).toString(),
+      totalDeposits: this.data.reserveState.totalDeposits.toNumber() / decimals,
+      totalDepositNotes: this.data.reserveState.totalDepositNotes.toNumber() / decimals,
+      totalLoanNotes: this.data.reserveState.totalLoanNotes.toNumber() / decimals,
     };
   }
 
@@ -182,7 +182,12 @@ export class HoneyReserve {
   getUtilizationAndInterestRate(): { utilization: number; interestRate: number } {
     const outstandingDebt = onChainNumberToBN(this.data.reserveState.outstandingDebt);
     const totalDeposits = this.data.reserveState.totalDeposits;
-    const util = outstandingDebt.div(totalDeposits.add(outstandingDebt)).toNumber();
+    const util =
+      outstandingDebt
+        .mul(new anchor.BN(10 ** mantissa))
+        .div(totalDeposits.add(outstandingDebt))
+        .toNumber() /
+      10 ** mantissa;
     const interestRate = getCcRate(this.data.config, util);
     return { utilization: util, interestRate: interestRate };
   }

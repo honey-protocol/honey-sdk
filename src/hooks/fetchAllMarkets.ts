@@ -13,7 +13,7 @@ import {
 import * as anchor from '@project-serum/anchor';
 import { BN, Program } from '@project-serum/anchor';
 import { Bid, NftPosition } from '../helpers/types';
-import { getHealthStatus, getOraclePrice, TokenAmount } from '../helpers/util';
+import { getHealthStatus, getOraclePrice, onChainNumberToBN, TokenAmount } from '../helpers/util';
 import devnetIdl from '../idl/devnet/honey.json';
 import mainnetBetaIdl from '../idl/mainnet-beta/honey.json';
 import NodeWallet from '@project-serum/anchor/dist/cjs/nodewallet';
@@ -183,22 +183,22 @@ const fetchPositionsAndBids = async (
         await Promise.all(
           nftMints.map(async (nft) => {
             if (nft.toString() != '11111111111111111111111111111111') {
-              const loanNoteBalance: TokenAmount = new TokenAmount(
-                item.account?.loans[0]?.amount,
-                -honeyReserves[0].data.exponent,
-              );
-
-              const totalDebt = loanNoteBalance
-                .mulb(reserveInfoList[0].loanNoteExchangeRate)
-                .divb(new BN(Math.pow(10, 15)).mul(new BN(Math.pow(10, 6))));
+              let debt = 0;
+              const exponent = -honeyReserves[0].data.exponent;
+              if (item.account?.loans.length != 0) {
+                const bnDebt = onChainNumberToBN(reserveInfoList[0].loanNoteExchangeRate).mul(
+                  item.account?.loans[0].amount,
+                );
+                debt = bnDebt.toNumber() / 10 ** exponent;
+              }
 
               let position: NftPosition = {
                 obligation: item.publicKey.toString(),
-                debt: new BN(totalDebt.uiAmountFloat),
+                debt,
                 nft_mint: new PublicKey(nft),
                 owner: item.account.owner,
                 ltv: 40,
-                is_healthy: getHealthStatus(new BN(totalDebt.uiAmountFloat), new BN(nftPrice)),
+                is_healthy: getHealthStatus(debt, nftPrice),
                 highest_bid: highestBid,
                 verifiedCreator: honeyMarket.nftCollectionCreator,
               };

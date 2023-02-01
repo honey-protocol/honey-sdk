@@ -238,12 +238,12 @@ export class TokenAmount {
   }
 }
 
-export const getHealthStatus = (debt: BN, collaterl: BN): string => {
-  const ltv = debt.mul(new BN(100)).div(collaterl);
+export const getHealthStatus = (debt: number, collaterl: number): string => {
+  const ltv = (debt * 100) / collaterl;
 
-  if (ltv.lt(new BN(20))) return 'LOW';
-  else if (ltv.lt(new BN(30))) return 'MEDIUM';
-  else if (ltv.eq(new BN(40))) return 'HIGH';
+  if (ltv < 20) return 'LOW';
+  else if (ltv < 30) return 'MEDIUM';
+  else if (ltv < 40) return 'HIGH';
   else return 'RISKY';
 };
 

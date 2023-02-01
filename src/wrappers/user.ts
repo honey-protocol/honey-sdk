@@ -29,7 +29,8 @@ import { ObligationAccount, TxnResponse, CachedReserveInfo, onChainNumberToBN } 
 export const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
 export const SOLVENT_PROGRAM = new PublicKey('GwRvoU6vTXQAbS75KaMbm7o2iTYVtdEnF4mFUbZr9Cmb');
 export const SOLVENT_FEE_ACCOUNT_DEVNET = new PublicKey('HkjFiwUW7qnREVm2PxBg8LUrCvjExrJjyYY51wsZTUK8');
-
+export const MAX_LTV = 5000; // bps
+export const mantissa = 9;
 export interface User {
   address: PublicKey;
 
@@ -83,51 +84,66 @@ export class HoneyUser implements User {
    * @param {HoneyUser} honeyUser
    * @returns {number} totalDeposits / decimals
    */
-  async fetchUserDeposits(index: number): Promise<anchor.BN> {
+  async fetchUserDeposits(index: number): Promise<number> {
     await this.refresh();
-    if (this.deposits().length == 0) return new anchor.BN(0);
-    const deposits = onChainNumberToBN(this.market.cachedReserveInfo[index].depositNoteExchangeRate)
-      .mul(this.deposits()[0].amount)
-      .div(new anchor.BN(10 ** (this.reserves[index].data.exponent * -1)));
+    if (this.deposits().length == 0) return 0;
+    const deposits =
+      onChainNumberToBN(this.market.cachedReserveInfo[index].depositNoteExchangeRate)
+        .mul(this.deposits()[0].amount)
+        .toNumber() /
+      10 ** (this.reserves[index].data.exponent * -1);
 
     return deposits;
   }
 
+  /**
+   * fetch the user specfic allowance and debt
+   * @param index index of the reserve to use for the calculation
+   * @param cluster which cluster to connect to
+   * @returns
+   */
   async fetchAllowanceAndDebt(
     index: number,
     cluster: 'mainnet-beta' | 'devnet' | 'testnet' | 'localnet' = 'mainnet-beta',
   ): Promise<{
-    valueMinusDebt: anchor.BN;
-    ratio: anchor.BN;
-    debt: anchor.BN;
-    exponent: number;
-    ltv: anchor.BN;
     allowance: number;
+    debt: number;
+    liquidationThreshold: number;
+    ltv: number;
+    ratio: anchor.BN;
+    exponent: number;
   }> {
     await this.refresh();
-    let debt, exponent;
+    let debt;
+    const exponent = this.reserves[index].data.exponent * -1;
     if (this.loans().length == 0) {
       debt = new anchor.BN(0);
     } else {
       debt = onChainNumberToBN(this.market.cachedReserveInfo[index].loanNoteExchangeRate).mul(this.loans()[0].amount);
-      exponent = this.reserves[index].data.exponent * -1;
-
-      // default debt to 0 if its less than 1 whole token
-      if (debt.lt(new anchor.BN(10 ** exponent))) {
-        debt = new anchor.BN(0);
-      } else {
-        debt = debt.div(new anchor.BN(10 ** exponent));
-      }
+      debt = debt.toNumber() / 10 ** exponent;
     }
     const nftValue = await this.market.fetchNFTFloorPriceInReserve(index);
-    const ltv = debt.mul(new anchor.BN(100)).div(new anchor.BN(nftValue));
+    const nftValueMantissaShifted = new anchor.BN(nftValue * 10 ** mantissa);
+    const debtValueMantissaShifted = new anchor.BN(debt * 10 ** mantissa);
+
     const minCollateralRatio = this.market.cachedReserveInfo[index].minCollateralRatio;
     const convertedCollatRatio = new anchor.BN(minCollateralRatio).div(new anchor.BN(10 ** 10));
-    const ratio = new anchor.BN(100000).mul(new anchor.BN(100)).div(convertedCollatRatio);
-    const valueMinusDebt = new anchor.BN(nftValue).sub(debt);
-    const allowance = valueMinusDebt.toNumber() / (ratio.toNumber() / 100);
+    const ratio = new anchor.BN(100000).mul(new anchor.BN(10000)).div(convertedCollatRatio);
 
-    return { valueMinusDebt, ratio, debt, exponent, ltv, allowance };
+    const liquidationThresholdMantissa = nftValueMantissaShifted
+      .mul(ratio)
+      .div(new anchor.BN(10000))
+      .sub(debtValueMantissaShifted);
+    const liquidationThreshold = liquidationThresholdMantissa.toNumber() / 10 ** mantissa;
+    const allowanceMantissa = nftValueMantissaShifted
+      .mul(new anchor.BN(MAX_LTV))
+      .div(new anchor.BN(10 ** 4))
+      .sub(debtValueMantissaShifted);
+    const allowance = allowanceMantissa.toNumber() / 10 ** mantissa;
+    const ltvMantissa = debtValueMantissaShifted.mul(new anchor.BN(10 ** mantissa)).div(nftValueMantissaShifted);
+    const ltv = ltvMantissa.toNumber() / 10 ** mantissa;
+
+    return { allowance, debt, liquidationThreshold, ltv, ratio, exponent };
   }
 
   async getObligationData(): Promise<ObligationAccount | Error> {
