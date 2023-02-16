@@ -51,7 +51,6 @@ export interface ToBytes {
 
 export class HoneyUser implements User {
   private _deposits: TokenAmount[] = [];
-  // private _collateral: TokenAmount[] = [];
   private _loans: TokenAmount[] = [];
 
   private conn: Connection;
@@ -74,7 +73,7 @@ export class HoneyUser implements User {
   ): Promise<HoneyUser> {
     const obligationAccount = await client.findDerivedAccount(['obligation', market.address, address]);
     const user = new HoneyUser(client, market, address, obligationAccount, reserves);
-    user.refresh();
+    await user.refresh();
     return user;
   }
 
@@ -85,7 +84,6 @@ export class HoneyUser implements User {
    * @returns {number} totalDeposits / decimals
    */
   async fetchUserDeposits(index: number): Promise<number> {
-    await this.refresh();
     if (this.deposits().length == 0) return 0;
     const deposits =
       onChainNumberToBN(this.market.cachedReserveInfo[index].depositNoteExchangeRate)
@@ -113,11 +111,12 @@ export class HoneyUser implements User {
     ratio: anchor.BN;
     exponent: number;
   }> {
-    await this.refresh();
+    if (this.loans.length == 0) await this.refresh();
+
     let debt;
     const exponent = this.reserves[index].data.exponent * -1;
     if (this.loans().length == 0) {
-      debt = new anchor.BN(0);
+      debt = 0;
     } else {
       debt = onChainNumberToBN(this.market.cachedReserveInfo[index].loanNoteExchangeRate).mul(this.loans()[0].amount);
       debt = debt.toNumber() / 10 ** exponent;
@@ -415,8 +414,6 @@ export class HoneyUser implements User {
 
     const obligationAccountData = await this.conn.getAccountInfo(obligationAddress);
     if (!obligationAccountData) {
-      console.log('adding obligationAccountData', obligationAccountData);
-
       const ix = await this.client.program.methods
         .initObligation(obligationBump)
         .accounts({
@@ -820,7 +817,6 @@ export class HoneyUser implements User {
   }
 
   private async makeInitLoanAccountIx(reserve: HoneyReserve, account: DerivedAccount): Promise<TransactionInstruction> {
-    console.log('loan account ', account.address.toString());
     return await this.client.program.methods
       .initLoanAccount(account.bumpSeed)
       .accounts({
@@ -836,22 +832,6 @@ export class HoneyUser implements User {
         tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
         rent: SYSVAR_RENT_PUBKEY,
-      })
-      .instruction();
-  }
-
-  private async makeInitObligationAccountIx(): Promise<TransactionInstruction> {
-    return await this.client.program.methods
-      .initObligation(this.obligation.bumpSeed)
-      .accounts({
-        market: this.market.address,
-        marketAuthority: this.market.marketAuthority,
-
-        obligation: this.obligation.address,
-        borrower: this.address,
-
-        tokenProgram: TOKEN_PROGRAM_ID,
-        systemProgram: SystemProgram.programId,
       })
       .instruction();
   }

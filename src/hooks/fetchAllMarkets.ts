@@ -186,9 +186,9 @@ const fetchPositionsAndBids = async (
               let debt = 0;
               const exponent = -honeyReserves[0].data.exponent;
               if (item.account?.loans.length != 0) {
-                const bnDebt = onChainNumberToBN(reserveInfoList[0].loanNoteExchangeRate).mul(
-                  item.account?.loans[0].amount,
-                );
+                const bnDebt = onChainNumberToBN(reserveInfoList[0].loanNoteExchangeRate)
+                  .mul(item.account?.loans[0].amount)
+                  .div(new BN(10 ** 6));
                 debt = bnDebt.toNumber() / 10 ** exponent;
               }
 
