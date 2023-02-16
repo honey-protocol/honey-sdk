@@ -111,7 +111,7 @@ export class HoneyUser implements User {
     ratio: anchor.BN;
     exponent: number;
   }> {
-    if (this.loans.length == 0) await this.refresh();
+    if (this.loans().length == 0) await this.refresh();
 
     let debt;
     const exponent = this.reserves[index].data.exponent * -1;
