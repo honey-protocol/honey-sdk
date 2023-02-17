@@ -109,11 +109,11 @@ export const useAllPositions = (
 
                 let position: NftPosition = {
                   obligation: item.publicKey.toString(),
-                  debt: new BN(totalDebt.uiAmountFloat),
+                  debt: totalDebt.uiAmountFloat,
                   nft_mint: new PublicKey(nft),
                   owner: item.account.owner,
                   ltv: 40,
-                  is_healthy: getHealthStatus(new BN(totalDebt.uiAmountFloat), new BN(nftPrice)),
+                  is_healthy: getHealthStatus(totalDebt.uiAmountFloat, nftPrice),
                   highest_bid: highestBid,
                 };
                 arrPositions.push(position);

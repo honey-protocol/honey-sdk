@@ -737,11 +737,6 @@ export class HoneyUser implements User {
       }),
     );
 
-    // const [feeReceiverAccount, feeReceiverAccountBump] = await PublicKey.findProgramAddress(
-    //   [Buffer.from('honey-protocol-fee'), reserve.data.tokenMint.toBuffer()],
-    //   this.client.program.programId,
-    // );
-
     const [loanAccountPK, loanAccountBump] = await PublicKey.findProgramAddress(
       [Buffer.from('loan'), reserve.reserve.toBuffer(), this.obligation.address.toBuffer(), this.address.toBuffer()],
       this.client.program.programId,
@@ -749,7 +744,6 @@ export class HoneyUser implements User {
 
     const borrowSeeds = {
       loanAccount: loanAccountBump,
-      // feeReceiverAccount: feeReceiverAccountBump,
     };
     const borrowIx = await this.client.program.methods
       .borrow(borrowSeeds, amount)
