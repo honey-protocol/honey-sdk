@@ -58,14 +58,20 @@ export const fetchAllMarkets = async (
   await Promise.all(
     honeyMarketIds.map(async (honeyMarketId) => {
       const marketBundle = await buildMarketBundle(connection, wallet, honeyId, honeyMarketId);
-      const positionsAndBids = await fetchPositionsAndBids(
-        devnet,
-        connection,
-        honeyMarketId,
-        marketBundle.market,
-        marketBundle.reserves,
-        program,
-      );
+      let positionsAndBids;
+      try {
+        positionsAndBids = await fetchPositionsAndBids(
+          devnet,
+          connection,
+          honeyMarketId,
+          marketBundle.market,
+          marketBundle.reserves,
+          program,
+        );
+      } catch (error) {
+        positionsAndBids = { positions: [], bids: [] };
+        console.error(error);
+      }
       marketBundles.push({ ...marketBundle, ...positionsAndBids });
     }),
   );

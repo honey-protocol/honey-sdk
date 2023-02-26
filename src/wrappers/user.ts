@@ -118,8 +118,12 @@ export class HoneyUser implements User {
     if (this.loans().length == 0) {
       debt = 0;
     } else {
-      debt = onChainNumberToBN(this.market.cachedReserveInfo[index].loanNoteExchangeRate).mul(this.loans()[0].amount);
-      debt = debt.toNumber() / 10 ** exponent;
+      debt =
+        this.market.cachedReserveInfo[index].loanNoteExchangeRate
+          .mul(this.loans()[0].amount)
+          .div(new anchor.BN(10 ** 15))
+          .toNumber() /
+        10 ** exponent;
     }
     const nftValue = await this.market.fetchNFTFloorPriceInReserve(index);
     const nftValueMantissaShifted = new anchor.BN(nftValue * 10 ** mantissa);
