@@ -182,6 +182,9 @@ export class HoneyReserve {
   getUtilizationAndInterestRate(): { utilization: number; interestRate: number } {
     const outstandingDebt = onChainNumberToBN(this.data.reserveState.outstandingDebt);
     const totalDeposits = this.data.reserveState.totalDeposits;
+    if (totalDeposits.isZero()) {
+      return { utilization: 0, interestRate: getCcRate(this.data.config, 0) };
+    }
     const util =
       outstandingDebt
         .mul(new anchor.BN(10 ** mantissa))
