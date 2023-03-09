@@ -16,11 +16,15 @@ import { HoneyClient } from './client';
 import { HoneyMarket } from './market';
 import {
   AccountLayout as TokenAccountLayout,
-  AccountInfo as TokenAccount,
   TOKEN_PROGRAM_ID,
   NATIVE_MINT,
-  Token,
   ASSOCIATED_TOKEN_PROGRAM_ID,
+  createInitializeAccount2Instruction,
+  createCloseAccountInstruction,
+  getAssociatedTokenAddress,
+  getMinimumBalanceForRentExemptAccount,
+  createAssociatedTokenAccountInstruction,
+  RawAccount,
 } from '@solana/spl-token';
 import { AuthorizationData, Metadata, PROGRAM_ID as TMETA_PROG_ID } from '@metaplex-foundation/mpl-token-metadata';
 import { Metaplex } from '@metaplex-foundation/js';
@@ -232,15 +236,13 @@ export class HoneyUser implements User {
         lamports: Number(amount.value.addn(rent).toString()),
       });
 
-      initTokenAccountIx = Token.createInitAccountInstruction(
-        TOKEN_PROGRAM_ID,
-        NATIVE_MINT,
+      initTokenAccountIx = createInitializeAccount2Instruction(
         depositSourcePubkey,
+        NATIVE_MINT,
         this.address,
       );
 
-      closeTokenAccountIx = Token.createCloseAccountInstruction(
-        TOKEN_PROGRAM_ID,
+      closeTokenAccountIx = createCloseAccountInstruction(
         depositSourcePubkey,
         this.address,
         this.address,
@@ -324,9 +326,7 @@ export class HoneyUser implements User {
       this.client.program.programId,
     );
 
-    const collateralAddress = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
+    const collateralAddress = await getAssociatedTokenAddress(
       tokenMint,
       this.market.marketAuthority,
       true,
@@ -379,13 +379,11 @@ export class HoneyUser implements User {
 
     if (!walletTokenExists) {
       // Create the wallet token account if it doesn't exist
-      const createAssociatedTokenAccountIx = Token.createAssociatedTokenAccountInstruction(
-        ASSOCIATED_TOKEN_PROGRAM_ID,
-        TOKEN_PROGRAM_ID,
-        tokenMint,
+      const createAssociatedTokenAccountIx = createAssociatedTokenAccountInstruction(
+        this.address,
         tokenAccount,
         this.address,
-        this.address,
+        tokenMint,
       );
       tx.add(createAssociatedTokenAccountIx);
     }
@@ -402,9 +400,7 @@ export class HoneyUser implements User {
     );
     await this.reserves[0].refreshOldReserves();
 
-    const collateralAddress = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
+    const collateralAddress = await getAssociatedTokenAddress(
       tokenMint,
       this.market.marketAuthority,
       true,
@@ -447,9 +443,7 @@ export class HoneyUser implements User {
       this.client.program.programId,
     );
 
-    const collateralAddress = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
+    const collateralAddress = await getAssociatedTokenAddress(
       tokenMint,
       this.market.marketAuthority,
       true,
@@ -566,9 +560,7 @@ export class HoneyUser implements User {
       tx.add(ix);
     }
 
-    const collateralAddress = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
+    const collateralAddress = await getAssociatedTokenAddress(
       tokenMint,
       this.market.marketAuthority,
       true,
@@ -628,9 +620,7 @@ export class HoneyUser implements User {
       tx.add(ix);
     }
 
-    const collateralAddress = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
+    const collateralAddress = await getAssociatedTokenAddress(
       tokenMint,
       this.market.marketAuthority,
       true,
@@ -730,7 +720,7 @@ export class HoneyUser implements User {
       // closing the account, so we avoid closing the
       // associated token account.
       supplementalTx = new Transaction();
-      const rent = await Token.getMinBalanceRentForExemptAccount(this.conn);
+      const rent = await getMinimumBalanceForRentExemptAccount(this.conn);
 
       wsolKeypair = Keypair.generate();
       withdrawAccount = wsolKeypair.publicKey;
@@ -741,10 +731,9 @@ export class HoneyUser implements User {
         space: TokenAccountLayout.span,
         lamports: rent,
       });
-      initWsolIx = Token.createInitAccountInstruction(
-        TOKEN_PROGRAM_ID,
-        reserve.data.tokenMint,
+      initWsolIx = createInitializeAccount2Instruction(
         withdrawAccount,
+        reserve.data.tokenMint,
         this.address,
       );
 
@@ -753,13 +742,11 @@ export class HoneyUser implements User {
       signer = [wsolKeypair] as Signer[];
     } else if (!walletTokenExists) {
       // Create the wallet token account if it doesn't exist
-      createAssociatedTokenAccountIx = Token.createAssociatedTokenAccountInstruction(
-        ASSOCIATED_TOKEN_PROGRAM_ID,
-        TOKEN_PROGRAM_ID,
-        reserve.data.tokenMint,
+      createAssociatedTokenAccountIx = createAssociatedTokenAccountInstruction(
+        this.address,
         withdrawAccount,
         this.address,
-        this.address,
+        reserve.data.tokenMint,
       );
       tx.add(createAssociatedTokenAccountIx);
     }
@@ -784,8 +771,7 @@ export class HoneyUser implements User {
     );
 
     if (reserve.data.tokenMint.equals(NATIVE_MINT) && wsolKeypair) {
-      closeWsolIx = Token.createCloseAccountInstruction(
-        TOKEN_PROGRAM_ID,
+      closeWsolIx = createCloseAccountInstruction(
         withdrawAccount,
         this.address,
         this.address,
@@ -851,15 +837,13 @@ export class HoneyUser implements User {
         lamports: Number(amount.value.addn(rent).toString()),
       });
 
-      initTokenAccountIx = Token.createInitAccountInstruction(
-        TOKEN_PROGRAM_ID,
-        NATIVE_MINT,
+      initTokenAccountIx = createInitializeAccount2Instruction(
         depositSourcePubkey,
+        NATIVE_MINT,
         this.address,
       );
 
-      closeTokenAccountIx = Token.createCloseAccountInstruction(
-        TOKEN_PROGRAM_ID,
+      closeTokenAccountIx = createCloseAccountInstruction(
         depositSourcePubkey,
         this.address,
         this.address,
@@ -936,7 +920,7 @@ export class HoneyUser implements User {
       // There isn't an easy way to unwrap sol without
       // closing the account, so we avoid closing the
       // associated token account.
-      const rent = await Token.getMinBalanceRentForExemptAccount(this.conn);
+      const rent = await getMinimumBalanceForRentExemptAccount(this.conn);
 
       wsolKeypair = Keypair.generate();
       receiverAccount = wsolKeypair.publicKey;
@@ -947,21 +931,18 @@ export class HoneyUser implements User {
         space: TokenAccountLayout.span,
         lamports: rent,
       });
-      initWsoltokenAccountIx = Token.createInitAccountInstruction(
-        TOKEN_PROGRAM_ID,
-        reserve.data.tokenMint,
+      initWsoltokenAccountIx = createInitializeAccount2Instruction(
         wsolKeypair.publicKey,
+        reserve.data.tokenMint,
         this.address,
       );
     } else if (!walletTokenExists) {
       // Create the wallet token account if it doesn't exist
-      createTokenAccountIx = Token.createAssociatedTokenAccountInstruction(
-        ASSOCIATED_TOKEN_PROGRAM_ID,
-        TOKEN_PROGRAM_ID,
-        reserve.data.tokenMint,
+      createTokenAccountIx = createAssociatedTokenAccountInstruction(
+        this.address,
         receiverAccount,
         this.address,
-        this.address,
+        reserve.data.tokenMint,
       );
     }
 
@@ -1006,8 +987,7 @@ export class HoneyUser implements User {
       .instruction();
 
     if (reserve.data.tokenMint.equals(NATIVE_MINT)) {
-      closeTokenAccountIx = Token.createCloseAccountInstruction(
-        TOKEN_PROGRAM_ID,
+      closeTokenAccountIx = createCloseAccountInstruction(
         receiverAccount,
         this.address,
         this.address,
@@ -1098,11 +1078,11 @@ export class HoneyUser implements User {
         return;
       }
 
-      const tokenAccount: TokenAccount = TokenAccountLayout.decode(info.data);
+      const tokenAccount: RawAccount = TokenAccountLayout.decode(info.data);
 
       appendTo.push({
         mint: new PublicKey(tokenAccount.mint),
-        amount: new anchor.BN(tokenAccount.amount, undefined, 'le'),
+        amount: new anchor.BN(tokenAccount.amount.toString(), undefined, 'le'),
       });
     } catch (e) {
       console.log(`error getting user account: ${e}`);

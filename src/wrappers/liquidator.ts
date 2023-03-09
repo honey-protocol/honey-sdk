@@ -9,7 +9,10 @@ import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
   AccountLayout as TokenAccountLayout,
-  Token,
+  getMinimumBalanceForRentExemptAccount,
+  createCloseAccountInstruction,
+  createInitializeAccount2Instruction,
+  getAssociatedTokenAddress,
 } from '@solana/spl-token';
 import { HoneyReserve } from '.';
 import { TxResponse } from '../actions';
@@ -127,11 +130,11 @@ export class LiquidatorClient {
         fromPubkey: bidder,
         newAccountPubkey: depositSource.publicKey,
         space: TokenAccountLayout.span,
-        lamports: (await Token.getMinBalanceRentForExemptAccount(this.program.provider.connection)) + amount, // rent + amount
+        lamports: (await getMinimumBalanceForRentExemptAccount(this.program.provider.connection)) + amount, // rent + amount
         programId: TOKEN_PROGRAM_ID,
       }),
       // init token account
-      Token.createInitAccountInstruction(TOKEN_PROGRAM_ID, NATIVE_MINT, depositSource.publicKey, bidder),
+      createInitializeAccount2Instruction(depositSource.publicKey, NATIVE_MINT, bidder),
     );
 
     try {
@@ -157,14 +160,14 @@ export class LiquidatorClient {
             fromPubkey: bidder,
             newAccountPubkey: depositSource.publicKey,
             space: TokenAccountLayout.span,
-            lamports: (await Token.getMinBalanceRentForExemptAccount(this.program.provider.connection)) + amount, // rent + amount
+            lamports: (await getMinimumBalanceForRentExemptAccount(this.program.provider.connection)) + amount, // rent + amount
             programId: TOKEN_PROGRAM_ID,
           }),
           // init token account
-          Token.createInitAccountInstruction(TOKEN_PROGRAM_ID, NATIVE_MINT, depositSource.publicKey, bidder),
+          createInitializeAccount2Instruction(depositSource.publicKey, NATIVE_MINT, bidder),
         ])
         .postInstructions([
-          Token.createCloseAccountInstruction(TOKEN_PROGRAM_ID, depositSource.publicKey, bidder, bidder, []),
+          createCloseAccountInstruction(depositSource.publicKey, bidder, bidder, []),
         ])
         .signers([depositSource])
         .rpc();
@@ -221,14 +224,14 @@ export class LiquidatorClient {
             fromPubkey: bidder,
             newAccountPubkey: depositSource.publicKey,
             space: TokenAccountLayout.span,
-            lamports: (await Token.getMinBalanceRentForExemptAccount(this.program.provider.connection)) + amount, // rent + amount
+            lamports: (await getMinimumBalanceForRentExemptAccount(this.program.provider.connection)) + amount, // rent + amount
             programId: TOKEN_PROGRAM_ID,
           }),
           // init token account
-          Token.createInitAccountInstruction(TOKEN_PROGRAM_ID, NATIVE_MINT, depositSource.publicKey, bidder),
+          createInitializeAccount2Instruction(depositSource.publicKey, NATIVE_MINT, bidder),
         ])
         .postInstructions([
-          Token.createCloseAccountInstruction(TOKEN_PROGRAM_ID, depositSource.publicKey, bidder, bidder, []),
+          createCloseAccountInstruction(depositSource.publicKey, bidder, bidder, []),
         ])
         .signers([depositSource])
         .rpc();
@@ -279,14 +282,14 @@ export class LiquidatorClient {
             fromPubkey: bidder,
             newAccountPubkey: withdrawDestination.publicKey,
             space: TokenAccountLayout.span,
-            lamports: await Token.getMinBalanceRentForExemptAccount(this.program.provider.connection), // rent + amount
+            lamports: await getMinimumBalanceForRentExemptAccount(this.program.provider.connection), // rent + amount
             programId: TOKEN_PROGRAM_ID,
           }),
           // init token account
-          Token.createInitAccountInstruction(TOKEN_PROGRAM_ID, NATIVE_MINT, withdrawDestination.publicKey, bidder),
+          createInitializeAccount2Instruction(withdrawDestination.publicKey, NATIVE_MINT, bidder),
         ])
         .postInstructions([
-          Token.createCloseAccountInstruction(TOKEN_PROGRAM_ID, withdrawDestination.publicKey, bidder, bidder, []),
+          createCloseAccountInstruction(withdrawDestination.publicKey, bidder, bidder, []),
         ])
         .signers([withdrawDestination])
         .rpc();
@@ -298,7 +301,7 @@ export class LiquidatorClient {
     }
 
     // tx.add(ix);
-    // tx.add(Token.createCloseAccountInstruction(TOKEN_PROGRAM_ID, withdrawDestination.publicKey, bidder, bidder, []));
+    // tx.add(createCloseAccountInstruction(withdrawDestination.publicKey, bidder, bidder, []));
 
     // try {
     //   const result = await this.program.provider.sendAndConfirm(tx, [withdrawDestination], { skipPreflight: true });
@@ -340,25 +343,19 @@ export class LiquidatorClient {
 
     // find the registered nft to liqudiate
     const vaultedNFTMint = obligation.collateralNftMint[0];
-    const vaultedNFT: PublicKey = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
+    const vaultedNFT: PublicKey = await getAssociatedTokenAddress(
       vaultedNFTMint,
       market_authority.address,
       true,
     );
 
-    const receiverAccount: PublicKey = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
+    const receiverAccount: PublicKey = await getAssociatedTokenAddress(
       params.nftMint,
       // @ts-ignore
       bidData.bidder,
     );
 
-    const liquidationFeeReceiver = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
+    const liquidationFeeReceiver = await getAssociatedTokenAddress(
       // @ts-ignore
       bidData.bidMint,
       params.payer,
@@ -366,9 +363,7 @@ export class LiquidatorClient {
 
     console.log('liquidationFeeReceiver', liquidationFeeReceiver.toString());
 
-    const leftoversReceiver = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
+    const leftoversReceiver = await getAssociatedTokenAddress(
       // @ts-ignore
       bidData.bidMint,
       bidData.bidder,
@@ -453,25 +448,19 @@ export class LiquidatorClient {
 
     // find the registered nft to liqudiate
     const vaultedNFTMint = obligation.collateralNftMint[0];
-    const vaultedNFT: PublicKey = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
+    const vaultedNFT: PublicKey = await getAssociatedTokenAddress(
       vaultedNFTMint,
       market_authority.address,
       true,
     );
 
-    const receiverAccount: PublicKey = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
+    const receiverAccount: PublicKey = await getAssociatedTokenAddress(
       params.nftMint,
       // @ts-ignore
       bidData.bidder,
     );
 
-    const liquidationFeeReceiver = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
+    const liquidationFeeReceiver = await getAssociatedTokenAddress(
       // @ts-ignore
       bidData.bidMint,
       params.payer,
@@ -479,9 +468,7 @@ export class LiquidatorClient {
 
     console.log('liquidationFeeReceiver', liquidationFeeReceiver.toString());
 
-    const leftoversReceiver = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
+    const leftoversReceiver = await getAssociatedTokenAddress(
       // @ts-ignore
       bidData.bidMint,
       bidData.bidder,

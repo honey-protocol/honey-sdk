@@ -2,7 +2,7 @@ import * as anchor from '@project-serum/anchor';
 import { HoneyClient } from './client';
 import { CreateReserveParams, HoneyReserve } from './reserve';
 import { PublicKey, Keypair, Transaction } from '@solana/web3.js';
-import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, u64 } from '@solana/spl-token';
+import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import {
   getOraclePrice,
   HoneyMarketData,
@@ -158,7 +158,7 @@ export class HoneyMarket implements HoneyMarketData {
     this.nftCollectionCreator = market.nftCollectionCreator;
   }
 
-  async setFlags(flags: u64) {
+  async setFlags(flags: anchor.BN) {
     await this.client.program.rpc.seMarketAccountFlags(flags, {
       accounts: {
         market: this.address,

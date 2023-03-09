@@ -1,9 +1,7 @@
 import { BN } from '@project-serum/anchor';
 import * as anchor from '@project-serum/anchor';
 import {
-  MintInfo,
   MintLayout,
-  AccountInfo as TokenAccountInfo,
   AccountLayout as TokenAccountLayout,
 } from '@solana/spl-token';
 import {
@@ -210,7 +208,7 @@ export const getMintInfoAndSubscribe = async function (
     publicKey,
     (account, context) => {
       if (account != null) {
-        let mintInfo = MintLayout.decode(account.data) as MintInfo;
+        let mintInfo = MintLayout.decode(account.data);
         let amount = TokenAmount.mint(mintInfo);
         callback(amount, context);
       } else {
@@ -538,15 +536,15 @@ export const parseTokenAccount = (account: AccountInfo<Buffer>, accountPubkey: P
 
   // PublicKeys and BNs are currently Uint8 arrays and
   // booleans are really Uint8s. Convert them
-  const decoded: AccountInfo<TokenAccountInfo> = {
+  const decoded: AccountInfo<any> = {
     ...account,
     data: {
       address: accountPubkey,
       mint: new PublicKey(data.mint),
       owner: new PublicKey(data.owner),
-      amount: new BN(data.amount, undefined, 'le'),
+      amount: new BN(data.amount.toString(), undefined, 'le'),
       delegate: (data as any).delegateOption ? new PublicKey(data.delegate!) : null,
-      delegatedAmount: new BN(data.delegatedAmount, undefined, 'le'),
+      delegatedAmount: new BN(data.delegatedAmount.toString(), undefined, 'le'),
       isInitialized: (data as any).state != 0,
       isFrozen: (data as any).state == 2,
       isNative: !!(data as any).isNativeOption,

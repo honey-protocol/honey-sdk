@@ -1,6 +1,6 @@
 import { Metadata } from '@metaplex-foundation/mpl-token-metadata';
 import { BN } from '@project-serum/anchor';
-import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { ConfirmOptions, Connection, PublicKey } from '@solana/web3.js';
 import { combineAllTransactions, InstructionAndSigner, TxnResponse } from '../helpers';
 import { Amount, HoneyReserve, HoneyUser } from '../wrappers';
@@ -9,9 +9,7 @@ import * as anchor from '@project-serum/anchor';
 
 // Lend Actions
 export const deriveAssociatedTokenAccount = async (tokenMint: PublicKey, userPubkey: PublicKey) => {
-  const associatedTokenAccount: PublicKey = await Token.getAssociatedTokenAddress(
-    ASSOCIATED_TOKEN_PROGRAM_ID,
-    TOKEN_PROGRAM_ID,
+  const associatedTokenAccount: PublicKey = await getAssociatedTokenAddress(
     tokenMint,
     userPubkey,
   );
