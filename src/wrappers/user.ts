@@ -125,8 +125,14 @@ export class HoneyUser implements User {
           .toNumber() /
         10 ** exponent;
     }
+
+    const obligationData = await this.getObligationData();
+    const collateralCount =
+      obligationData instanceof Error
+        ? 1
+        : obligationData.collateralNftMint.filter((mint) => !mint.equals(PublicKey.default)).length;
     const nftValue = await this.market.fetchNFTFloorPriceInReserve(index);
-    const nftValueMantissaShifted = new anchor.BN(nftValue * 10 ** mantissa);
+    const nftValueMantissaShifted = new anchor.BN(nftValue * collateralCount * 10 ** mantissa);
     const debtValueMantissaShifted = new anchor.BN(debt * 10 ** mantissa);
 
     const minCollateralRatio = this.market.cachedReserveInfo[index].minCollateralRatio;
