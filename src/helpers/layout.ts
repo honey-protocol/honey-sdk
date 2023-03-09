@@ -2,7 +2,7 @@ import { BN } from '@project-serum/anchor';
 import { PublicKey } from '@solana/web3.js';
 import * as BL from '@solana/buffer-layout';
 
-export class NumberField extends BL.Layout {
+export class NumberField extends BL.Layout<BN> {
   constructor(span: number, property?: string) {
     super(span, property);
   }
@@ -21,7 +21,7 @@ export class NumberField extends BL.Layout {
   }
 }
 
-export class SignedNumberField extends BL.Layout {
+export class SignedNumberField extends BL.Layout<BN> {
   constructor(span: number, property?: string) {
     super(span, property);
   }
@@ -40,7 +40,7 @@ export class SignedNumberField extends BL.Layout {
   }
 }
 
-export class PubkeyField extends BL.Layout {
+export class PubkeyField extends BL.Layout<PublicKey> {
   constructor(property?: string) {
     super(32, property);
   }
@@ -78,7 +78,7 @@ export function pubkeyField(property?: string): PubkeyField {
 
 const MAX_RESERVES = 32;
 
-const ReserveInfoStruct = BL.struct([
+const ReserveInfoStruct = BL.struct<any>([
   pubkeyField('reserve'),
   BL.blob(80, '_UNUSED_0_'),
   numberField('price'),
@@ -95,7 +95,7 @@ const ReserveInfoStruct = BL.struct([
 export const MarketReserveInfoList = BL.seq(ReserveInfoStruct, MAX_RESERVES);
 
 /// Reserve
-export const ReserveStateLayout = BL.struct([
+export const ReserveStateLayout = BL.struct<any>([
   i64Field('accruedUntil'),
   numberField('outstandingDebt'),
   numberField('uncollectedFees'),
@@ -110,7 +110,7 @@ export const ReserveStateLayout = BL.struct([
 ]);
 
 /// Obligation
-export const PositionInfo = BL.struct([
+export const PositionInfo = BL.struct<any>([
   pubkeyField('account'),
   numberField('amount'),
   BL.u32('side'),
