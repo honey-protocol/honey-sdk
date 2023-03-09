@@ -17,6 +17,9 @@ import {
   Transaction,
   TransactionInstruction,
 } from '@solana/web3.js';
+import { Metaplex } from '@metaplex-foundation/js';
+import { AuthorizationData, Metadata, PROGRAM_ID as TMETA_PROG_ID } from '@metaplex-foundation/mpl-token-metadata';
+import { PREFIX, PROGRAM_ID as AUTH_PROG_ID } from '@metaplex-foundation/mpl-token-auth-rules';
 import { Buffer } from 'buffer';
 import { PositionInfoList } from './layout';
 import { TokenAmount } from './util';
@@ -648,4 +651,81 @@ export const getDepositRate = (ccRate: number, utilRatio: number): number => {
   const rt = ccRate / secondsPerYear;
 
   return Math.log1p(Math.expm1(rt)) * secondsPerYear * utilRatio;
+};
+
+export const fetchNft = async (conn: Connection, mint: PublicKey) => {
+  const mplex = new Metaplex(conn);
+  return await mplex.nfts().findByMint({ mintAddress: mint, loadJsonMetadata: true });
+};
+
+export const findTokenRecordPDA = async (mint: PublicKey, token: PublicKey) => {
+  return findProgramAddress(TMETA_PROG_ID, [
+    Buffer.from('metadata'),
+    TMETA_PROG_ID.toBuffer(),
+    mint.toBuffer(),
+    Buffer.from('token_record'),
+    token.toBuffer(),
+  ]);
+};
+
+export const findRuleSetPDA = async (payer: PublicKey, name: string) => {
+  return await findProgramAddress(AUTH_PROG_ID, [Buffer.from(PREFIX), payer.toBuffer(), Buffer.from(name)]);
+};
+
+export const prepPnftAccounts = async (
+  connection: Connection,
+  {
+    nftMetadata,
+    nftMint,
+    sourceAta,
+    destAta,
+    authData = null,
+  }: {
+    nftMetadata?: PublicKey;
+    nftMint: PublicKey;
+    sourceAta: PublicKey;
+    destAta: PublicKey;
+    authData?: AuthorizationData | null;
+  },
+) => {
+  let meta;
+  let creators: PublicKey[] = [];
+  if (nftMetadata) {
+    meta = nftMetadata;
+  } else {
+    const nft = await fetchNft(connection, nftMint);
+    meta = nft.metadataAddress;
+    creators = nft.creators.map((c) => c.address);
+  }
+
+  const inflatedMeta = await Metadata.fromAccountAddress(connection, meta);
+  const ruleSet = inflatedMeta.programmableConfig?.ruleSet;
+
+  const [ownerTokenRecordPda, ownerTokenRecordBump] = await findTokenRecordPDA(nftMint, sourceAta);
+  const [destTokenRecordPda, destTokenRecordBump] = await findTokenRecordPDA(nftMint, destAta);
+
+  //retrieve edition PDA
+  const mplex = new Metaplex(connection);
+  const nftEditionPda = mplex.nfts().pdas().edition({ mint: nftMint });
+
+  //have to re-serialize due to anchor limitations
+  const authDataSerialized = authData
+    ? {
+        payload: Object.entries(authData.payload.map).map(([k, v]) => {
+          return { name: k, payload: v };
+        }),
+      }
+    : null;
+
+  return {
+    meta,
+    creators,
+    ownerTokenRecordBump,
+    ownerTokenRecordPda,
+    destTokenRecordBump,
+    destTokenRecordPda,
+    ruleSet,
+    nftEditionPda,
+    authDataSerialized,
+  };
 };

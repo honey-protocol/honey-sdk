@@ -38,14 +38,15 @@ export const depositNFT = async (
   connection: Connection,
   honeyUser: HoneyUser,
   metadataPubKey: PublicKey,
+  pnft?: boolean
 ): Promise<TxResponse> => {
   const associatedMetadata = await getNFTAssociatedMetadata(connection, metadataPubKey);
   if (!associatedMetadata) {
     console.error(`Could not find NFT metadata account ${metadataPubKey}`);
     return [TxnResponse.Failed, []];
   }
-  const tokenMetadata = new Metadata(metadataPubKey, associatedMetadata);
-  const tokenMint = new PublicKey(tokenMetadata.data.mint);
+  const tokenMetadata = await Metadata.fromAccountAddress(connection, metadataPubKey);
+  const tokenMint = new PublicKey(tokenMetadata.mint);
   const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(
     tokenMint,
     honeyUser.address,
@@ -57,7 +58,8 @@ export const depositNFT = async (
   return await honeyUser.depositNFT(
     associatedTokenAccount,
     tokenMint,
-    new PublicKey(tokenMetadata.data.data.creators[0].address),
+    new PublicKey(tokenMetadata.data.creators[0].address),
+    pnft
   );
 };
 /**
@@ -74,14 +76,15 @@ export const withdrawNFT = async (
   connection: Connection,
   honeyUser: HoneyUser,
   metadataPubKey: PublicKey,
+  pnft?: boolean
 ): Promise<TxResponse> => {
   const associatedMetadata = await getNFTAssociatedMetadata(connection, metadataPubKey);
   if (!associatedMetadata) {
     console.error(`Could not find NFT metadata account ${metadataPubKey}`);
     return [TxnResponse.Failed, []];
   }
-  const tokenMetadata = new Metadata(metadataPubKey, associatedMetadata);
-  const tokenMint = new PublicKey(tokenMetadata.data.mint);
+  const tokenMetadata = await Metadata.fromAccountAddress(connection, metadataPubKey);
+  const tokenMint = new PublicKey(tokenMetadata.mint);
   const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(
     tokenMint,
     honeyUser.address,
@@ -94,7 +97,8 @@ export const withdrawNFT = async (
   return await honeyUser.withdrawNFT(
     associatedTokenAccount,
     tokenMint,
-    new PublicKey(tokenMetadata.data.data.creators[0].address),
+    new PublicKey(tokenMetadata.data.creators[0].address),
+    pnft
   );
 };
 /**
@@ -290,8 +294,8 @@ export const makeRepayAndWithdrawNFT = async (
     return [TxnResponse.Failed, []];
   }
 
-  const tokenMetadata = new Metadata(metadataPubKey, associatedMetadata);
-  const tokenMint = new PublicKey(tokenMetadata.data.mint);
+  const tokenMetadata = await Metadata.fromAccountAddress(connection, metadataPubKey);
+  const tokenMint = new PublicKey(tokenMetadata.mint);
   const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(
     tokenMint,
     honeyUser.address,
@@ -304,7 +308,7 @@ export const makeRepayAndWithdrawNFT = async (
   const repayAndWithdraw = await honeyUser.makeNFTWithdrawTx(
     associatedTokenAccount,
     tokenMint,
-    new PublicKey(tokenMetadata.data.data.creators[0].address),
+    new PublicKey(tokenMetadata.data.creators[0].address),
   );
 
   transaction.add(repayAndWithdraw);

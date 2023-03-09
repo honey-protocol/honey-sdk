@@ -1,9 +1,11 @@
 import {
+  ComputeBudgetProgram,
   Connection,
   Keypair,
   PublicKey,
   Signer,
   SystemProgram,
+  SYSVAR_INSTRUCTIONS_PUBKEY,
   SYSVAR_RENT_PUBKEY,
   Transaction,
   TransactionInstruction,
@@ -20,8 +22,16 @@ import {
   Token,
   ASSOCIATED_TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
+import { AuthorizationData, Metadata, PROGRAM_ID as TMETA_PROG_ID } from '@metaplex-foundation/mpl-token-metadata';
+import { Metaplex } from '@metaplex-foundation/js';
+import { PROGRAM_ID as AUTH_PROG_ID } from '@metaplex-foundation/mpl-token-auth-rules';
 import { HoneyReserve } from './reserve';
-import { InstructionAndSigner, parseObligationAccount, sendAllTransactions } from '../helpers/programUtil';
+import {
+  prepPnftAccounts,
+  InstructionAndSigner,
+  parseObligationAccount,
+  sendAllTransactions,
+} from '../helpers/programUtil';
 import { TxResponse } from '../actions/types';
 import { TokenAmount } from './token-amount';
 import { ObligationAccount, TxnResponse, CachedReserveInfo, onChainNumberToBN } from '../helpers';
@@ -270,8 +280,11 @@ export class HoneyUser implements User {
     return ixs;
   }
 
-  async withdrawNFT(tokenAccount: PublicKey, tokenMint: PublicKey, updateAuthority: PublicKey): Promise<TxResponse> {
-    const tx = await this.makeNFTWithdrawTx(tokenAccount, tokenMint, updateAuthority);
+  async withdrawNFT(tokenAccount: PublicKey, tokenMint: PublicKey, updateAuthority: PublicKey, pnft?: boolean): Promise<TxResponse> {
+    const tx = 
+      pnft ?
+        await this.makePNFTWithdrawTx(tokenAccount, tokenMint, updateAuthority) :
+        await this.makeNFTWithdrawTx(tokenAccount, tokenMint, updateAuthority);
     try {
       const txid = await this.client.program.provider.sendAndConfirm(tx, [], { skipPreflight: true });
       return [TxnResponse.Success, [txid]];
@@ -418,8 +431,104 @@ export class HoneyUser implements User {
     return tx;
   }
 
-  async depositNFT(tokenAccount: PublicKey, tokenMint: PublicKey, updateAuthority: PublicKey): Promise<TxResponse> {
-    const tx = await this.makeNFTDepositTx(tokenAccount, tokenMint, updateAuthority);
+  async makePNFTWithdrawTx(
+    tokenAccount: PublicKey,
+    tokenMint: PublicKey,
+    nftCollectionCreator: PublicKey,
+  ): Promise<Transaction> {
+    const tx = new Transaction();
+    const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({ 
+      units: 500000 
+    });
+    tx.add(modifyComputeUnits);
+
+    const [obligationAddress, obligationBump] = await PublicKey.findProgramAddress(
+      [Buffer.from('obligation'), this.market.address.toBuffer(), this.address.toBuffer()],
+      this.client.program.programId,
+    );
+
+    const collateralAddress = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      tokenMint,
+      this.market.marketAuthority,
+      true,
+    );
+
+    const [nftMetadata, metadataBump] = await PublicKey.findProgramAddress(
+      [Buffer.from('metadata'), METADATA_PROGRAM_ID.toBuffer(), tokenMint.toBuffer()],
+      METADATA_PROGRAM_ID,
+    );
+
+    await Promise.all(
+      this.reserves.map(async (reserve) => {
+        if (!reserve.reserve.equals(PublicKey.default)) tx.add(await reserve.makeRefreshIx());
+      }),
+    );
+
+    //pnft
+    const {
+      meta,
+      ownerTokenRecordBump,
+      ownerTokenRecordPda,
+      destTokenRecordBump,
+      destTokenRecordPda,
+      ruleSet,
+      nftEditionPda,
+      authDataSerialized,
+    } = await prepPnftAccounts(this.conn, {
+      nftMint: tokenMint,
+      destAta: tokenAccount,
+      authData: null, //currently useless
+      sourceAta: collateralAddress,
+    });
+    const remainingAccounts = [];
+    if (!!ruleSet) {
+      remainingAccounts.push({
+        pubkey: ruleSet,
+        isSigner: false,
+        isWritable: false,
+      });
+    }
+
+    tx.add(
+      await this.client.program.methods
+        .withdrawPnft(metadataBump, authDataSerialized, !!ruleSet)
+        .accounts({
+          market: this.market.address,
+          marketAuthority: this.market.marketAuthority,
+          obligation: obligationAddress,
+          owner: this.address,
+          depositTo: tokenAccount,
+          nftCollectionCreator,
+          depositNftMint: tokenMint,
+          nftMetadata,
+          nftEdition: nftEditionPda,
+          ownerTokenRecord: ownerTokenRecordPda,
+          destTokenRecord: destTokenRecordPda,
+          collateralAccount: collateralAddress,
+          pnftShared: {
+            authorizationRulesProgram: AUTH_PROG_ID,
+            tokenMetadataProgram: TMETA_PROG_ID,
+            instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+          },
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: anchor.web3.SystemProgram.programId,
+          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+        })
+        .remainingAccounts(remainingAccounts)
+        .instruction(),
+    );
+
+    return tx;
+  }
+
+  async depositNFT(tokenAccount: PublicKey, tokenMint: PublicKey, updateAuthority: PublicKey, pnft?: boolean): Promise<TxResponse> {
+    const tx = 
+      pnft ? 
+        await this.makePNFTDepositTx(tokenAccount, tokenMint, updateAuthority) :
+        await this.makeNFTDepositTx(tokenAccount, tokenMint, updateAuthority);
     try {
       const txid = await this.client.program.provider.sendAndConfirm(tx, [], { skipPreflight: true });
       return [TxnResponse.Success, [txid]];
@@ -487,6 +596,107 @@ export class HoneyUser implements User {
       .instruction();
 
     tx.add(depositNFTIx);
+
+    return tx;
+  }
+
+  async makePNFTDepositTx(
+    tokenAccount: PublicKey,
+    tokenMint: PublicKey,
+    updateAuthority: PublicKey,
+  ): Promise<Transaction> {
+    const tx = new Transaction();
+
+    const [obligationAddress, obligationBump] = await PublicKey.findProgramAddress(
+      [Buffer.from('obligation'), this.market.address.toBuffer(), this.address.toBuffer()],
+      this.client.program.programId,
+    );
+
+    const obligationAccountData = await this.conn.getAccountInfo(obligationAddress);
+    if (!obligationAccountData) {
+      const ix = await this.client.program.methods
+        .initObligation(obligationBump)
+        .accounts({
+          market: this.market.address,
+          marketAuthority: this.market.marketAuthority,
+          obligation: obligationAddress,
+          borrower: this.address,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .instruction();
+      tx.add(ix);
+    }
+
+    const collateralAddress = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      tokenMint,
+      this.market.marketAuthority,
+      true,
+    );
+
+    const derivedMetadata = await this.findNftMetadata(tokenMint);
+
+    //pnft
+    const {
+      meta,
+      ownerTokenRecordBump,
+      ownerTokenRecordPda,
+      destTokenRecordBump,
+      destTokenRecordPda,
+      ruleSet,
+      nftEditionPda,
+      authDataSerialized,
+    } = await prepPnftAccounts(this.conn, {
+      nftMint: tokenMint,
+      destAta: collateralAddress,
+      authData: null, //currently useless
+      sourceAta: tokenAccount,
+    });
+    const remainingAccounts = [];
+    if (!!ruleSet) {
+      remainingAccounts.push({
+        pubkey: ruleSet,
+        isSigner: false,
+        isWritable: false,
+      });
+    }
+
+    const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({ 
+      units: 500000 
+    });
+    tx.add(modifyComputeUnits);
+
+    const depositPNFTIx = await this.client.program.methods
+      .depositPnft(derivedMetadata.bumpSeed, authDataSerialized, !!ruleSet)
+      .accounts({
+        market: this.market.address,
+        marketAuthority: this.market.marketAuthority,
+        obligation: obligationAddress,
+        owner: this.address,
+        depositSource: tokenAccount,
+        depositNftMint: tokenMint,
+        nftMetadata: derivedMetadata.address,
+        nftEdition: nftEditionPda,
+        ownerTokenRecord: ownerTokenRecordPda,
+        destTokenRecord: destTokenRecordPda,
+        pnftShared: {
+          authorizationRulesProgram: AUTH_PROG_ID,
+          tokenMetadataProgram: TMETA_PROG_ID,
+          instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+        },
+        nftCollectionCreator: updateAuthority,
+        collateralAccount: collateralAddress,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: anchor.web3.SystemProgram.programId,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+      })
+      .remainingAccounts(remainingAccounts)
+      .instruction();
+
+    tx.add(depositPNFTIx);
 
     return tx;
   }

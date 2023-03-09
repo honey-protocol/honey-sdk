@@ -1,5 +1,5 @@
 import * as anchor from '@project-serum/anchor';
-import { Keypair, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
+import { ComputeBudgetProgram, Keypair, PublicKey, SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY, Transaction } from '@solana/web3.js';
 import { HasPublicKey, ToBytes, TxnResponse } from '../helpers';
 import devnetIdl from '../idl/devnet/honey.json';
 import mainnetBetaIdl from '../idl/mainnet-beta/honey.json';
@@ -13,6 +13,11 @@ import {
 } from '@solana/spl-token';
 import { HoneyReserve } from '.';
 import { TxResponse } from '../actions';
+import { prepPnftAccounts } from '../helpers/programUtil';
+import { METADATA_PROGRAM_ID } from './user';
+import { AuthorizationData, Metadata, PROGRAM_ID as TMETA_PROG_ID } from '@metaplex-foundation/mpl-token-metadata';
+import { Metaplex } from '@metaplex-foundation/js';
+import { PROGRAM_ID as AUTH_PROG_ID } from '@metaplex-foundation/mpl-token-auth-rules';
 
 export interface PlaceBidParams {
   bid_limit: number;
@@ -409,6 +414,165 @@ export class LiquidatorClient {
         .rpc();
 
       // const result = await this.program.provider.sendAndConfirm(tx, [], { skipPreflight: true });
+      console.log(result);
+      return [TxnResponse.Success, [result]];
+    } catch (err) {
+      console.log('error', err);
+      return [TxnResponse.Failed, []];
+    }
+  }
+
+  /**
+   * Execute a liquidation bid.
+   * @param params
+   * @returns
+   */
+   async executePnftBid(reserves: HoneyReserve[], params: ExecuteBidParams) {
+    const bid = await this.findBidAccount(params.market, params.bidder);
+    const bid_escrow = await this.findEscrowAccount(params.market, params.bidder);
+    const bid_escrow_authority = await this.findBidEscrowAuthorityAccount(bid_escrow.address);
+    const market_authority = await this.findMarketAuthority(params.market);
+
+    const bumps = {
+      bid: bid.bumpSeed,
+      bidEscrow: bid_escrow.bumpSeed,
+      bidEscrowAuthority: bid_escrow_authority.bumpSeed,
+    };
+
+    const market = await this.program.account.market.fetch(params.market);
+    const reserve = await this.program.account.reserve.fetch(params.reserve);
+    const obligation = await this.program.account.obligation.fetch(params.obligation);
+    const bidData = await this.program.account.bid.fetch(bid.address);
+
+    // pay for these should be ther person getting liquidated
+    // @ts-ignore
+    const loanNoteAddress = await this.findLoanNoteAddress(params.reserve, params.obligation, obligation.owner);
+    // @ts-ignore
+    const loanNoteMint = await this.findLoanNoteMintAddress(params.reserve, reserve.tokenMint);
+    const vault = await this.findVaultAddress(params.market, params.reserve);
+
+    // find the registered nft to liqudiate
+    const vaultedNFTMint = obligation.collateralNftMint[0];
+    const vaultedNFT: PublicKey = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      vaultedNFTMint,
+      market_authority.address,
+      true,
+    );
+
+    const receiverAccount: PublicKey = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      params.nftMint,
+      // @ts-ignore
+      bidData.bidder,
+    );
+
+    const liquidationFeeReceiver = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      // @ts-ignore
+      bidData.bidMint,
+      params.payer,
+    );
+
+    console.log('liquidationFeeReceiver', liquidationFeeReceiver.toString());
+
+    const leftoversReceiver = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      // @ts-ignore
+      bidData.bidMint,
+      bidData.bidder,
+    );
+    console.log('leftoversReceiver', leftoversReceiver.toString());
+    console.log('bid', bid.address.toString());
+    console.log('bidData.bidder', bidData.bidder.toString());
+
+    const refreshIx = await reserves[0].makeRefreshIx();
+    // const tx = new Transaction().add(refreshIx);
+
+    const [nftMetadata, metadataBump] = await PublicKey.findProgramAddress(
+      [Buffer.from('metadata'), METADATA_PROGRAM_ID.toBuffer(), params.nftMint.toBuffer()],
+      METADATA_PROGRAM_ID,
+    );
+
+    //pnft
+    const {
+      meta,
+      ownerTokenRecordBump,
+      ownerTokenRecordPda,
+      destTokenRecordBump,
+      destTokenRecordPda,
+      ruleSet,
+      nftEditionPda,
+      authDataSerialized,
+    } = await prepPnftAccounts(this.conn, {
+      nftMint: params.nftMint,
+      destAta: receiverAccount,
+      authData: null, //currently useless
+      sourceAta: vaultedNFT,
+    });
+    const remainingAccounts = [];
+    if (!!ruleSet) {
+      remainingAccounts.push({
+        pubkey: ruleSet,
+        isSigner: false,
+        isWritable: false,
+      });
+    }
+
+    try {
+      const tx = new Transaction();
+      const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({ 
+        units: 500000 
+      });
+      tx.add(modifyComputeUnits);
+      tx.add(refreshIx);
+      tx.add(
+         await this.program.methods
+          .executeLiquidatePnftBid(bumps, authDataSerialized, !!ruleSet)
+          .accounts({
+            market: params.market,
+            marketAuthority: market_authority.address,
+            obligation: params.obligation,
+            reserve: params.reserve,
+            vault: vault.address,
+            loanNoteMint: loanNoteMint.address,
+            loanAccount: loanNoteAddress.address,
+            collateralAccount: vaultedNFT,
+            bid: bid.address,
+            bidder: new PublicKey(bidData.bidder),
+            bidMint: new PublicKey(bidData.bidMint),
+            bidEscrow: new PublicKey(bidData.bidEscrow),
+            bidEscrowAuthority: bid_escrow_authority.address,
+            payerAccount: new PublicKey(bidData.bidEscrow),
+            nftMint: params.nftMint,
+            nftMetadata,
+            nftEdition: nftEditionPda,
+            ownerTokenRecord: ownerTokenRecordPda,
+            destTokenRecord: destTokenRecordPda,
+            pnftShared: {
+              authorizationRulesProgram: AUTH_PROG_ID,
+              tokenMetadataProgram: TMETA_PROG_ID,
+              instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+            },
+            receiverAccount: receiverAccount,
+            liquidationFeeReceiver,
+            leftoversReceiver,
+            payer: params.payer,
+            // system accounts
+            tokenProgram: TOKEN_PROGRAM_ID,
+            associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+            rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+            systemProgram: anchor.web3.SystemProgram.programId,
+          })
+          .remainingAccounts(remainingAccounts)
+          .instruction()
+      );
+
+      const result = await this.program.provider.sendAndConfirm(tx, [], { skipPreflight: true });
       console.log(result);
       return [TxnResponse.Success, [result]];
     } catch (err) {

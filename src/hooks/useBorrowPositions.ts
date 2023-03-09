@@ -59,17 +59,17 @@ export const useBorrowPositions = (
         );
         const data = await getNFTAssociatedMetadata(connection, nftMetadata);
         if (!data) return;
-        const tokenMetadata = new Metadata(nftMetadata, data);
-        const verifiedCreator = tokenMetadata.data.data.creators.filter((creator) => creator.verified)[0].address;
-        const arweaveData = await (await fetch(tokenMetadata.data.data.uri)).json();
+        const tokenMetadata = await Metadata.fromAccountAddress(connection, nftMetadata);
+        const verifiedCreator = tokenMetadata.data.creators.filter((creator) => creator.verified)[0].address;
+        const arweaveData = await (await fetch(tokenMetadata.data.uri)).json();
         collateralNFTPositions.push({
-          mint: new PublicKey(tokenMetadata?.data?.mint),
-          updateAuthority: new PublicKey(tokenMetadata?.data?.updateAuthority),
-          name: tokenMetadata?.data?.data?.name,
-          symbol: tokenMetadata?.data?.data.symbol,
-          uri: tokenMetadata?.data?.data.uri,
+          mint: new PublicKey(tokenMetadata?.mint),
+          updateAuthority: new PublicKey(tokenMetadata?.updateAuthority),
+          name: tokenMetadata?.data?.name,
+          symbol: tokenMetadata?.data?.symbol,
+          uri: tokenMetadata?.data?.uri,
           image: arweaveData?.image,
-          verifiedCreator,
+          verifiedCreator: verifiedCreator.toBase58(),
         });
       }
     });
