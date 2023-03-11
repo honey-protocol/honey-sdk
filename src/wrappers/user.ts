@@ -367,6 +367,21 @@ export class HoneyUser implements User {
       true,
     );
 
+    const walletTokenExists = await this.conn.getAccountInfo(collateralAddress);
+
+    if (!walletTokenExists) {
+      // Create the wallet token account if it doesn't exist
+      const createAssociatedTokenAccountIx = Token.createAssociatedTokenAccountInstruction(
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        this.address,
+        withdrawAccount,
+        this.address,
+        this.address,
+      );
+      tx.add(createAssociatedTokenAccountIx);
+    }
+
     const [nftMetadata, metadataBump] = await PublicKey.findProgramAddress(
       [Buffer.from('metadata'), METADATA_PROGRAM_ID.toBuffer(), tokenMint.toBuffer()],
       METADATA_PROGRAM_ID,
