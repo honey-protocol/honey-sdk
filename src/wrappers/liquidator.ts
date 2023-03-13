@@ -11,7 +11,7 @@ import {
   AccountLayout as TokenAccountLayout,
   getMinimumBalanceForRentExemptAccount,
   createCloseAccountInstruction,
-  createInitializeAccountInstruction,
+  createInitializeAccount2Instruction,
   getAssociatedTokenAddress,
 } from '@solana/spl-token';
 import { HoneyReserve } from '.';
@@ -134,7 +134,7 @@ export class LiquidatorClient {
         programId: TOKEN_PROGRAM_ID,
       }),
       // init token account
-      createInitializeAccountInstruction(depositSource.publicKey, NATIVE_MINT, bidder),
+      createInitializeAccount2Instruction(depositSource.publicKey, NATIVE_MINT, bidder),
     );
 
     try {
@@ -164,7 +164,7 @@ export class LiquidatorClient {
             programId: TOKEN_PROGRAM_ID,
           }),
           // init token account
-          createInitializeAccountInstruction(depositSource.publicKey, NATIVE_MINT, bidder),
+          createInitializeAccount2Instruction(depositSource.publicKey, NATIVE_MINT, bidder),
         ])
         .postInstructions([
           createCloseAccountInstruction(depositSource.publicKey, bidder, bidder, []),
@@ -228,7 +228,7 @@ export class LiquidatorClient {
             programId: TOKEN_PROGRAM_ID,
           }),
           // init token account
-          createInitializeAccountInstruction(depositSource.publicKey, NATIVE_MINT, bidder),
+          createInitializeAccount2Instruction(depositSource.publicKey, NATIVE_MINT, bidder),
         ])
         .postInstructions([
           createCloseAccountInstruction(depositSource.publicKey, bidder, bidder, []),
@@ -286,7 +286,7 @@ export class LiquidatorClient {
             programId: TOKEN_PROGRAM_ID,
           }),
           // init token account
-          createInitializeAccountInstruction(withdrawDestination.publicKey, NATIVE_MINT, bidder),
+          createInitializeAccount2Instruction(withdrawDestination.publicKey, NATIVE_MINT, bidder),
         ])
         .postInstructions([
           createCloseAccountInstruction(withdrawDestination.publicKey, bidder, bidder, []),
