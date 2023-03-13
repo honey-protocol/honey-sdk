@@ -445,43 +445,6 @@
   dependencies:
     "@hapi/hoek" "^9.0.0"
 
-"@honey-finance/sdk@^1.1.46":
-  version "1.1.46"
-  resolved "https://registry.yarnpkg.com/@honey-finance/sdk/-/sdk-1.1.46.tgz#a6220af889d72f03f6983442f9e83cfb4af1436d"
-  integrity sha512-MDh5zSxl8a3pCo3ORBtbfYngWZI1VTvfS8IXm5mn7vrEb5DWvpNJd6ZhTJs16eYWKrD+lrOQ8v7f+O00QYKepA==
-  dependencies:
-    "@metaplex-foundation/mpl-token-metadata" "^1.2.0"
-    "@project-serum/anchor" "^0.25.0"
-    "@project-serum/serum" "^0.13.61"
-    "@pythnetwork/client" "^2.5.3"
-    "@rollup/plugin-commonjs" "^21.1.0"
-    "@solana/buffer-layout" "^3.0.0"
-    "@solana/spl-token" "^0.1.8"
-    "@solana/web3.js" "^1.32.1"
-    "@switchboard-xyz/switchboard-v2" "^0.0.127"
-    "@types/chai" "^4.3.0"
-    "@types/chai-as-promised" "^7.1.5"
-    "@types/mocha" "^9.1.0"
-
-"@honey-finance/sdk@^1.1.48":
-  version "1.1.48"
-  resolved "https://registry.yarnpkg.com/@honey-finance/sdk/-/sdk-1.1.48.tgz#40559d322d976638458ba46a2bda09e7eefdd251"
-  integrity sha512-tY0c2857lYwxk0FYHNMzzcoeaXzoWUjJLZVBCdITVUikW1dqSWBdZNL5OrmBGvvgCtDJPnaujcusWSqd/+LTsA==
-  dependencies:
-    "@honey-finance/sdk" "^1.1.46"
-    "@metaplex-foundation/mpl-token-metadata" "^1.2.0"
-    "@project-serum/anchor" "^0.25.0"
-    "@project-serum/serum" "^0.13.61"
-    "@pythnetwork/client" "^2.5.3"
-    "@rollup/plugin-commonjs" "^21.1.0"
-    "@solana/buffer-layout" "^3.0.0"
-    "@solana/spl-token" "^0.1.8"
-    "@solana/web3.js" "^1.32.1"
-    "@switchboard-xyz/switchboard-v2" "^0.0.127"
-    "@types/chai" "^4.3.0"
-    "@types/chai-as-promised" "^7.1.5"
-    "@types/mocha" "^9.1.0"
-
 "@jest/types@^27.5.1":
   version "27.5.1"
   resolved "https://registry.npmjs.org/@jest/types/-/types-27.5.1.tgz"
@@ -618,14 +581,6 @@
     "@solana/spl-token" "^0.3.6"
     "@solana/web3.js" "^1.66.2"
 
-"@metaplex-foundation/mpl-core@^0.0.2":
-  version "0.0.2"
-  resolved "https://registry.npmjs.org/@metaplex-foundation/mpl-core/-/mpl-core-0.0.2.tgz"
-  integrity sha512-UUJ4BlYiWdDegAWmjsNQiNehwYU3QfSFWs3sv4VX0J6/ZrQ28zqosGhQ+I2ZCTEy216finJ82sZWNjuwSWCYyQ==
-  dependencies:
-    "@solana/web3.js" "^1.31.0"
-    bs58 "^4.0.1"
-
 "@metaplex-foundation/mpl-token-auth-rules@^1.0.0":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@metaplex-foundation/mpl-token-auth-rules/-/mpl-token-auth-rules-1.2.0.tgz#31e8154e7039c2c184c9dda1f61eb107b4adcc81"
@@ -636,15 +591,6 @@
     "@metaplex-foundation/cusper" "^0.0.2"
     "@solana/spl-token" "^0.3.6"
     "@solana/web3.js" "^1.66.2"
-
-"@metaplex-foundation/mpl-token-metadata@^1.2.0":
-  version "1.2.5"
-  resolved "https://registry.npmjs.org/@metaplex-foundation/mpl-token-metadata/-/mpl-token-metadata-1.2.5.tgz"
-  integrity sha512-pxRG53JsTSwXpiJJMHNulJhH8kO3hHztQ3QxslUoKw2hBYKXsg9TGsiHgNIhN2MPZGBJ2pDeK6kNGv0sd54HhA==
-  dependencies:
-    "@metaplex-foundation/mpl-core" "^0.0.2"
-    "@solana/spl-token" "^0.1.8"
-    "@solana/web3.js" "^1.31.0"
 
 "@metaplex-foundation/mpl-token-metadata@^2.7.0", "@metaplex-foundation/mpl-token-metadata@^2.8.6":
   version "2.9.0"
@@ -733,27 +679,6 @@
     js-sha256 "^0.9.0"
     pako "^2.0.3"
     snake-case "^3.0.4"
-    toml "^3.0.0"
-
-"@project-serum/anchor@^0.25.0":
-  version "0.25.0"
-  resolved "https://registry.npmjs.org/@project-serum/anchor/-/anchor-0.25.0.tgz"
-  integrity sha512-E6A5Y/ijqpfMJ5psJvbw0kVTzLZFUcOFgs6eSM2M2iWE1lVRF18T6hWZVNl6zqZsoz98jgnNHtVGJMs+ds9A7A==
-  dependencies:
-    "@project-serum/borsh" "^0.2.5"
-    "@solana/web3.js" "^1.36.0"
-    base64-js "^1.5.1"
-    bn.js "^5.1.2"
-    bs58 "^4.0.1"
-    buffer-layout "^1.2.2"
-    camelcase "^5.3.1"
-    cross-fetch "^3.1.5"
-    crypto-hash "^1.3.0"
-    eventemitter3 "^4.0.7"
-    js-sha256 "^0.9.0"
-    pako "^2.0.3"
-    snake-case "^3.0.4"
-    superstruct "^0.15.4"
     toml "^3.0.0"
 
 "@project-serum/anchor@^0.26.0":
@@ -934,13 +859,6 @@
     bigint-buffer "^1.1.5"
     bignumber.js "^9.0.1"
 
-"@solana/buffer-layout@^3.0.0":
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/@solana/buffer-layout/-/buffer-layout-3.0.0.tgz#b9353caeb9a1589cb77a1b145bcb1a9a93114326"
-  integrity sha512-MVdgAKKL39tEs0l8je0hKaXLQFb7Rdfb0Xg2LjFZd8Lfdazkg6xiS98uAZrEKvaoF3i4M95ei9RydkGIDMeo3w==
-  dependencies:
-    buffer "~6.0.3"
-
 "@solana/buffer-layout@^4.0.0":
   version "4.0.0"
   resolved "https://registry.npmjs.org/@solana/buffer-layout/-/buffer-layout-4.0.0.tgz"
@@ -970,7 +888,7 @@
     "@solana/web3.js" "^1.32.0"
     start-server-and-test "^1.14.0"
 
-"@solana/spl-token@^0.1.6", "@solana/spl-token@^0.1.8":
+"@solana/spl-token@^0.1.6":
   version "0.1.8"
   resolved "https://registry.npmjs.org/@solana/spl-token/-/spl-token-0.1.8.tgz"
   integrity sha512-LZmYCKcPQDtJgecvWOgT/cnoIQPWjdH+QVyzPcFvyDUiT0DiRjZaam4aqNUyvchLFhzgunv3d9xOoyE34ofdoQ==
@@ -982,7 +900,17 @@
     buffer-layout "^1.2.0"
     dotenv "10.0.0"
 
-"@solana/spl-token@^0.3.5", "@solana/spl-token@^0.3.6", "@solana/spl-token@^0.3.7":
+"@solana/spl-token@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@solana/spl-token/-/spl-token-0.2.0.tgz#329bb6babb5de0f9c40035ddb1657f01a8347acd"
+  integrity sha512-RWcn31OXtdqIxmkzQfB2R+WpsJOVS6rKuvpxJFjvik2LyODd+WN58ZP3Rpjpro03fscGAkzlFuP3r42doRJgyQ==
+  dependencies:
+    "@solana/buffer-layout" "^4.0.0"
+    "@solana/buffer-layout-utils" "^0.2.0"
+    "@solana/web3.js" "^1.32.0"
+    start-server-and-test "^1.14.0"
+
+"@solana/spl-token@^0.3.5", "@solana/spl-token@^0.3.6":
   version "0.3.7"
   resolved "https://registry.yarnpkg.com/@solana/spl-token/-/spl-token-0.3.7.tgz#6f027f9ad8e841f792c32e50920d9d2e714fc8da"
   integrity sha512-bKGxWTtIw6VDdCBngjtsGlKGLSmiu/8ghSt/IOYJV24BsymRbgq7r12GToeetpxmPaZYLddKwAz7+EwprLfkfg==
@@ -1009,7 +937,7 @@
     "@wallet-standard/base" "^1.0.1"
     "@wallet-standard/features" "^1.0.3"
 
-"@solana/web3.js@^1.17.0", "@solana/web3.js@^1.21.0", "@solana/web3.js@^1.30.2", "@solana/web3.js@^1.31.0", "@solana/web3.js@^1.32.1":
+"@solana/web3.js@^1.17.0", "@solana/web3.js@^1.21.0", "@solana/web3.js@^1.30.2":
   version "1.39.1"
   resolved "https://registry.npmjs.org/@solana/web3.js/-/web3.js-1.39.1.tgz"
   integrity sha512-Q7XnWTAiU7n7GcoINDAAMLO7CJHpm5kPK46HKwJi2x0cusHQ3WFa7QEp6aPzH7tuf7yl/Kw1lYitcwTVOvqARA==

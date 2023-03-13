@@ -19,7 +19,7 @@ import {
   TOKEN_PROGRAM_ID,
   NATIVE_MINT,
   ASSOCIATED_TOKEN_PROGRAM_ID,
-  createInitializeAccount2Instruction,
+  createInitializeAccountInstruction,
   createCloseAccountInstruction,
   getAssociatedTokenAddress,
   getMinimumBalanceForRentExemptAccount,
@@ -236,7 +236,7 @@ export class HoneyUser implements User {
         lamports: Number(amount.value.addn(rent).toString()),
       });
 
-      initTokenAccountIx = createInitializeAccount2Instruction(
+      initTokenAccountIx = createInitializeAccountInstruction(
         depositSourcePubkey,
         NATIVE_MINT,
         this.address,
@@ -731,7 +731,7 @@ export class HoneyUser implements User {
         space: TokenAccountLayout.span,
         lamports: rent,
       });
-      initWsolIx = createInitializeAccount2Instruction(
+      initWsolIx = createInitializeAccountInstruction(
         withdrawAccount,
         reserve.data.tokenMint,
         this.address,
@@ -837,7 +837,7 @@ export class HoneyUser implements User {
         lamports: Number(amount.value.addn(rent).toString()),
       });
 
-      initTokenAccountIx = createInitializeAccount2Instruction(
+      initTokenAccountIx = createInitializeAccountInstruction(
         depositSourcePubkey,
         NATIVE_MINT,
         this.address,
@@ -931,7 +931,7 @@ export class HoneyUser implements User {
         space: TokenAccountLayout.span,
         lamports: rent,
       });
-      initWsoltokenAccountIx = createInitializeAccount2Instruction(
+      initWsoltokenAccountIx = createInitializeAccountInstruction(
         wsolKeypair.publicKey,
         reserve.data.tokenMint,
         this.address,
