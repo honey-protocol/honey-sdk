@@ -42,6 +42,8 @@ export interface User {
   loans(): TokenAmount[];
 }
 
+const JET_NUMBER: anchor.BN = new anchor.BN(10).pow(new anchor.BN(15));
+
 export interface HasPublicKey {
   publicKey: PublicKey;
 }
@@ -86,8 +88,9 @@ export class HoneyUser implements User {
   async fetchUserDeposits(index: number): Promise<number> {
     if (this.deposits().length == 0) return 0;
     const deposits =
-      onChainNumberToBN(this.market.cachedReserveInfo[index].depositNoteExchangeRate)
+      this.market.cachedReserveInfo[index].depositNoteExchangeRate
         .mul(this.deposits()[0].amount)
+        .div(JET_NUMBER)
         .toNumber() /
       10 ** (this.reserves[index].data.exponent * -1);
 
@@ -359,23 +362,15 @@ export class HoneyUser implements User {
       this.client.program.programId,
     );
 
-    const collateralAddress = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      tokenMint,
-      this.market.marketAuthority,
-      true,
-    );
-
-    const walletTokenExists = await this.conn.getAccountInfo(collateralAddress);
+    const walletTokenExists = await this.conn.getAccountInfo(tokenAccount);
 
     if (!walletTokenExists) {
       // Create the wallet token account if it doesn't exist
       const createAssociatedTokenAccountIx = Token.createAssociatedTokenAccountInstruction(
         ASSOCIATED_TOKEN_PROGRAM_ID,
         TOKEN_PROGRAM_ID,
-        this.address,
-        this.address,
+        tokenMint,
+        tokenAccount,
         this.address,
         this.address,
       );
@@ -391,6 +386,14 @@ export class HoneyUser implements User {
       this.reserves.map(async (reserve) => {
         if (!reserve.reserve.equals(PublicKey.default)) tx.add(await reserve.makeRefreshIx());
       }),
+    );
+
+    const collateralAddress = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      tokenMint,
+      this.market.marketAuthority,
+      true,
     );
 
     tx.add(
@@ -542,7 +545,7 @@ export class HoneyUser implements User {
       createAssociatedTokenAccountIx = Token.createAssociatedTokenAccountInstruction(
         ASSOCIATED_TOKEN_PROGRAM_ID,
         TOKEN_PROGRAM_ID,
-        this.address,
+        reserve.data.tokenMint,
         withdrawAccount,
         this.address,
         this.address,
