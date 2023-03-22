@@ -387,6 +387,7 @@ export class HoneyUser implements User {
         if (!reserve.reserve.equals(PublicKey.default)) tx.add(await reserve.makeRefreshIx());
       }),
     );
+    await this.reserves[0].refreshOldReserves();
 
     const collateralAddress = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -592,6 +593,8 @@ export class HoneyUser implements User {
   }
 
   async deposit(reserve: HoneyReserve, tokenAccount: PublicKey, amount: Amount): Promise<TxResponse> {
+    await reserve.refreshOldReserves();
+    
     const [transaction, signers] = await this.makeDepositTx(reserve, tokenAccount, amount);
     try {
       const txid = await this.client.program.provider.sendAndConfirm(transaction, signers, { skipPreflight: true });
