@@ -6,6 +6,14 @@ import { HoneyClient, HoneyMarket, HoneyUser, HoneyReserve } from '..';
 import { useAnchor } from '../contexts/anchor';
 import { ConnectedWallet } from '../helpers/walletType';
 
+/**
+ * Mostly deprecated, but still useful for fetching a single market
+ * @param connection to the cluster
+ * @param wallet wallet adapter or null for read-only
+ * @param honeyProgramId of the program
+ * @param honeyMarketId single market id to fetch
+ * @returns HoneyClient, HoneyMarket, HoneyUser, HoneyReserve[] and their setters
+ */
 export const useMarket = (
   connection: Connection,
   wallet: ConnectedWallet | null,
@@ -37,7 +45,7 @@ export const useMarket = (
       // pull latest reserve data
       market.refresh();
 
-      const reserves: HoneyReserve[] = market.reserves.map(
+      const reserves: HoneyReserve[] = market.cachedReserveInfo.map(
         (reserve) => new HoneyReserve(client, market, reserve.reserve),
       );
       await Promise.all(

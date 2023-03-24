@@ -1,10 +1,11 @@
 import { Metadata } from '@metaplex-foundation/mpl-token-metadata';
+import { BN } from '@project-serum/anchor';
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { Connection, PublicKey } from '@solana/web3.js';
-import { InstructionAndSigner } from '../helpers';
-import { TxnResponse } from '../helpers/honeyTypes';
+import { ConfirmOptions, Connection, PublicKey } from '@solana/web3.js';
+import { combineAllTransactions, InstructionAndSigner, TxnResponse } from '../helpers';
 import { Amount, HoneyReserve, HoneyUser } from '../wrappers';
 import { TxResponse } from './types';
+import * as anchor from '@project-serum/anchor';
 
 // Lend Actions
 export const deriveAssociatedTokenAccount = async (tokenMint: PublicKey, userPubkey: PublicKey) => {
@@ -109,10 +110,13 @@ export const withdrawNFT = async (
 
 export const borrow = async (
   honeyUser: HoneyUser,
-  borrowAmount: number,
+  borrowAmount: number | BN,
   borrowTokenMint: PublicKey,
   borrowReserves: HoneyReserve[],
 ): Promise<TxResponse> => {
+  if (typeof borrowAmount === 'number') {
+    borrowAmount = new BN(borrowAmount);
+  }
   const amount = Amount.tokens(borrowAmount);
   const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(
     borrowTokenMint,
@@ -132,10 +136,13 @@ export const borrow = async (
 
 export const borrowAndRefresh = async (
   honeyUser: HoneyUser,
-  borrowAmount: number,
+  borrowAmount: number | BN,
   borrowTokenMint: PublicKey,
   borrowReserves: HoneyReserve[],
 ): Promise<TxResponse> => {
+  if (typeof borrowAmount === 'number') {
+    borrowAmount = new BN(borrowAmount);
+  }
   const amount = Amount.tokens(borrowAmount);
   const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(
     borrowTokenMint,
@@ -189,7 +196,7 @@ export const makeBorrowTx = async (
  */
 export const repay = async (
   honeyUser: HoneyUser,
-  repayAmount: number,
+  repayAmount: BN,
   repayTokenMint: PublicKey,
   repayReserves: HoneyReserve[],
 ): Promise<TxResponse> => {
@@ -210,7 +217,7 @@ export const repay = async (
 
 export const repayAndRefresh = async (
   honeyUser: HoneyUser,
-  repayAmount: number,
+  repayAmount: BN,
   repayTokenMint: PublicKey,
   repayReserves: HoneyReserve[],
 ): Promise<TxResponse> => {
@@ -232,11 +239,11 @@ export const repayAndRefresh = async (
 
 export const makeRepayTx = async (
   honeyUser: HoneyUser,
-  repayAmount: number,
+  repayAmount: BN,
   repayTokenMint: PublicKey,
   repayReserves: HoneyReserve[],
 ): Promise<InstructionAndSigner[]> => {
-  const amount = Amount.tokens(repayAmount); // basically just pay back double the loan for now
+  const amount = Amount.tokens(repayAmount);
   const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(
     repayTokenMint,
     honeyUser.address,
@@ -249,4 +256,63 @@ export const makeRepayTx = async (
     return [];
   }
   return await honeyUser.makeRepayTx(repayReserve, associatedTokenAccount, amount);
+};
+
+// export const repayAndWithdrawNFT = async (
+//   connection: Connection,
+//   honeyUser: HoneyUser,
+//   metadataPubKey: PublicKey,
+//   repayAmount: BN,
+//   repayTokenMint: PublicKey,
+//   reserve: HoneyReserve,
+// ): Promise<TxResponse> => {};
+
+export const makeRepayAndWithdrawNFT = async (
+  connection: Connection,
+  honeyUser: HoneyUser,
+  metadataPubKey: PublicKey,
+  repayAmount: BN,
+  repayTokenMint: PublicKey,
+  reserve: HoneyReserve,
+): Promise<TxResponse> => {
+  const amount = Amount.tokens(repayAmount.muln(1.002)); // interest
+  const associatedRepayTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(
+    repayTokenMint,
+    honeyUser.address,
+  );
+  const ixs = await honeyUser.makeRepayTx(reserve, associatedRepayTokenAccount, amount);
+
+  const transaction = await combineAllTransactions(honeyUser.client.program.provider as anchor.AnchorProvider, ixs);
+
+  const associatedMetadata = await getNFTAssociatedMetadata(connection, metadataPubKey);
+  if (!associatedMetadata) {
+    console.error(`Could not find NFT metadata account ${metadataPubKey}`);
+    return [TxnResponse.Failed, []];
+  }
+
+  const tokenMetadata = new Metadata(metadataPubKey, associatedMetadata);
+  const tokenMint = new PublicKey(tokenMetadata.data.mint);
+  const associatedTokenAccount: PublicKey | undefined = await deriveAssociatedTokenAccount(
+    tokenMint,
+    honeyUser.address,
+  );
+
+  if (!associatedTokenAccount) {
+    console.error(`Could not find the associated token account: ${associatedTokenAccount}`);
+    return [TxnResponse.Failed, []];
+  }
+  const repayAndWithdraw = await honeyUser.makeNFTWithdrawTx(
+    associatedTokenAccount,
+    tokenMint,
+    new PublicKey(tokenMetadata.data.data.creators[0].address),
+  );
+
+  transaction.add(repayAndWithdraw);
+  // @ts-ignore
+  // const signedTx = await honeyUser.client.program.provider.wallet.signTransaction(transaction);
+  const txid = await honeyUser.client.program.provider.sendAndConfirm(transaction, [], { skipPreflight: true });
+  // const rawTransaction = signedTx.serialize();
+  // const txid = await honeyUser.client.program.provider.connection.sendRawTransaction(rawTransaction);
+
+  return [TxnResponse.Success, [txid]];
 };

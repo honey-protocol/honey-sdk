@@ -3,6 +3,20 @@ import type { AccountInfo as TokenAccountInfo, MintInfo, u64 } from '@solana/spl
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { AggregatorAccount, loadSwitchboardProgram } from '@switchboard-xyz/switchboard-v2';
 
+const JET_NUMBER: BN = new BN(10).pow(new BN(15));
+
+export function onChainNumberToBN(state: BN): BN {
+  return state.div(JET_NUMBER);
+}
+
+export const RoundHalfDown = (val: number, decimals: number = 2): number => {
+  return Math.floor(val * 10 ** decimals) / 10 ** decimals;
+};
+
+export const RoundHalfUp = (val: number, decimals: number = 2): number => {
+  return Math.ceil(val * 10 ** decimals) / 10 ** decimals;
+};
+
 // Format USD or crypto with default or desired decimals
 export const currencyFormatter = (value: number, usd: boolean, digits?: number) => {
   let currencyFormat: Intl.NumberFormat;
@@ -229,12 +243,12 @@ export const getHealthStatus = (debt: number, collaterl: number): string => {
 
   if (ltv < 20) return 'LOW';
   else if (ltv < 30) return 'MEDIUM';
-  else if (ltv == 40) return 'HIGH';
+  else if (ltv < 40) return 'HIGH';
   else return 'RISKY';
 };
 
 export async function getOraclePrice(
-  cluster: 'devnet' | 'mainnet-beta' = 'devnet',
+  cluster: 'mainnet-beta' | 'devnet' = 'mainnet-beta',
   connection: Connection,
   aggregatorKey: PublicKey,
 ): Promise<any> {

@@ -1,33 +1,19 @@
 import * as anchor from '@project-serum/anchor';
 import { HoneyClient } from './client';
 import { CreateReserveParams, HoneyReserve } from './reserve';
-import { PublicKey, Keypair, Transaction, Connection } from '@solana/web3.js';
+import { PublicKey, Keypair, Transaction } from '@solana/web3.js';
 import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, u64 } from '@solana/spl-token';
 import {
   getOraclePrice,
-  HoneyMarketReserveInfo,
+  HoneyMarketData,
+  CachedReserveInfo,
   MarketReserveInfoList,
-  ReserveStateStruct,
-  TMarket,
+  MarketAccount,
   TReserve,
+  oracleUrl,
+  onChainNumberToBN,
+  ReserveInfoState,
 } from '../helpers';
-
-export interface HoneyMarketData {
-  quoteTokenMint: PublicKey;
-  marketAuthority: PublicKey;
-  owner: PublicKey;
-  nftSwitchboardPriceAggregator: PublicKey;
-  nftCollectionCreator: PublicKey;
-  market: TMarket;
-  reserves: HoneyMarketReserveInfo[];
-  reserveList: ReserveDataAndState[];
-  conn: Connection;
-}
-
-export interface ReserveDataAndState {
-  data: TReserve;
-  state: ReserveStateStruct;
-}
 
 export class HoneyMarket implements HoneyMarketData {
   conn: anchor.web3.Connection;
@@ -38,9 +24,9 @@ export class HoneyMarket implements HoneyMarketData {
     public quoteTokenMint: PublicKey,
     public marketAuthority: PublicKey,
     public owner: PublicKey,
-    public market: TMarket,
-    public reserves: HoneyMarketReserveInfo[],
-    public reserveList: ReserveDataAndState[],
+    public market: MarketAccount,
+    public cachedReserveInfo: CachedReserveInfo[],
+    public reserveList: TReserve[],
     public nftSwitchboardPriceAggregator: PublicKey,
     public nftCollectionCreator: PublicKey,
   ) {
@@ -58,29 +44,65 @@ export class HoneyMarket implements HoneyMarketData {
     return obligations;
   }
 
+  /**
+   * Fetch and decode all the associated data for a market
+   * @param client HoneyClient
+   * @param address Market address
+   * @returns MarketAccount: market level data
+   * @returns CachedReserveInfo[]: reserve level data
+   * @returns TReserve[]: data includes the config + public keys associated with the reserve
+   * state includes the current state of the reserve, eg outstanding deposits, loans, etc
+   */
   public static async fetchMarket(
     client: HoneyClient,
     address?: PublicKey,
-  ): Promise<[TMarket, HoneyMarketReserveInfo[], ReserveDataAndState[]]> {
-    const tMarket: TMarket = (await client.program.account.market.fetch(address)) as any as TMarket;
+  ): Promise<[MarketAccount, CachedReserveInfo[], TReserve[]]> {
+    const market: MarketAccount = (await client.program.account.market.fetch(address)) as any as MarketAccount;
 
-    const reserveInfoData = new Uint8Array(tMarket.reserves);
-    const reserveInfoList = MarketReserveInfoList.decode(reserveInfoData) as HoneyMarketReserveInfo[];
+    const reserveInfoData = new Uint8Array(market.reserves as any as number[]);
+    const reserveInfoList = MarketReserveInfoList.decode(reserveInfoData) as CachedReserveInfo[];
 
-    const reservesList = [] as ReserveDataAndState[];
+    const reservesList = [] as TReserve[];
     for (const reserve of reserveInfoList) {
       if (reserve.reserve.equals(PublicKey.default)) {
         continue;
       }
-      const { data, state } = await HoneyReserve.decodeReserve(client, reserve.reserve);
-      reservesList.push({ data, state });
+      const data = await HoneyReserve.decodeReserve(client, reserve.reserve);
+      reservesList.push(data);
     }
 
-    return [tMarket, reserveInfoList, reservesList];
+    return [market, reserveInfoList, reservesList];
   }
 
-  public async fetchNFTFloorPrice(cluster: 'mainnet-beta' | 'devnet' = 'mainnet-beta'): Promise<any> {
-    return await getOraclePrice(cluster, this.conn, this.market.nftSwitchboardPriceAggregator);
+  /**
+   * @param index of the reserve
+   * @returns ReserveInfoState: price, depositNoteExchangeRate, loanNoteExchangeRate, minCollateralRatio in number format
+   */
+  getCachedReserveInfo(index: number): ReserveInfoState {
+    return {
+      price: onChainNumberToBN(this.cachedReserveInfo[index].price).toNumber(),
+      depositNoteExchangeRate: onChainNumberToBN(this.cachedReserveInfo[index].depositNoteExchangeRate).toNumber(),
+      loanNoteExchangeRate: onChainNumberToBN(this.cachedReserveInfo[index].loanNoteExchangeRate).toNumber(),
+      minCollateralRatio: onChainNumberToBN(this.cachedReserveInfo[index].minCollateralRatio).toNumber(),
+    };
+  }
+
+  public async fetchNFTFloorPrice(
+    cluster: 'mainnet-beta' | 'devnet' | 'localnet' | 'testnet' = 'mainnet-beta',
+  ): Promise<number> {
+    // @ts-ignore - switchboard doesn't export their big number type
+    return (await getOraclePrice(cluster, this.conn, this.market.nftSwitchboardPriceAggregator)).toNumber();
+  }
+
+  public async fetchNFTFloorPriceInReserve(index: number): Promise<number> {
+    let reservePrice = await getOraclePrice(
+      'mainnet-beta',
+      this.conn,
+      this.reserveList[index].switchboardPriceAggregator,
+    );
+    let floor = await getOraclePrice('mainnet-beta', this.conn, this.market.nftSwitchboardPriceAggregator);
+
+    return floor / reservePrice;
   }
 
   /**
@@ -90,40 +112,54 @@ export class HoneyMarket implements HoneyMarketData {
    * @returns An object for interacting with the Honey market.
    */
   static async load(client: HoneyClient, address: PublicKey): Promise<HoneyMarket> {
-    const [tMarket, reserveInfoList, reserveList] = await HoneyMarket.fetchMarket(client, address);
+    const [market, reserveInfoList, reserveList] = await HoneyMarket.fetchMarket(client, address);
 
     return new HoneyMarket(
       client,
       address,
-      tMarket.quoteTokenMint,
-      tMarket.marketAuthority,
-      tMarket.owner,
-      tMarket,
+      market.quoteTokenMint,
+      market.marketAuthority,
+      market.owner,
+      market,
       reserveInfoList,
       reserveList,
-      tMarket.nftSwitchboardPriceAggregator,
-      tMarket.nftCollectionCreator,
+      market.nftSwitchboardPriceAggregator,
+      market.nftCollectionCreator,
     );
+  }
+
+  /**
+   * @returns string url of the oracle
+   */
+  fetchOracleUrl() {
+    return oracleUrl(this.market.nftSwitchboardPriceAggregator.toString());
+  }
+
+  /**
+   * @returns approx LTV given the min collateral ratio config
+   */
+  fetchLTV(index: number = 0): number {
+    return 10000 / this.reserveList[index].config.minCollateralRatio;
   }
 
   /**
    * Get the latest market account data from the network.
    */
   async refresh(): Promise<void> {
-    const [tMarket, reserveInfoList, reserveList] = await HoneyMarket.fetchMarket(this.client, this.address);
+    const [market, reserveInfoList, reserveList] = await HoneyMarket.fetchMarket(this.client, this.address);
 
-    this.market = tMarket;
-    this.reserves = reserveInfoList;
+    this.market = market;
+    this.cachedReserveInfo = reserveInfoList;
     this.reserveList = reserveList;
-    this.owner = tMarket.owner;
-    this.marketAuthority = tMarket.marketAuthority;
-    this.quoteTokenMint = tMarket.quoteTokenMint;
-    this.nftSwitchboardPriceAggregator = tMarket.nftSwitchboardPriceAggregator;
-    this.nftCollectionCreator = tMarket.nftCollectionCreator;
+    this.owner = market.owner;
+    this.marketAuthority = market.marketAuthority;
+    this.quoteTokenMint = market.quoteTokenMint;
+    this.nftSwitchboardPriceAggregator = market.nftSwitchboardPriceAggregator;
+    this.nftCollectionCreator = market.nftCollectionCreator;
   }
 
   async setFlags(flags: u64) {
-    await this.client.program.rpc.setMarketFlags(flags, {
+    await this.client.program.rpc.seMarketAccountFlags(flags, {
       accounts: {
         market: this.address,
         owner: this.owner,
@@ -154,9 +190,6 @@ export class HoneyMarket implements HoneyMarketData {
       vault: derivedAccounts.vault.bumpSeed,
       feeNoteVault: feeAccountBump,
       protocolFeeNoteVault: protocolFeeAccountBump,
-      dexOpenOrdersA: derivedAccounts.dexOpenOrdersA.bumpSeed,
-      dexOpenOrdersB: derivedAccounts.dexOpenOrdersB.bumpSeed,
-      dexSwapTokens: derivedAccounts.dexSwapTokens.bumpSeed,
       loanNoteMint: derivedAccounts.loanNoteMint.bumpSeed,
       depositNoteMint: derivedAccounts.depositNoteMint.bumpSeed,
     };

@@ -18,17 +18,17 @@ import {
   TransactionInstruction,
 } from '@solana/web3.js';
 import { Buffer } from 'buffer';
-import type {
+import { PositionInfoList } from './layout';
+import { TokenAmount } from './util';
+import {
   CustomProgramError,
   HasPublicKey,
   ObligationAccount,
   ObligationPositionStruct,
   ReserveConfigStruct,
   ToBytes,
-} from './honeyTypes';
-import { TxnResponse } from './honeyTypes';
-import { PositionInfoList } from './layout';
-import { TokenAmount } from './util';
+  TxnResponse,
+} from './types';
 
 export const SOL_DECIMALS = 9;
 export const NULL_PUBKEY = new PublicKey('11111111111111111111111111111111');
@@ -302,6 +302,10 @@ export const explorerUrl = (txid: string) => {
   return `https://explorer.solana.com/transaction/${txid}${clusterParam}`;
 };
 
+export const oracleUrl = (aggId: string) => {
+  return `https://switchboard.xyz/explorer/3/${aggId}`;
+};
+
 let customProgramErrors: CustomProgramError[];
 //Take error code and and return error explanation
 export const getErrNameAndMsg = (errCode: number): string => {
@@ -421,6 +425,33 @@ export const simulateAllTransactions = async (
     }
   }
   return [res, txids];
+};
+
+export const combineAllTransactions = async (
+  provider: anchor.AnchorProvider,
+  transactions: InstructionAndSigner[],
+): Promise<Transaction> => {
+  if (!provider.wallet?.publicKey) {
+    throw new Error('Wallet is not connected');
+  }
+
+  // Building and partial sign phase
+  const recentBlockhash = await provider.connection.getRecentBlockhash();
+  let transaction = new Transaction();
+  for (const tx of transactions) {
+    if (tx.ix.length == 0) {
+      continue;
+    }
+    transaction.add(...tx.ix);
+
+    transaction.recentBlockhash = recentBlockhash.blockhash;
+    transaction.feePayer = provider.wallet.publicKey;
+    if (tx.signers && tx.signers.length > 0) {
+      transaction.partialSign(...tx.signers);
+    }
+  }
+  return transaction;
+  // return await provider.wallet.signTransaction(transaction);
 };
 
 export const sendAllTransactions = async (
@@ -578,7 +609,8 @@ const interpolate = (x: number, x0: number, x1: number, y0: number, y1: number):
   return y0 + ((x - x0) * (y1 - y0)) / (x1 - x0);
 };
 
-/** Continuous Compounding Rate
+/**
+ * Continuous Compounding Rate
  */
 export const getCcRate = (reserveConfig: ReserveConfigStruct, utilRate: number): number => {
   const basisPointFactor = 10000;

@@ -1,6 +1,6 @@
 {
   "name": "@honey-finance/sdk",
-  "version": "1.1.12",
+  "version": "1.1.122",
   "description": "This repository holds the wrappers, contexts and other utilities to interact with the Honey program library.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -17,6 +17,7 @@
   "license": "ISC",
   "private": false,
   "dependencies": {
+    "@honey-finance/sdk": "^1.1.48",
     "@metaplex-foundation/mpl-token-metadata": "^1.2.0",
     "@project-serum/anchor": "^0.25.0",
     "@project-serum/serum": "^0.13.61",

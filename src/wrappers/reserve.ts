@@ -5,7 +5,16 @@ import { HoneyClient } from './client';
 import { HoneyMarket } from './market';
 import { BN } from '@project-serum/anchor';
 import { DerivedAccount } from './derived-account';
-import { getOraclePrice, ReserveStateLayout, ReserveStateStruct, TReserve } from '../helpers';
+import {
+  getCcRate,
+  getOraclePrice,
+  ReserveState,
+  ReserveStateLayout,
+  ReserveStateStruct,
+  TReserve,
+  TotalReserveState,
+  onChainNumberToBN,
+} from '../helpers';
 
 export interface ReserveConfig {
   utilizationRate1: number;
@@ -25,9 +34,6 @@ export interface ReserveAccounts {
   vault: DerivedAccount;
   feeNoteVault: DerivedAccount;
   protocolFeeNoteVault: DerivedAccount;
-  dexSwapTokens: DerivedAccount;
-  dexOpenOrdersA: DerivedAccount;
-  dexOpenOrdersB: DerivedAccount;
   loanNoteMint: DerivedAccount;
   depositNoteMint: DerivedAccount;
 }
@@ -54,21 +60,6 @@ export interface CreateReserveParams {
   config: ReserveConfig;
 
   /**
-   * token mint for the solvent droplets
-   */
-  nftDropletMint?: PublicKey;
-
-  /**
-   * Dex market A
-   */
-  dexMarketA?: PublicKey;
-
-  /**
-   * dex market B
-   */
-  dexMarketB?: PublicKey;
-
-  /**
    * The account to use for the reserve data.
    *
    * If not provided an account will be generated.
@@ -77,7 +68,6 @@ export interface CreateReserveParams {
 }
 
 export interface ReserveData {
-  // index: number;
   market: PublicKey;
   switchBoardOracle: PublicKey;
   tokenMint: PublicKey;
@@ -86,11 +76,6 @@ export interface ReserveData {
   vault: PublicKey;
   feeNoteVault: PublicKey;
   protocolFeeNoteVault: PublicKey;
-  dexSwapTokens: PublicKey;
-  dexOpenOrdersA: PublicKey;
-  dexOpenOrdersB: PublicKey;
-  dexMarketA: PublicKey;
-  dexMarketB: PublicKey;
 }
 
 export interface ReserveStateData {
@@ -101,18 +86,6 @@ export interface ReserveStateData {
   totalDeposits: anchor.BN;
   totalDepositNotes: anchor.BN;
   totalLoanNotes: anchor.BN;
-}
-
-export interface ReserveDexMarketAccounts {
-  market: PublicKey;
-  openOrders: PublicKey;
-  requestQueue: PublicKey;
-  eventQueue: PublicKey;
-  bids: PublicKey;
-  asks: PublicKey;
-  coinVault: PublicKey;
-  pcVault: PublicKey;
-  vaultSigner: PublicKey;
 }
 
 export interface UpdateReserveConfigParams {
@@ -126,6 +99,7 @@ const SECONDS_PER_HOUR: BN = new BN(3600);
 const SECONDS_PER_DAY: BN = SECONDS_PER_HOUR.muln(24);
 const SECONDS_PER_WEEK: BN = SECONDS_PER_DAY.muln(7);
 const MAX_ACCRUAL_SECONDS: BN = SECONDS_PER_WEEK;
+export const mantissa = 9;
 export class HoneyReserve {
   private conn: Connection;
 
@@ -134,27 +108,91 @@ export class HoneyReserve {
     private market: HoneyMarket,
     public reserve: PublicKey,
     public data?: TReserve,
-    public state?: ReserveStateStruct,
   ) {
     this.conn = this.client.program.provider.connection;
   }
 
   async refresh(): Promise<void> {
     await this.market.refresh();
-    const { data, state } = await HoneyReserve.decodeReserve(this.client, this.reserve);
+    const data = await HoneyReserve.decodeReserve(this.client, this.reserve);
     this.data = data;
-    this.state = state;
   }
 
-  static async decodeReserve(
-    client: HoneyClient,
-    address: PublicKey,
-  ): Promise<{ data: TReserve; state: ReserveStateStruct }> {
+  static async decodeReserve(client: HoneyClient, address: PublicKey): Promise<TReserve> {
     const reserveData = (await client.program.account.reserve.fetch(address)) as any as TReserve;
     const reserveState = ReserveStateLayout.decode(Buffer.from(reserveData.state)) as ReserveStateStruct;
     reserveData.reserveState = reserveState;
 
-    return { data: reserveData, state: reserveState };
+    return reserveData;
+  }
+
+  /**
+   *
+   * @returns {TotalReserveState} gathers all of the state information for the reserve from the chain and converts
+   * it into human readable format useable by the front end.
+   */
+  gatherReserveState(): TotalReserveState {
+    const { utilization, interestRate } = this.getUtilizationAndInterestRate();
+    return {
+      config: this.getReserveConfig(),
+      state: this.getReserveState(),
+      utilization,
+      interestRate,
+    };
+  }
+
+  /**
+   * Get specific information about the configuration of the reserve.
+   * Example include fees charges, expected collateralization ratios and interest rate.
+   * @returns {ReserveConfig} The reserve config
+   */
+  getReserveConfig(): ReserveConfig {
+    return this.data.config;
+  }
+
+  /**
+   * Get the top level information needed for each reserve.
+   * outstandingDebt, uncollectedFees and protocolUncollectedFees are stored as a special Number type on the
+   * backend and therefore need to be converted by dividing by 10^15.
+   * @returns {ReserveState} The latest state of the total reserve in string format
+   */
+  getReserveState(): ReserveState {
+    const decimals = 10 ** (this.data.exponent * -1);
+
+    const outstandingAsUnderlying = onChainNumberToBN(this.data.reserveState.outstandingDebt).toNumber() / decimals;
+    const uncollectedAsUnderlying = onChainNumberToBN(this.data.reserveState.uncollectedFees).toNumber() / decimals;
+    const protocolUncollectedAsUnderlying =
+      onChainNumberToBN(this.data.reserveState.protocolUncollectedFees).toNumber() / decimals;
+
+    return {
+      accruedUntil: this.data.reserveState.accruedUntil.toString(),
+      outstandingDebt: outstandingAsUnderlying,
+      uncollectedFees: uncollectedAsUnderlying,
+      protocolUncollectedFees: protocolUncollectedAsUnderlying,
+      totalDeposits: this.data.reserveState.totalDeposits.toNumber() / decimals,
+      totalDepositNotes: this.data.reserveState.totalDepositNotes.toNumber() / decimals,
+      totalLoanNotes: this.data.reserveState.totalLoanNotes.toNumber() / decimals,
+    };
+  }
+
+  /**
+   * Takes the reserve level state and calculates the current utilization
+   * and interest rate based on the utilization.
+   */
+  getUtilizationAndInterestRate(): { utilization: number; interestRate: number } {
+    const outstandingDebt = onChainNumberToBN(this.data.reserveState.outstandingDebt);
+    const totalDeposits = this.data.reserveState.totalDeposits;
+    if (totalDeposits.isZero()) {
+      return { utilization: 0, interestRate: getCcRate(this.data.config, 0) };
+    }
+    const util =
+      outstandingDebt
+        .mul(new anchor.BN(10 ** mantissa))
+        .div(totalDeposits.add(outstandingDebt))
+        .toNumber() /
+      10 ** mantissa;
+    const interestRate = getCcRate(this.data.config, util);
+    return { utilization: util, interestRate: interestRate };
   }
 
   async sendRefreshTx(): Promise<string> {
@@ -162,16 +200,18 @@ export class HoneyReserve {
     return await this.client.program.provider.sendAndConfirm(tx);
   }
 
-  async fetchReserveValue(cluster: 'mainnet-beta' | 'devnet' = 'mainnet-beta'): Promise<any> {
-    return await getOraclePrice(cluster, this.conn, this.data.switchboardPriceAggregator);
+  async fetchReserveValue(cluster: 'mainnet-beta' | 'devnet' = 'mainnet-beta'): Promise<number> {
+    // @ts-ignore - switchboard doesn't export their big number type
+    const bigNumber = await getOraclePrice(cluster, this.conn, this.data.switchboardPriceAggregator);
+    return bigNumber.toNumber();
   }
 
   async refreshOldReserves(): Promise<void> {
-    if (!this.state) {
+    if (!this.data.reserveState) {
       console.log('State is not set, call refresh');
       return;
     }
-    let accruedUntil = new BN(this.state.accruedUntil);
+    let accruedUntil = new BN(this.data.reserveState.accruedUntil);
     while (accruedUntil.add(MAX_ACCRUAL_SECONDS).lt(new BN(Math.floor(Date.now() / 1000)))) {
       await this.sendRefreshTx();
       accruedUntil = accruedUntil.add(MAX_ACCRUAL_SECONDS);
@@ -219,7 +259,7 @@ export class HoneyReserve {
   }
 
   static async load(client: HoneyClient, address: PublicKey, maybeMarket?: HoneyMarket): Promise<HoneyReserve> {
-    const { data } = await HoneyReserve.decodeReserve(client, address);
+    const data = await HoneyReserve.decodeReserve(client, address);
     const market = maybeMarket || (await HoneyMarket.load(client, data.market));
     return new HoneyReserve(client, market, address, data);
   }
@@ -235,9 +275,6 @@ export class HoneyReserve {
       vault: await client.findDerivedAccount(['vault', address]),
       feeNoteVault: await client.findDerivedAccount(['fee-vault', address]),
       protocolFeeNoteVault: await client.findDerivedAccount(['protocol-fee-vault', address]),
-      dexSwapTokens: await client.findDerivedAccount(['dex-swap-tokens', address]),
-      dexOpenOrdersA: await client.findDerivedAccount(['dex-open-orders-a', address]),
-      dexOpenOrdersB: await client.findDerivedAccount(['dex-open-orders-b', address]),
       loanNoteMint: await client.findDerivedAccount(['loans', address, tokenMint]),
       depositNoteMint: await client.findDerivedAccount(['deposits', address, tokenMint]),
     };

@@ -1,8 +1,9 @@
 import { PublicKey } from '@solana/web3.js';
-import { TxnResponse } from '../helpers/honeyTypes';
+import { TxnResponse } from '../helpers';
 import { Amount, HoneyReserve, HoneyUser } from '../wrappers';
 import { deriveAssociatedTokenAccount } from './borrow';
 import { TxResponse } from './types';
+import { BN } from '@project-serum/anchor';
 /**
  * Deposit Collateral.
  *
@@ -15,10 +16,13 @@ import { TxResponse } from './types';
  */
 export const deposit = async (
   honeyUser: HoneyUser,
-  tokenAmount: number,
+  tokenAmount: number | BN,
   depositTokenMint: PublicKey,
   depositReserves: HoneyReserve[],
 ): Promise<TxResponse> => {
+  if (typeof tokenAmount === 'number') {
+    tokenAmount = new BN(tokenAmount);
+  }
   const depositReserve = depositReserves.filter((reserve: HoneyReserve) =>
     reserve?.data?.tokenMint?.equals(depositTokenMint),
   )[0];
@@ -38,10 +42,13 @@ export const deposit = async (
 
 export const withdraw = async (
   honeyUser: HoneyUser,
-  tokenAmount: number,
+  tokenAmount: number | BN,
   withdrawTokenMint: PublicKey,
   withdrawReserves: HoneyReserve[],
 ): Promise<TxResponse> => {
+  if (typeof tokenAmount === 'number') {
+    tokenAmount = new BN(tokenAmount);
+  }
   const withdrawReserve = withdrawReserves.filter((reserve: HoneyReserve) =>
     reserve?.data?.tokenMint.equals(withdrawTokenMint),
   )[0];

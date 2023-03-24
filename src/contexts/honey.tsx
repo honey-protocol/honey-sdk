@@ -1,16 +1,15 @@
 import React, { FC, ReactNode, useContext, useEffect, useState } from 'react';
-import { HoneyMarketReserveInfo } from '../helpers/honeyTypes';
 import { useAnchor } from './anchor';
 import { MarketReserveInfoList } from '../helpers/layout';
 import { ConnectedWallet } from '../helpers/walletType';
 import { useMarket } from '../hooks';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { HoneyReserve } from '../wrappers';
-import { TMarket, TReserve } from '../helpers';
+import { CachedReserveInfo, MarketAccount, TReserve } from '../helpers';
 
 interface HoneyContext {
-  market: TMarket | null;
-  marketReserveInfo: HoneyMarketReserveInfo[] | null;
+  market: MarketAccount | null;
+  marketReserveInfo: CachedReserveInfo[] | null;
   parsedReserves: TReserve[] | null;
   fetchMarket: Function;
 }
@@ -74,18 +73,18 @@ export const HoneyProvider: FC<HoneyProps> = ({ children, wallet, connection, ho
   const { program, coder } = useAnchor();
   const { honeyClient, honeyMarket } = useMarket(connection, wallet, honeyProgramId, honeyMarketId);
 
-  const [market, setMarket] = useState<TMarket | null>(null);
-  const [marketReserveInfo, setMarketReserveInfo] = useState<HoneyMarketReserveInfo[]>();
+  const [market, setMarket] = useState<MarketAccount | null>(null);
+  const [marketReserveInfo, setMarketReserveInfo] = useState<CachedReserveInfo[]>();
   const [parsedReserves, setReserves] = useState<TReserve[] | null>();
 
   const fetchMarket = async () => {
     // market info
     const marketValue = await program.account.market.fetch(honeyMarket.address);
-    setMarket(marketValue as any as TMarket);
+    setMarket(marketValue as any as MarketAccount);
 
     // reserve info
     const reserveInfoData = new Uint8Array(marketValue.reserves as any as number[]);
-    const reserveInfoList = MarketReserveInfoList.decode(reserveInfoData) as HoneyMarketReserveInfo[];
+    const reserveInfoList = MarketReserveInfoList.decode(reserveInfoData) as CachedReserveInfo[];
     setMarketReserveInfo(reserveInfoList);
 
     const reservesList = [] as TReserve[];
@@ -93,7 +92,7 @@ export const HoneyProvider: FC<HoneyProps> = ({ children, wallet, connection, ho
       if (reserve.reserve.equals(PublicKey.default)) {
         continue;
       }
-      const { data, state } = await HoneyReserve.decodeReserve(honeyClient, reserve.reserve);
+      const data = await HoneyReserve.decodeReserve(honeyClient, reserve.reserve);
       reservesList.push(data);
     }
     setReserves(reservesList);

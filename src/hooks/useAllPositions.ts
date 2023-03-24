@@ -6,7 +6,7 @@ import { ConnectedWallet } from '../helpers/walletType';
 import { useMarket } from './useMarket';
 import * as anchor from '@project-serum/anchor';
 import { BN } from '@project-serum/anchor';
-import { NftPosition } from '../helpers/types';
+import { Bid, NftPosition } from '../helpers/types';
 import { getHealthStatus, getOraclePrice, TokenAmount } from '../helpers/util';
 import NodeWallet from '@project-serum/anchor/dist/cjs/nodewallet';
 
@@ -15,12 +15,15 @@ export const LTV_MAX = 40;
 export const LTV_MEDIUM = 30;
 export const LTV_LOW = 20;
 
-export interface Bid {
-  bid: string;
-  bidder: string;
-  bidLimit: number;
-}
-
+/**
+ * Mostly deprecated, use fetchAllMarkets instead
+ * @param connection of the cluster
+ * @param wallet wallet adapter (or null for read-only)
+ * @param honeyId of the program
+ * @param honeyMarketId of the market
+ * @param devnet flag to fetch devnet or mainnet-beta idl
+ * @returns nft borrow positions and bids against the market
+ */
 export const useAllPositions = (
   connection: Connection,
   wallet: ConnectedWallet | null,
@@ -44,12 +47,10 @@ export const useAllPositions = (
       isDevnet
         ? `https://honey-nft-api.herokuapp.com/bids/${honeyMarketId}`
         : `https://honey-mainnet-api.herokuapp.com/bids/${honeyMarketId}`,
-      // 'http://localhost:3001/bids',
       { mode: 'cors' },
     );
-    const arrBids = await resBids.json();
-    // const parsedBids = arrBids.map((str) => JSON.parse(str));
 
+    const arrBids = await resBids.json();
     const highestBid = Math.max.apply(
       Math,
       arrBids.map(function (o) {
@@ -94,15 +95,17 @@ export const useAllPositions = (
             return pos;
           };
 
-          item.account.loans = PositionInfoList.decode(Buffer.from(item.account.loans as any as number[])).map(
-            parsePosition,
-          );
+          item.account.loans = PositionInfoList.decode(Buffer.from(item.account.loans)).map(parsePosition);
           await Promise.all(
             nftMints.map(async (nft) => {
               if (nft.toString() != '11111111111111111111111111111111') {
-
-                const loanNoteBalance: TokenAmount = new TokenAmount(item.account?.loans[0]?.amount, -honeyReserves[0].data.exponent);                
-                const totalDebt = loanNoteBalance.mulb(marketReserveInfo[0].loanNoteExchangeRate).divb(new BN(Math.pow(10, 15)).mul(new BN(Math.pow(10, 6))));
+                const loanNoteBalance: TokenAmount = new TokenAmount(
+                  item.account?.loans[0]?.amount,
+                  -honeyReserves[0].data.exponent,
+                );
+                const totalDebt = loanNoteBalance
+                  .mulb(marketReserveInfo[0].loanNoteExchangeRate)
+                  .divb(new BN(Math.pow(10, 15)).mul(new BN(Math.pow(10, 6))));
 
                 let position: NftPosition = {
                   obligation: item.publicKey.toString(),
