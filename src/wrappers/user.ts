@@ -25,9 +25,9 @@ import {
   getMinimumBalanceForRentExemptAccount,
   createAssociatedTokenAccountInstruction,
   RawAccount,
+  getAccount,
 } from '@solana/spl-token';
-import { AuthorizationData, Metadata, PROGRAM_ID as TMETA_PROG_ID } from '@metaplex-foundation/mpl-token-metadata';
-import { Metaplex } from '@metaplex-foundation/js';
+import { PROGRAM_ID as TMETA_PROG_ID } from '@metaplex-foundation/mpl-token-metadata';
 import { PROGRAM_ID as AUTH_PROG_ID } from '@metaplex-foundation/mpl-token-auth-rules';
 import { HoneyReserve } from './reserve';
 import {
@@ -38,7 +38,7 @@ import {
 } from '../helpers/programUtil';
 import { TxResponse } from '../actions/types';
 import { TokenAmount } from './token-amount';
-import { ObligationAccount, TxnResponse, CachedReserveInfo, onChainNumberToBN } from '../helpers';
+import { ObligationAccount, TxnResponse, CachedReserveInfo } from '../helpers';
 
 export const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
 export const SOLVENT_PROGRAM = new PublicKey('GwRvoU6vTXQAbS75KaMbm7o2iTYVtdEnF4mFUbZr9Cmb');
@@ -236,18 +236,9 @@ export class HoneyUser implements User {
         lamports: Number(amount.value.addn(rent).toString()),
       });
 
-      initTokenAccountIx = createInitializeAccount2Instruction(
-        depositSourcePubkey,
-        NATIVE_MINT,
-        this.address,
-      );
+      initTokenAccountIx = createInitializeAccount2Instruction(depositSourcePubkey, NATIVE_MINT, this.address);
 
-      closeTokenAccountIx = createCloseAccountInstruction(
-        depositSourcePubkey,
-        this.address,
-        this.address,
-        [],
-      );
+      closeTokenAccountIx = createCloseAccountInstruction(depositSourcePubkey, this.address, this.address, []);
     }
 
     const refreshReserveIx = await reserve.makeRefreshIx();
@@ -282,11 +273,15 @@ export class HoneyUser implements User {
     return ixs;
   }
 
-  async withdrawNFT(tokenAccount: PublicKey, tokenMint: PublicKey, updateAuthority: PublicKey, pnft?: boolean): Promise<TxResponse> {
-    const tx = 
-      pnft ?
-        await this.makePNFTWithdrawTx(tokenAccount, tokenMint, updateAuthority) :
-        await this.makeNFTWithdrawTx(tokenAccount, tokenMint, updateAuthority);
+  async withdrawNFT(
+    tokenAccount: PublicKey,
+    tokenMint: PublicKey,
+    updateAuthority: PublicKey,
+    pnft?: boolean,
+  ): Promise<TxResponse> {
+    const tx = pnft
+      ? await this.makePNFTWithdrawTx(tokenAccount, tokenMint, updateAuthority)
+      : await this.makeNFTWithdrawTx(tokenAccount, tokenMint, updateAuthority);
     try {
       const txid = await this.client.program.provider.sendAndConfirm(tx, [], { skipPreflight: true });
       return [TxnResponse.Success, [txid]];
@@ -326,11 +321,7 @@ export class HoneyUser implements User {
       this.client.program.programId,
     );
 
-    const collateralAddress = await getAssociatedTokenAddress(
-      tokenMint,
-      this.market.marketAuthority,
-      true,
-    );
+    const collateralAddress = await getAssociatedTokenAddress(tokenMint, this.market.marketAuthority, true);
 
     const [nftMetadata, metadataBump] = await PublicKey.findProgramAddress(
       [Buffer.from('metadata'), METADATA_PROGRAM_ID.toBuffer(), tokenMint.toBuffer()],
@@ -400,11 +391,7 @@ export class HoneyUser implements User {
     );
     await this.reserves[0].refreshOldReserves();
 
-    const collateralAddress = await getAssociatedTokenAddress(
-      tokenMint,
-      this.market.marketAuthority,
-      true,
-    );
+    const collateralAddress = await getAssociatedTokenAddress(tokenMint, this.market.marketAuthority, true);
 
     tx.add(
       await this.client.program.methods
@@ -433,8 +420,8 @@ export class HoneyUser implements User {
     nftCollectionCreator: PublicKey,
   ): Promise<Transaction> {
     const tx = new Transaction();
-    const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({ 
-      units: 500000 
+    const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
+      units: 500000,
     });
     tx.add(modifyComputeUnits);
 
@@ -443,11 +430,7 @@ export class HoneyUser implements User {
       this.client.program.programId,
     );
 
-    const collateralAddress = await getAssociatedTokenAddress(
-      tokenMint,
-      this.market.marketAuthority,
-      true,
-    );
+    const collateralAddress = await getAssociatedTokenAddress(tokenMint, this.market.marketAuthority, true);
 
     const [nftMetadata, metadataBump] = await PublicKey.findProgramAddress(
       [Buffer.from('metadata'), METADATA_PROGRAM_ID.toBuffer(), tokenMint.toBuffer()],
@@ -518,11 +501,15 @@ export class HoneyUser implements User {
     return tx;
   }
 
-  async depositNFT(tokenAccount: PublicKey, tokenMint: PublicKey, updateAuthority: PublicKey, pnft?: boolean): Promise<TxResponse> {
-    const tx = 
-      pnft ? 
-        await this.makePNFTDepositTx(tokenAccount, tokenMint, updateAuthority) :
-        await this.makeNFTDepositTx(tokenAccount, tokenMint, updateAuthority);
+  async depositNFT(
+    tokenAccount: PublicKey,
+    tokenMint: PublicKey,
+    updateAuthority: PublicKey,
+    pnft?: boolean,
+  ): Promise<TxResponse> {
+    const tx = pnft
+      ? await this.makePNFTDepositTx(tokenAccount, tokenMint, updateAuthority)
+      : await this.makeNFTDepositTx(tokenAccount, tokenMint, updateAuthority);
     try {
       const txid = await this.client.program.provider.sendAndConfirm(tx, [], { skipPreflight: true });
       return [TxnResponse.Success, [txid]];
@@ -560,11 +547,7 @@ export class HoneyUser implements User {
       tx.add(ix);
     }
 
-    const collateralAddress = await getAssociatedTokenAddress(
-      tokenMint,
-      this.market.marketAuthority,
-      true,
-    );
+    const collateralAddress = await getAssociatedTokenAddress(tokenMint, this.market.marketAuthority, true);
 
     const derivedMetadata = await this.findNftMetadata(tokenMint);
 
@@ -620,11 +603,7 @@ export class HoneyUser implements User {
       tx.add(ix);
     }
 
-    const collateralAddress = await getAssociatedTokenAddress(
-      tokenMint,
-      this.market.marketAuthority,
-      true,
-    );
+    const collateralAddress = await getAssociatedTokenAddress(tokenMint, this.market.marketAuthority, true);
 
     const derivedMetadata = await this.findNftMetadata(tokenMint);
 
@@ -653,8 +632,8 @@ export class HoneyUser implements User {
       });
     }
 
-    const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({ 
-      units: 500000 
+    const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
+      units: 500000,
     });
     tx.add(modifyComputeUnits);
 
@@ -731,11 +710,7 @@ export class HoneyUser implements User {
         space: TokenAccountLayout.span,
         lamports: rent,
       });
-      initWsolIx = createInitializeAccount2Instruction(
-        withdrawAccount,
-        reserve.data.tokenMint,
-        this.address,
-      );
+      initWsolIx = createInitializeAccount2Instruction(withdrawAccount, reserve.data.tokenMint, this.address);
 
       tx.add(createWsolIx);
       tx.add(initWsolIx);
@@ -771,12 +746,7 @@ export class HoneyUser implements User {
     );
 
     if (reserve.data.tokenMint.equals(NATIVE_MINT) && wsolKeypair) {
-      closeWsolIx = createCloseAccountInstruction(
-        withdrawAccount,
-        this.address,
-        this.address,
-        [],
-      );
+      closeWsolIx = createCloseAccountInstruction(withdrawAccount, this.address, this.address, []);
       tx.add(closeWsolIx);
     }
     try {
@@ -790,7 +760,7 @@ export class HoneyUser implements User {
 
   async deposit(reserve: HoneyReserve, tokenAccount: PublicKey, amount: Amount): Promise<TxResponse> {
     await reserve.refreshOldReserves();
-    
+
     const [transaction, signers] = await this.makeDepositTx(reserve, tokenAccount, amount);
     try {
       const txid = await this.client.program.provider.sendAndConfirm(transaction, signers, { skipPreflight: true });
@@ -837,18 +807,9 @@ export class HoneyUser implements User {
         lamports: Number(amount.value.addn(rent).toString()),
       });
 
-      initTokenAccountIx = createInitializeAccount2Instruction(
-        depositSourcePubkey,
-        NATIVE_MINT,
-        this.address,
-      );
+      initTokenAccountIx = createInitializeAccount2Instruction(depositSourcePubkey, NATIVE_MINT, this.address);
 
-      closeTokenAccountIx = createCloseAccountInstruction(
-        depositSourcePubkey,
-        this.address,
-        this.address,
-        [],
-      );
+      closeTokenAccountIx = createCloseAccountInstruction(depositSourcePubkey, this.address, this.address, []);
 
       tx.add(createTokenAccountIx);
       tx.add(initTokenAccountIx);
@@ -987,12 +948,7 @@ export class HoneyUser implements User {
       .instruction();
 
     if (reserve.data.tokenMint.equals(NATIVE_MINT)) {
-      closeTokenAccountIx = createCloseAccountInstruction(
-        receiverAccount,
-        this.address,
-        this.address,
-        [],
-      );
+      closeTokenAccountIx = createCloseAccountInstruction(receiverAccount, this.address, this.address, []);
     }
     const ixs = [
       {
@@ -1072,17 +1028,11 @@ export class HoneyUser implements User {
 
   private async refreshAccount(appendTo: TokenAmount[], account: DerivedAccount) {
     try {
-      const info = await this.conn.getAccountInfo(account.address);
-
-      if (info == null) {
-        return;
-      }
-
-      const tokenAccount: RawAccount = TokenAccountLayout.decode(info.data);
+      const info = await getAccount(this.conn, account.address);
 
       appendTo.push({
-        mint: new PublicKey(tokenAccount.mint),
-        amount: new anchor.BN(tokenAccount.amount.toString(), undefined, 'le'),
+        mint: info.mint,
+        amount: new anchor.BN(info.amount.toString()),
       });
     } catch (e) {
       console.log(`error getting user account: ${e}`);
