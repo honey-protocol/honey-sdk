@@ -13,6 +13,7 @@ import {
 } from '@solana/spl-token';
 import { HoneyReserve } from '.';
 import { TxResponse } from '../actions';
+import { updateMarket } from '../helpers/updateMarket';
 
 export interface PlaceBidParams {
   bid_limit: number;
@@ -164,6 +165,7 @@ export class LiquidatorClient {
         .signers([depositSource])
         .rpc();
       console.log(result);
+      await updateMarket(params.market.toString());
       return [TxnResponse.Success, [result]];
     } catch (err) {
       console.error(`Error placing bid: ${err}`);
@@ -228,6 +230,7 @@ export class LiquidatorClient {
         .signers([depositSource])
         .rpc();
       console.log('increase bid tx result', result);
+      await updateMarket(params.market.toString());
       return [TxnResponse.Success, [result]];
     } catch (err) {
       return [TxnResponse.Failed, []];
@@ -287,6 +290,7 @@ export class LiquidatorClient {
         .rpc();
 
       console.log('revoke bid result', ix_result);
+      await updateMarket(params.market.toString());
       return [TxnResponse.Success, [ix_result]];
     } catch (err) {
       return [TxnResponse.Failed, []];
@@ -410,6 +414,7 @@ export class LiquidatorClient {
 
       // const result = await this.program.provider.sendAndConfirm(tx, [], { skipPreflight: true });
       console.log(result);
+      await updateMarket(params.market.toString());
       return [TxnResponse.Success, [result]];
     } catch (err) {
       console.log('error', err);
