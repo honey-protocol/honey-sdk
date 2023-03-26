@@ -237,7 +237,7 @@ export class TokenAmount {
     return new TokenAmount(amount, this.decimals);
   }
 }
-
+// TODO: revise logic / separate into constants - no magic numbers
 export const getHealthStatus = (debt: number, collaterl: number): string => {
   const ltv = (debt * 100) / collaterl;
 
