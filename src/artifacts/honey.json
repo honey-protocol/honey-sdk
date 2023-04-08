@@ -3180,6 +3180,17 @@
       }
     },
     {
+      "name": "Side",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Loan"
+          }
+        ]
+      }
+    },
+    {
       "name": "JobCompletion",
       "type": {
         "kind": "enum",
@@ -3659,8 +3670,5 @@
       "name": "BadMetadata",
       "msg": "bad metadata passed"
     }
-  ],
-  "metadata": {
-    "address": "DQYcRGf9cdhFFUoNbnebzZTz8D6tzFNS2GZgM5MJyiK"
-  }
+  ]
 }

@@ -43,7 +43,7 @@ export interface HoneyMarketData {
  * @property {number} flags The flags for the market
  * @property {number[]} marketOracleState The state of the market oracle
  * @property {number[]} reserved Reserved space for future use
- * @property {number[]} reserves The reserve accounts
+ * @property {CachedReserveInfo[]} reserves The reserve accounts
  */
 export interface MarketAccount {
   version: 0;
@@ -59,7 +59,7 @@ export interface MarketAccount {
   flags: number;
   marketOracleState: number[];
   reserved: number[];
-  reserves: number[];
+  reserves: CachedReserveInfo[];
 }
 
 /**
@@ -126,7 +126,7 @@ export interface TReserve {
   config: ReserveConfigStruct;
   reserved0: number[];
   reserved1: number[];
-  state: number[];
+  state: ReserveStateStruct;
   reserveState: ReserveStateStruct;
 }
 
@@ -213,23 +213,72 @@ export interface ReserveConfigStruct {
   /** The fee rate applied as interest owed on new loans */
   loanOriginationFee: number;
   /** Unused space */
-  _reserved0: number;
+  reserved0: number;
   /** Unused space */
-  _reserved1: number[];
-  _reserved2: number[];
+  reserved1: number[];
+  reserved2: number[];
 }
+
+// [
+//           {
+//             name: 'version';
+//             type: 'u32';
+//           },
+//           {
+//             name: 'reserved0';
+//             type: 'u32';
+//           },
+//           {
+//             name: 'market';
+//             docs: ['The market this obligation is a part of'];
+//             type: 'publicKey';
+//           },
+//           {
+//             name: 'owner';
+//             docs: ['The address that owns the debt/assets as a part of this obligation'];
+//             type: 'publicKey';
+//           },
+//           {
+//             name: 'reserved1';
+//             docs: ['Unused space before start of collateral info'];
+//             type: {
+//               array: ['u8', 184];
+//             };
+//           },
+//           {
+//             name: 'collateralNftMint';
+//             docs: ['stores collateral nft key'];
+//             type: {
+//               array: ['publicKey', 11];
+//             };
+//           },
+//           {
+//             name: 'cached';
+//             docs: ['The storage for cached calculations'];
+//             type: {
+//               array: ['u8', 256];
+//             };
+//           },
+//           {
+//             name: 'loans';
+//             docs: ['The storage for the information on positions owed by this obligation'];
+//             type: {
+//               array: ['u8', 2048];
+//             };
+//           },
+//         ]
 
 // Obligation
 export interface ObligationAccount {
   version: number;
   /** Unused space */
-  _reserved0: number;
+  reserved0: number;
   /** The market this obligation is a part of */
   market: PublicKey;
   /** The address that owns the debt/assets as a part of this obligation */
   owner: PublicKey;
   /** Unused space */
-  _reserved1: number[];
+  reserved1: number[];
   /** nfts registered with the obligation */
   collateralNftMint: PublicKey[];
   /** Storage for cached calculations */

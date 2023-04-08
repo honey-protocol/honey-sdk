@@ -1,7 +1,7 @@
 import { Metadata } from '@metaplex-foundation/mpl-token-metadata';
 import { BN } from '@project-serum/anchor';
-import { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { ConfirmOptions, Connection, PublicKey } from '@solana/web3.js';
+import { getAssociatedTokenAddress } from '@solana/spl-token';
+import { Connection, PublicKey } from '@solana/web3.js';
 import { combineAllTransactions, InstructionAndSigner, TxnResponse } from '../helpers';
 import { Amount, HoneyReserve, HoneyUser } from '../wrappers';
 import { TxResponse } from './types';
@@ -9,10 +9,7 @@ import * as anchor from '@project-serum/anchor';
 
 // Lend Actions
 export const deriveAssociatedTokenAccount = async (tokenMint: PublicKey, userPubkey: PublicKey) => {
-  const associatedTokenAccount: PublicKey = await getAssociatedTokenAddress(
-    tokenMint,
-    userPubkey,
-  );
+  const associatedTokenAccount: PublicKey = await getAssociatedTokenAddress(tokenMint, userPubkey);
   if (!associatedTokenAccount) console.log('Associated Token Account could not be located');
   return associatedTokenAccount;
 };
@@ -36,7 +33,7 @@ export const depositNFT = async (
   connection: Connection,
   honeyUser: HoneyUser,
   metadataPubKey: PublicKey,
-  pnft?: boolean
+  pnft?: boolean,
 ): Promise<TxResponse> => {
   const associatedMetadata = await getNFTAssociatedMetadata(connection, metadataPubKey);
   if (!associatedMetadata) {
@@ -57,7 +54,7 @@ export const depositNFT = async (
     associatedTokenAccount,
     tokenMint,
     new PublicKey(tokenMetadata.data.creators[0].address),
-    pnft
+    pnft,
   );
 };
 /**
@@ -74,7 +71,7 @@ export const withdrawNFT = async (
   connection: Connection,
   honeyUser: HoneyUser,
   metadataPubKey: PublicKey,
-  pnft?: boolean
+  pnft?: boolean,
 ): Promise<TxResponse> => {
   const associatedMetadata = await getNFTAssociatedMetadata(connection, metadataPubKey);
   if (!associatedMetadata) {
@@ -96,7 +93,7 @@ export const withdrawNFT = async (
     associatedTokenAccount,
     tokenMint,
     new PublicKey(tokenMetadata.data.creators[0].address),
-    pnft
+    pnft,
   );
 };
 /**

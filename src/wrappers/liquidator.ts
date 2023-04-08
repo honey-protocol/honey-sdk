@@ -1,8 +1,15 @@
 import * as anchor from '@project-serum/anchor';
-import { ComputeBudgetProgram, Keypair, PublicKey, SystemProgram, SYSVAR_INSTRUCTIONS_PUBKEY, Transaction } from '@solana/web3.js';
+import {
+  ComputeBudgetProgram,
+  Keypair,
+  PublicKey,
+  SystemProgram,
+  SYSVAR_INSTRUCTIONS_PUBKEY,
+  Transaction,
+} from '@solana/web3.js';
 import { HasPublicKey, ToBytes, TxnResponse } from '../helpers';
-import devnetIdl from '../idl/devnet/honey.json';
-import mainnetBetaIdl from '../idl/mainnet-beta/honey.json';
+import devnetIdl from '../artifacts/devnet/honey.json';
+import mainnetBetaIdl from '../artifacts/mainnet-beta/honey.json';
 import { DerivedAccount } from './derived-account';
 import {
   NATIVE_MINT,
@@ -166,9 +173,7 @@ export class LiquidatorClient {
           // init token account
           createInitializeAccount2Instruction(depositSource.publicKey, NATIVE_MINT, bidder),
         ])
-        .postInstructions([
-          createCloseAccountInstruction(depositSource.publicKey, bidder, bidder, []),
-        ])
+        .postInstructions([createCloseAccountInstruction(depositSource.publicKey, bidder, bidder, [])])
         .signers([depositSource])
         .rpc();
       console.log(result);
@@ -230,9 +235,7 @@ export class LiquidatorClient {
           // init token account
           createInitializeAccount2Instruction(depositSource.publicKey, NATIVE_MINT, bidder),
         ])
-        .postInstructions([
-          createCloseAccountInstruction(depositSource.publicKey, bidder, bidder, []),
-        ])
+        .postInstructions([createCloseAccountInstruction(depositSource.publicKey, bidder, bidder, [])])
         .signers([depositSource])
         .rpc();
       console.log('increase bid tx result', result);
@@ -288,9 +291,7 @@ export class LiquidatorClient {
           // init token account
           createInitializeAccount2Instruction(withdrawDestination.publicKey, NATIVE_MINT, bidder),
         ])
-        .postInstructions([
-          createCloseAccountInstruction(withdrawDestination.publicKey, bidder, bidder, []),
-        ])
+        .postInstructions([createCloseAccountInstruction(withdrawDestination.publicKey, bidder, bidder, [])])
         .signers([withdrawDestination])
         .rpc();
 
@@ -343,11 +344,7 @@ export class LiquidatorClient {
 
     // find the registered nft to liqudiate
     const vaultedNFTMint = obligation.collateralNftMint[0];
-    const vaultedNFT: PublicKey = await getAssociatedTokenAddress(
-      vaultedNFTMint,
-      market_authority.address,
-      true,
-    );
+    const vaultedNFT: PublicKey = await getAssociatedTokenAddress(vaultedNFTMint, market_authority.address, true);
 
     const receiverAccount: PublicKey = await getAssociatedTokenAddress(
       params.nftMint,
@@ -422,7 +419,7 @@ export class LiquidatorClient {
    * @param params
    * @returns
    */
-   async executePnftBid(reserves: HoneyReserve[], params: ExecuteBidParams) {
+  async executePnftBid(reserves: HoneyReserve[], params: ExecuteBidParams) {
     const bid = await this.findBidAccount(params.market, params.bidder);
     const bid_escrow = await this.findEscrowAccount(params.market, params.bidder);
     const bid_escrow_authority = await this.findBidEscrowAuthorityAccount(bid_escrow.address);
@@ -448,11 +445,7 @@ export class LiquidatorClient {
 
     // find the registered nft to liqudiate
     const vaultedNFTMint = obligation.collateralNftMint[0];
-    const vaultedNFT: PublicKey = await getAssociatedTokenAddress(
-      vaultedNFTMint,
-      market_authority.address,
-      true,
-    );
+    const vaultedNFT: PublicKey = await getAssociatedTokenAddress(vaultedNFTMint, market_authority.address, true);
 
     const receiverAccount: PublicKey = await getAssociatedTokenAddress(
       params.nftMint,
@@ -512,13 +505,13 @@ export class LiquidatorClient {
 
     try {
       const tx = new Transaction();
-      const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({ 
-        units: 500000 
+      const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
+        units: 500000,
       });
       tx.add(modifyComputeUnits);
       tx.add(refreshIx);
       tx.add(
-         await this.program.methods
+        await this.program.methods
           .executeLiquidatePnftBid(bumps, authDataSerialized, !!ruleSet)
           .accounts({
             market: params.market,
@@ -556,7 +549,7 @@ export class LiquidatorClient {
             systemProgram: anchor.web3.SystemProgram.programId,
           })
           .remainingAccounts(remainingAccounts)
-          .instruction()
+          .instruction(),
       );
 
       const result = await this.program.provider.sendAndConfirm(tx, [], { skipPreflight: true });

@@ -24,7 +24,6 @@ import {
   getAssociatedTokenAddress,
   getMinimumBalanceForRentExemptAccount,
   createAssociatedTokenAccountInstruction,
-  RawAccount,
   getAccount,
 } from '@solana/spl-token';
 import { PROGRAM_ID as TMETA_PROG_ID } from '@metaplex-foundation/mpl-token-metadata';
@@ -33,12 +32,18 @@ import { HoneyReserve } from './reserve';
 import {
   prepPnftAccounts,
   InstructionAndSigner,
-  parseObligationAccount,
   sendAllTransactions,
+  parseObligationAccount,
 } from '../helpers/programUtil';
 import { TxResponse } from '../actions/types';
 import { TokenAmount } from './token-amount';
-import { ObligationAccount, TxnResponse, CachedReserveInfo } from '../helpers';
+import {
+  ObligationAccount,
+  TxnResponse,
+  CachedReserveInfo,
+  PositionInfoList,
+  ObligationPositionStruct,
+} from '../helpers';
 
 export const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
 export const SOLVENT_PROGRAM = new PublicKey('GwRvoU6vTXQAbS75KaMbm7o2iTYVtdEnF4mFUbZr9Cmb');
@@ -173,11 +178,27 @@ export class HoneyUser implements User {
   }
 
   async getObligationData(): Promise<ObligationAccount | Error> {
-    const data = await this.conn.getAccountInfo(this.obligation.address);
-    if (!data) return new Error('Could not get obligation data');
-    const parsed = parseObligationAccount(data.data, this.client.program.coder);
+    const obligation = await this.client.program.account.obligation.fetchNullable(this.obligation.address);
+    if (!obligation) return new Error('Could not get obligation data');
+
+    obligation.loans = PositionInfoList.decode(Buffer.from(obligation.loans as any as number[])).map(
+      this.parsePosition,
+    );
+
+    const parsed = parseObligationAccount(obligation, this.client.program.coder);
     return parsed;
   }
+
+  parsePosition = (position: any) => {
+    const pos: ObligationPositionStruct = {
+      account: new PublicKey(position.account),
+      amount: new anchor.BN(position.amount),
+      side: position.side,
+      reserveIndex: position.reserveIndex,
+      _reserved: [],
+    };
+    return pos;
+  };
 
   async repay(reserve: HoneyReserve, tokenAccount: PublicKey, amount: Amount): Promise<TxResponse> {
     const ixs = await this.makeRepayTx(reserve, tokenAccount, amount);

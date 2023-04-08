@@ -1,9 +1,10 @@
-import { PublicKey, Keypair, Connection } from '@solana/web3.js';
+import { PublicKey, Keypair } from '@solana/web3.js';
 import * as anchor from '@project-serum/anchor';
 import { CreateMarketParams, HoneyMarket } from './market';
 import { DerivedAccount } from './derived-account';
-import devnetIdl from '../idl/devnet/honey.json';
-import mainnetBetaIdl from '../idl/mainnet-beta/honey.json';
+import { Honey } from '../artifacts/honey';
+import HoneyIdl from '../artifacts/honey.json';
+import { AnchorProvider, Program } from '@project-serum/anchor';
 
 interface ToBytes {
   toBytes(): Uint8Array;
@@ -16,17 +17,16 @@ interface HasPublicKey {
 type DerivedAccountSeed = HasPublicKey | ToBytes | Uint8Array | string;
 
 export class HoneyClient {
-  constructor(public program: anchor.Program, public devnet?: boolean) {}
+  constructor(public program: Program<Honey>, public devnet?: boolean) {}
 
   /**
    * Create a new client for interacting with the Honey lending program.
    * @param provider The provider with wallet/network access that can be used to send transactions.
    * @returns The client
    */
-  static async connect(provider: anchor.AnchorProvider, honeyPubKey: string, devnet?: boolean): Promise<HoneyClient> {
-    const idl = devnet ? devnetIdl : mainnetBetaIdl;
+  static async connect(provider: AnchorProvider, honeyPubKey: string, devnet?: boolean): Promise<HoneyClient> {
     const HONEY_PROGRAM_ID = new PublicKey(honeyPubKey);
-    const program = new anchor.Program(idl as any, HONEY_PROGRAM_ID, provider);
+    const program = new Program(HoneyIdl as anchor.Idl, HONEY_PROGRAM_ID, provider) as Program<Honey>;
 
     return new HoneyClient(program, devnet);
   }

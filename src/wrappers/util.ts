@@ -2,7 +2,7 @@ import * as BL from '@solana/buffer-layout';
 import { BN } from '@project-serum/anchor';
 import { PublicKey } from '@solana/web3.js';
 
-export class NumberField extends BL.Layout {
+export class NumberField extends BL.Layout<BN> {
   constructor(property?: string) {
     super(24, property);
   }
@@ -22,7 +22,7 @@ export class NumberField extends BL.Layout {
   }
 }
 
-export class PubkeyField extends BL.Layout {
+export class PubkeyField extends BL.Layout<PublicKey> {
   constructor(property?: string) {
     super(32, property);
   }
@@ -42,7 +42,7 @@ export class PubkeyField extends BL.Layout {
   }
 }
 
-export class U64Field extends BL.Layout {
+export class U64Field extends BL.Layout<BN> {
   constructor(property?: string) {
     super(8, property);
   }

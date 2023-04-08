@@ -3,8 +3,8 @@ import React, { FC, ReactNode, useContext, useEffect, useState } from 'react';
 import * as anchor from '@project-serum/anchor';
 import { Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
 import { ConnectedWallet } from '../helpers/walletType';
-import devnetIdl from '../idl/devnet/honey.json';
-import mainnetBetaIdl from '../idl/mainnet-beta/honey.json';
+import devnetIdl from '../artifacts/devnet/honey.json';
+import mainnetBetaIdl from '../artifacts/mainnet-beta/honey.json';
 import NodeWallet from '@project-serum/anchor/dist/cjs/nodewallet';
 
 export interface AnchorContext {

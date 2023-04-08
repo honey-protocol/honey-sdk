@@ -1,9 +1,6 @@
 import { BN } from '@project-serum/anchor';
 import * as anchor from '@project-serum/anchor';
-import {
-  MintLayout,
-  AccountLayout as TokenAccountLayout,
-} from '@solana/spl-token';
+import { MintLayout, AccountLayout as TokenAccountLayout } from '@solana/spl-token';
 import {
   AccountInfo,
   Commitment,
@@ -553,25 +550,6 @@ export const parseTokenAccount = (account: AccountInfo<Buffer>, accountPubkey: P
     },
   };
   return decoded;
-};
-
-export const parseObligationAccount = (account: Buffer, coder: anchor.Coder) => {
-  let obligation = coder.accounts.decode<ObligationAccount>('Obligation', account);
-
-  const parsePosition = (position: any) => {
-    const pos: ObligationPositionStruct = {
-      account: new PublicKey(position.account),
-      amount: new BN(position.amount),
-      side: position.side,
-      reserveIndex: position.reserveIndex,
-      _reserved: [],
-    };
-    return pos;
-  };
-
-  obligation.loans = PositionInfoList.decode(Buffer.from(obligation.loans as any as number[])).map(parsePosition);
-
-  return obligation;
 };
 
 export const parseU192 = (data: Buffer | number[]) => {
