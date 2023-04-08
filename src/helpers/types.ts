@@ -214,7 +214,6 @@ export interface ReserveConfigStruct {
   loanOriginationFee: number;
   /** Unused space */
   reserved0: number;
-  /** Unused space */
   reserved1: number[];
   reserved2: number[];
 }

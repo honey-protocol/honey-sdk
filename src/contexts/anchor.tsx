@@ -3,8 +3,8 @@ import React, { FC, ReactNode, useContext, useEffect, useState } from 'react';
 import * as anchor from '@project-serum/anchor';
 import { Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
 import { ConnectedWallet } from '../helpers/walletType';
-import devnetIdl from '../artifacts/devnet/honey.json';
-import mainnetBetaIdl from '../artifacts/mainnet-beta/honey.json';
+import { Honey } from '../artifacts/honey';
+import HoneyIdl from '../artifacts/honey.json';
 import NodeWallet from '@project-serum/anchor/dist/cjs/nodewallet';
 
 export interface AnchorContext {
@@ -78,8 +78,7 @@ export const AnchorProvider: FC<AnchorProviderProps> = ({ children, wallet, conn
   useEffect(() => {
     // setup coder for anchor operations
     const setup = async () => {
-      const idl: any = network === 'devnet' ? devnetIdl : mainnetBetaIdl;
-      setAnchorCoder(new anchor.BorshCoder(idl));
+      setAnchorCoder(new anchor.BorshCoder(HoneyIdl as any));
       // init program
       const HONEY_PROGRAM_ID = new PublicKey(honeyProgram);
 
@@ -88,7 +87,7 @@ export const AnchorProvider: FC<AnchorProviderProps> = ({ children, wallet, conn
         wallet ?? new NodeWallet(new Keypair()),
         anchor.AnchorProvider.defaultOptions(),
       );
-      const anchorProgram: Program = new anchor.Program(idl as any, HONEY_PROGRAM_ID, provider);
+      const anchorProgram = new Program(HoneyIdl as anchor.Idl, HONEY_PROGRAM_ID, provider) as Program<Honey>;
       setProgram(anchorProgram);
       setIsConfigured(true);
     };

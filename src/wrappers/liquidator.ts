@@ -8,8 +8,6 @@ import {
   Transaction,
 } from '@solana/web3.js';
 import { HasPublicKey, ToBytes, TxnResponse } from '../helpers';
-import devnetIdl from '../artifacts/devnet/honey.json';
-import mainnetBetaIdl from '../artifacts/mainnet-beta/honey.json';
 import { DerivedAccount } from './derived-account';
 import {
   NATIVE_MINT,
@@ -25,9 +23,10 @@ import { HoneyReserve } from '.';
 import { TxResponse } from '../actions';
 import { prepPnftAccounts } from '../helpers/programUtil';
 import { METADATA_PROGRAM_ID } from './user';
-import { AuthorizationData, Metadata, PROGRAM_ID as TMETA_PROG_ID } from '@metaplex-foundation/mpl-token-metadata';
-import { Metaplex } from '@metaplex-foundation/js';
+import { PROGRAM_ID as TMETA_PROG_ID } from '@metaplex-foundation/mpl-token-metadata';
 import { PROGRAM_ID as AUTH_PROG_ID } from '@metaplex-foundation/mpl-token-auth-rules';
+import { Honey } from '../artifacts/honey';
+import HoneyIdl from '../artifacts/honey.json';
 
 export interface PlaceBidParams {
   bid_limit: number;
@@ -80,11 +79,8 @@ export class LiquidatorClient {
     honeyPubKey: string,
     devnet?: boolean,
   ): Promise<LiquidatorClient> {
-    console.log('provider in liquidator', typeof provider);
-    const idl = devnet ? devnetIdl : mainnetBetaIdl;
     const HONEY_PROGRAM_ID = new PublicKey(honeyPubKey);
-    const program = new anchor.Program(idl as any, HONEY_PROGRAM_ID, provider);
-
+    const program = new anchor.Program(HoneyIdl as anchor.Idl, HONEY_PROGRAM_ID, provider) as anchor.Program<Honey>;
     return new LiquidatorClient(program);
   }
 

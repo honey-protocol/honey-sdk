@@ -35,7 +35,7 @@ export const useBorrowPositions = (
     setStatus({ loading: true });
 
     const collateralNFTPositions: CollateralNFTPosition[] = [];
-    const obligation = (await honeyUser.getObligationData()) as ObligationAccount;
+    const obligation = await honeyUser.getObligationData();
     if (!obligation.market) {
       setStatus({ loading: false, error: new Error('Obligation does not have a valid market') });
       return;
@@ -47,7 +47,7 @@ export const useBorrowPositions = (
     }
     const promises = collateralNftMint.map(async (key: PublicKey, index: number) => {
       if (!key.equals(PublicKey.default)) {
-        const [nftMetadata, metadataBump] = await PublicKey.findProgramAddress(
+        const [nftMetadata, _] = await PublicKey.findProgramAddress(
           [Buffer.from('metadata'), METADATA_PROGRAM_ID.toBuffer(), key.toBuffer()],
           METADATA_PROGRAM_ID,
         );
