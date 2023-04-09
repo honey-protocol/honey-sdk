@@ -1,6 +1,6 @@
 {
   "name": "@honey-finance/sdk",
-  "version": "1.1.134",
+  "version": "1.1.136",
   "description": "This repository holds the wrappers, contexts and other utilities to interact with the Honey program library.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -25,7 +25,7 @@
     "@rollup/plugin-commonjs": "^21.1.0",
     "@solana/buffer-layout": "^4.0.0",
     "@solana/spl-token": "^0.3.7",
-    "@solana/web3.js": "^1.73.3",
+    "@solana/web3.js": "1.36.0",
     "@switchboard-xyz/switchboard-v2": "^0.0.127",
     "@types/chai": "^4.3.0",
     "@types/chai-as-promised": "^7.1.5",
