@@ -25,6 +25,7 @@ import {
   getMinimumBalanceForRentExemptAccount,
   createAssociatedTokenAccountInstruction,
   getAccount,
+  Account,
 } from '@solana/spl-token';
 import { PROGRAM_ID as TMETA_PROG_ID } from '@metaplex-foundation/mpl-token-metadata';
 import { PROGRAM_ID as AUTH_PROG_ID } from '@metaplex-foundation/mpl-token-auth-rules';
@@ -1041,15 +1042,14 @@ export class HoneyUser implements User {
 
   private async refreshAccount(appendTo: TokenAmount[], account: DerivedAccount) {
     try {
-      const info = await getAccount(this.conn, account.address);
+      const info: Account = await getAccount(this.conn, account.address);
 
       appendTo.push({
         mint: info.mint,
         amount: new anchor.BN(info.amount.toString()),
       });
     } catch (e) {
-      console.log(`error getting user account: ${e}`);
-      // ignore error, which should mean it's an invalid/uninitialized account
+      console.log(`Account not found: ${account.address.toBase58()}`);
     }
   }
 

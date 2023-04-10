@@ -82,10 +82,13 @@ export const HoneyProvider: FC<HoneyProps> = ({ children, wallet, connection, ho
     setMarket(fetchMarket);
 
     // reserve info
-    setMarketReserveInfo(fetchMarket.reserves);
+    const reserveInfoData = new Uint8Array(market.reserves as any as number[]);
+    const reserveInfoList = MarketReserveInfoList.decode(reserveInfoData) as CachedReserveInfo[];
+
+    setMarketReserveInfo(reserveInfoList);
 
     const reservesList = [] as TReserve[];
-    for (const reserve of fetchMarket.reserves) {
+    for (const reserve of reserveInfoList) {
       if (reserve.reserve.equals(PublicKey.default)) {
         continue;
       }
