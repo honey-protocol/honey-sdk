@@ -283,7 +283,7 @@ export interface ObligationAccount {
   /** Storage for cached calculations */
   cached: number[];
   /** The storage for the information on positions owed by this obligation */
-  loans: ObligationPositionStruct[];
+  loans: ObligationPositionStruct[] | number[];
 }
 export interface ObligationPositionStruct {
   /** The token account holding the bank notes */

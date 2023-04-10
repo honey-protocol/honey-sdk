@@ -326,10 +326,11 @@ export class LiquidatorClient {
       bidEscrowAuthority: bid_escrow_authority.bumpSeed,
     };
 
-    const market = await this.program.account.market.fetch(params.market);
     const reserve = await this.program.account.reserve.fetch(params.reserve);
     const obligation = await this.program.account.obligation.fetch(params.obligation);
     const bidData = await this.program.account.bid.fetch(bid.address);
+
+    console.log('bidData', bidData);
 
     // pay for these should be ther person getting liquidated
     // @ts-ignore
@@ -427,7 +428,6 @@ export class LiquidatorClient {
       bidEscrowAuthority: bid_escrow_authority.bumpSeed,
     };
 
-    const market = await this.program.account.market.fetch(params.market);
     const reserve = await this.program.account.reserve.fetch(params.reserve);
     const obligation = await this.program.account.obligation.fetch(params.obligation);
     const bidData = await this.program.account.bid.fetch(bid.address);

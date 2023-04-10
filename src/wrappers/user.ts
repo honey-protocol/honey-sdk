@@ -30,7 +30,12 @@ import {
 import { PROGRAM_ID as TMETA_PROG_ID } from '@metaplex-foundation/mpl-token-metadata';
 import { PROGRAM_ID as AUTH_PROG_ID } from '@metaplex-foundation/mpl-token-auth-rules';
 import { HoneyReserve } from './reserve';
-import { prepPnftAccounts, InstructionAndSigner, sendAllTransactions } from '../helpers/programUtil';
+import {
+  prepPnftAccounts,
+  InstructionAndSigner,
+  sendAllTransactions,
+  parseObligationAccount,
+} from '../helpers/programUtil';
 import { TxResponse } from '../actions/types';
 import { TokenAmount } from './token-amount';
 import {
@@ -173,13 +178,20 @@ export class HoneyUser implements User {
     return { allowance, debt, liquidationThreshold, ltv, ratio, exponent };
   }
 
-  async getObligationData(): Promise<ObligationAccount> {
-    const obligation = await this.client.program.account.obligation.fetchNullable(this.obligation.address);
+  // async getObligationData(): Promise<ObligationAccount> {
+  //   const obligation = (await this.client.program.account.obligation.fetchNullable(
+  //     this.obligation.address,
+  //   )) as ObligationAccount;
 
-    // obligation.loans = PositionInfoList.decode(Buffer.from(obligation.loans as any as number[])).map(
-    //   this.parsePosition,
-    // );
-    return obligation as unknown as ObligationAccount;
+  //   const loans = PositionInfoList.decode(Buffer.from(obligation.loans as any as number[])).map(this.parsePosition);
+  //   obligation.loans = loans;
+  //   return obligation;
+  // }
+  async getObligationData(): Promise<ObligationAccount | Error> {
+    const data = await this.conn.getAccountInfo(this.obligation.address);
+    if (!data) return new Error('Could not get obligation data');
+    const parsed = parseObligationAccount(data.data, this.client.program.coder);
+    return parsed;
   }
 
   parsePosition = (position: any) => {

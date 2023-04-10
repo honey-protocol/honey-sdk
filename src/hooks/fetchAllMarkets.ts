@@ -3,15 +3,15 @@ import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import {
   HoneyClient,
   HoneyMarket,
-  CachedReserveInfo,
   HoneyReserve,
   HoneyUser,
+  MarketReserveInfoList,
   ObligationPositionStruct,
   PositionInfoList,
 } from '..';
 import * as anchor from '@project-serum/anchor';
 import { BN, Idl, Program } from '@project-serum/anchor';
-import { Bid, NftPosition } from '../helpers/types';
+import { Bid, CachedReserveInfo, NftPosition } from '../helpers/types';
 import { getHealthStatus, getOraclePrice, onChainNumberToBN, TokenAmount } from '../helpers/util';
 import NodeWallet from '@project-serum/anchor/dist/cjs/nodewallet';
 import { Honey } from '../artifacts/honey';
@@ -53,7 +53,7 @@ export const fetchAllMarkets = async (
   devnet?: boolean,
 ): Promise<MarketBundle[]> => {
   const marketBundles: MarketBundle[] = [];
-  const program: Program = buildProgram(honeyId, connection, wallet, devnet);
+  const program: Program<Honey> = buildProgram(honeyId, connection, wallet, devnet);
   await Promise.all(
     honeyMarketIds.map(async (honeyMarketId) => {
       const marketBundle = await buildMarketBundle(connection, wallet, honeyId, honeyMarketId);
@@ -162,8 +162,12 @@ const fetchPositionsAndBids = async (
   // reserve info
   const marketReserves = await program.account.market.fetch(honeyMarket.address);
 
+  const reserveInfoData = new Uint8Array(marketReserves.reserves as any as number[]);
+  const reserveInfoList = MarketReserveInfoList.decode(reserveInfoData) as CachedReserveInfo[];
+  marketReserves.reserves = reserveInfoList;
+
   let obligations = await honeyMarket.fetchObligations();
-  if (obligations && marketReserves.reserves) {
+  if (obligations && reserveInfoList) {
     await Promise.all(
       obligations.map(async (item) => {
         let nftMints: PublicKey[] = item.account.collateralNftMint;

@@ -82,7 +82,7 @@ export const HoneyProvider: FC<HoneyProps> = ({ children, wallet, connection, ho
     setMarket(fetchMarket);
 
     // reserve info
-    const reserveInfoData = new Uint8Array(market.reserves as any as number[]);
+    const reserveInfoData = new Uint8Array(fetchMarket.reserves as any as number[]);
     const reserveInfoList = MarketReserveInfoList.decode(reserveInfoData) as CachedReserveInfo[];
 
     setMarketReserveInfo(reserveInfoList);

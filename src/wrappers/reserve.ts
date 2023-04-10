@@ -13,6 +13,7 @@ import {
   TReserve,
   TotalReserveState,
   onChainNumberToBN,
+  ReserveStateLayout,
 } from '../helpers';
 
 export interface ReserveConfig {
@@ -122,6 +123,8 @@ export class HoneyReserve {
 
   static async decodeReserve(client: HoneyClient, address: PublicKey): Promise<TReserve> {
     const reserveData = (await client.program.account.reserve.fetch(address)) as unknown as TReserve;
+    const reserveState = ReserveStateLayout.decode(Buffer.from(reserveData.state as any)) as ReserveStateStruct;
+    reserveData.state = reserveState;
     return reserveData;
   }
 

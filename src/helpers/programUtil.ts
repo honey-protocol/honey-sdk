@@ -16,7 +16,6 @@ import { Metaplex } from '@metaplex-foundation/js';
 import { AuthorizationData, Metadata, PROGRAM_ID as TMETA_PROG_ID } from '@metaplex-foundation/mpl-token-metadata';
 import { PREFIX, PROGRAM_ID as AUTH_PROG_ID } from '@metaplex-foundation/mpl-token-auth-rules';
 import { Buffer } from 'buffer';
-import { PositionInfoList } from './layout';
 import { TokenAmount } from './util';
 import {
   CustomProgramError,
@@ -27,6 +26,7 @@ import {
   ToBytes,
   TxnResponse,
 } from './types';
+import { PositionInfoList } from './layout';
 
 export const SOL_DECIMALS = 9;
 export const NULL_PUBKEY = new PublicKey('11111111111111111111111111111111');
@@ -146,6 +146,25 @@ export const findProgramAddress = async (
   });
 
   return await anchor.web3.PublicKey.findProgramAddress(SEEDBYTES, programId);
+};
+
+export const parseObligationAccount = (account: Buffer, coder: anchor.Coder) => {
+  let obligation = coder.accounts.decode<ObligationAccount>('Obligation', account);
+
+  const parsePosition = (position: any) => {
+    const pos: ObligationPositionStruct = {
+      account: new PublicKey(position.account),
+      amount: new BN(position.amount),
+      side: position.side,
+      reserveIndex: position.reserveIndex,
+      _reserved: [],
+    };
+    return pos;
+  };
+
+  obligation.loans = PositionInfoList.decode(Buffer.from(obligation.loans as any as number[])).map(parsePosition);
+
+  return obligation;
 };
 
 /**
