@@ -1658,7 +1658,6 @@ export type Honey = {
           name: 'bid';
           isMut: true;
           isSigner: false;
-          docs: ["The account that holds the borrower's collateral"];
         },
         {
           name: 'bidder';
@@ -2809,6 +2808,11 @@ export type Honey = {
         },
         {
           name: 'owner';
+          type: 'publicKey';
+          index: false;
+        },
+        {
+          name: 'nftMint';
           type: 'publicKey';
           index: false;
         },
@@ -4866,7 +4870,6 @@ export const IDL: Honey = {
           name: 'bid',
           isMut: true,
           isSigner: false,
-          docs: ["The account that holds the borrower's collateral"],
         },
         {
           name: 'bidder',
@@ -6017,6 +6020,11 @@ export const IDL: Honey = {
         },
         {
           name: 'owner',
+          type: 'publicKey',
+          index: false,
+        },
+        {
+          name: 'nftMint',
           type: 'publicKey',
           index: false,
         },

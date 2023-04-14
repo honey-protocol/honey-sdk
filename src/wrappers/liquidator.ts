@@ -60,6 +60,8 @@ export interface ExecuteBidParams {
   bidder: PublicKey;
 }
 
+const ROOT_AUTHORITY = new PublicKey('4mhZ7qW2EpryeT9YkBGwfWRVE75pJsFdqCGB7WpKdic2');
+
 type DerivedAccountSeed = HasPublicKey | ToBytes | Uint8Array | string;
 
 export class LiquidatorClient {
@@ -329,9 +331,6 @@ export class LiquidatorClient {
     const reserve = await this.program.account.reserve.fetch(params.reserve);
     const obligation = await this.program.account.obligation.fetch(params.obligation);
     const bidData = await this.program.account.bid.fetch(bid.address);
-
-    console.log('bidData', bidData);
-
     // pay for these should be ther person getting liquidated
     // @ts-ignore
     const loanNoteAddress = await this.findLoanNoteAddress(params.reserve, params.obligation, obligation.owner);
@@ -355,22 +354,16 @@ export class LiquidatorClient {
       params.payer,
     );
 
-    console.log('liquidationFeeReceiver', liquidationFeeReceiver.toString());
-
     const leftoversReceiver = await getAssociatedTokenAddress(
       // @ts-ignore
       bidData.bidMint,
-      bidData.bidder,
+      ROOT_AUTHORITY,
     );
-    console.log('leftoversReceiver', leftoversReceiver.toString());
-    console.log('bid', bid.address.toString());
-    console.log('bidData.bidder', bidData.bidder.toString());
 
     const refreshIx = await reserves[0].makeRefreshIx();
-    // const tx = new Transaction().add(refreshIx);
-
     try {
       // @ts-ignore
+      // const tx = new Transaction();
       const result = await this.program.methods
         .executeLiquidateBid(bumps)
         .accounts({
@@ -381,14 +374,15 @@ export class LiquidatorClient {
           vault: vault.address,
           loanNoteMint: loanNoteMint.address,
           loanAccount: loanNoteAddress.address,
-          collateralAccount: vaultedNFT,
           bid: bid.address,
           bidder: new PublicKey(bidData.bidder),
+          rootAuthority: ROOT_AUTHORITY,
           bidMint: new PublicKey(bidData.bidMint),
           bidEscrow: new PublicKey(bidData.bidEscrow),
           bidEscrowAuthority: bid_escrow_authority.address,
           payerAccount: new PublicKey(bidData.bidEscrow),
           nftMint: params.nftMint,
+          collateralAccount: vaultedNFT,
           receiverAccount: receiverAccount,
           liquidationFeeReceiver,
           leftoversReceiver,
@@ -401,7 +395,6 @@ export class LiquidatorClient {
         })
         .preInstructions([refreshIx])
         .rpc();
-
       // const result = await this.program.provider.sendAndConfirm(tx, [], { skipPreflight: true });
       console.log(result);
       return [TxnResponse.Success, [result]];

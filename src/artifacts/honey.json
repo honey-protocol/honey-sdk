@@ -4,9 +4,7 @@
   "instructions": [
     {
       "name": "initMarket",
-      "docs": [
-        "Initialize a new empty market with a given owner."
-      ],
+      "docs": ["Initialize a new empty market with a given owner."],
       "accounts": [
         {
           "name": "market",
@@ -40,106 +38,79 @@
     },
     {
       "name": "initReserve",
-      "docs": [
-        "Initialize a new reserve in a market with some initial liquidity."
-      ],
+      "docs": ["Initialize a new reserve in a market with some initial liquidity."],
       "accounts": [
         {
           "name": "market",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The market the new reserve is being added to."
-          ]
+          "docs": ["The market the new reserve is being added to."]
         },
         {
           "name": "marketAuthority",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The market's authority account, which owns the vault"
-          ]
+          "docs": ["The market's authority account, which owns the vault"]
         },
         {
           "name": "reserve",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The new account to store data about the reserve"
-          ]
+          "docs": ["The new account to store data about the reserve"]
         },
         {
           "name": "vault",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The account to hold custody of the tokens being",
-            "controlled by this reserve."
-          ]
+          "docs": ["The account to hold custody of the tokens being", "controlled by this reserve."]
         },
         {
           "name": "depositNoteMint",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The mint for notes which will represent user deposits"
-          ]
+          "docs": ["The mint for notes which will represent user deposits"]
         },
         {
           "name": "feeNoteVault",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The account to hold the notes created from fees collected by the reserve"
-          ]
+          "docs": ["The account to hold the notes created from fees collected by the reserve"]
         },
         {
           "name": "protocolFeeNoteVault",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The account to hold the notes created from protocol fees collected by the reserve"
-          ]
+          "docs": ["The account to hold the notes created from protocol fees collected by the reserve"]
         },
         {
           "name": "tokenMint",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The mint for the token being stored in this reserve."
-          ]
+          "docs": ["The mint for the token being stored in this reserve."]
         },
         {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The program for interacting with the token."
-          ]
+          "docs": ["The program for interacting with the token."]
         },
         {
           "name": "switchboardPriceAggregator",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The account containing the price information for the token."
-          ]
+          "docs": ["The account containing the price information for the token."]
         },
         {
           "name": "loanNoteMint",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The mint for notes which will represent user loans"
-          ]
+          "docs": ["The mint for notes which will represent user loans"]
         },
         {
           "name": "owner",
           "isMut": true,
           "isSigner": true,
-          "docs": [
-            "The market owner, which must sign to make this change to the market."
-          ]
+          "docs": ["The market owner, which must sign to make this change to the market."]
         },
         {
           "name": "associatedTokenProgram",
@@ -174,9 +145,7 @@
     },
     {
       "name": "updateReserveConfig",
-      "docs": [
-        "Replace an existing reserve config"
-      ],
+      "docs": ["Replace an existing reserve config"],
       "accounts": [
         {
           "name": "market",
@@ -205,57 +174,43 @@
     },
     {
       "name": "initDepositAccount",
-      "docs": [
-        "Initialize an account that can be used to store deposit notes"
-      ],
+      "docs": ["Initialize an account that can be used to store deposit notes"],
       "accounts": [
         {
           "name": "market",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The relevant market this deposit is for"
-          ]
+          "docs": ["The relevant market this deposit is for"]
         },
         {
           "name": "marketAuthority",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The market's authority account"
-          ]
+          "docs": ["The market's authority account"]
         },
         {
           "name": "reserve",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The reserve being deposited into"
-          ]
+          "docs": ["The reserve being deposited into"]
         },
         {
           "name": "depositNoteMint",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The mint for the deposit notes"
-          ]
+          "docs": ["The mint for the deposit notes"]
         },
         {
           "name": "depositor",
           "isMut": true,
           "isSigner": true,
-          "docs": [
-            "The user/authority that will own the deposits"
-          ]
+          "docs": ["The user/authority that will own the deposits"]
         },
         {
           "name": "depositAccount",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The account that will store the deposit notes"
-          ]
+          "docs": ["The account that will store the deposit notes"]
         },
         {
           "name": "tokenProgram",
@@ -282,65 +237,49 @@
     },
     {
       "name": "initLoanAccount",
-      "docs": [
-        "Initialize an account that can be used to store deposit notes as collateral"
-      ],
+      "docs": ["Initialize an account that can be used to store deposit notes as collateral"],
       "accounts": [
         {
           "name": "market",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The relevant market this loan is for"
-          ]
+          "docs": ["The relevant market this loan is for"]
         },
         {
           "name": "marketAuthority",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The market's authority account"
-          ]
+          "docs": ["The market's authority account"]
         },
         {
           "name": "obligation",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The obligation the loan account is used for"
-          ]
+          "docs": ["The obligation the loan account is used for"]
         },
         {
           "name": "reserve",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The reserve that the loan comes from"
-          ]
+          "docs": ["The reserve that the loan comes from"]
         },
         {
           "name": "loanNoteMint",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The mint for the loan notes being used as loan"
-          ]
+          "docs": ["The mint for the loan notes being used as loan"]
         },
         {
           "name": "owner",
           "isMut": true,
           "isSigner": true,
-          "docs": [
-            "The user/authority that owns the loan"
-          ]
+          "docs": ["The user/authority that owns the loan"]
         },
         {
           "name": "loanAccount",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The account that will store the loan notes"
-          ]
+          "docs": ["The account that will store the loan notes"]
         },
         {
           "name": "tokenProgram",
@@ -367,42 +306,31 @@
     },
     {
       "name": "initObligation",
-      "docs": [
-        "Initialize an account that can be used to borrow from a reserve"
-      ],
+      "docs": ["Initialize an account that can be used to borrow from a reserve"],
       "accounts": [
         {
           "name": "market",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The relevant market"
-          ]
+          "docs": ["The relevant market"]
         },
         {
           "name": "marketAuthority",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The market's authority account"
-          ]
+          "docs": ["The market's authority account"]
         },
         {
           "name": "borrower",
           "isMut": true,
           "isSigner": true,
-          "docs": [
-            "The user/authority that is responsible for owning this obligation."
-          ]
+          "docs": ["The user/authority that is responsible for owning this obligation."]
         },
         {
           "name": "obligation",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The new account to track information about the borrower's loan,",
-            "such as the collateral put up."
-          ]
+          "docs": ["The new account to track information about the borrower's loan,", "such as the collateral put up."]
         },
         {
           "name": "tokenProgram",
@@ -424,9 +352,7 @@
     },
     {
       "name": "setMarketOwner",
-      "docs": [
-        "Change the owner on a market"
-      ],
+      "docs": ["Change the owner on a market"],
       "accounts": [
         {
           "name": "market",
@@ -448,9 +374,7 @@
     },
     {
       "name": "setMarketFlags",
-      "docs": [
-        "Change the flags on a market"
-      ],
+      "docs": ["Change the flags on a market"],
       "accounts": [
         {
           "name": "market",
@@ -472,73 +396,55 @@
     },
     {
       "name": "depositTokens",
-      "docs": [
-        "Deposit tokens into a reserve (unmanaged)"
-      ],
+      "docs": ["Deposit tokens into a reserve (unmanaged)"],
       "accounts": [
         {
           "name": "market",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The relevant market this deposit is for"
-          ]
+          "docs": ["The relevant market this deposit is for"]
         },
         {
           "name": "marketAuthority",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The market's authority account"
-          ]
+          "docs": ["The market's authority account"]
         },
         {
           "name": "reserve",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The reserve being deposited into"
-          ]
+          "docs": ["The reserve being deposited into"]
         },
         {
           "name": "vault",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The reserve's vault where the deposited tokens will be transferred to"
-          ]
+          "docs": ["The reserve's vault where the deposited tokens will be transferred to"]
         },
         {
           "name": "depositNoteMint",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The mint for the deposit notes"
-          ]
+          "docs": ["The mint for the deposit notes"]
         },
         {
           "name": "depositor",
           "isMut": false,
           "isSigner": true,
-          "docs": [
-            "The user/authority that owns the deposit"
-          ]
+          "docs": ["The user/authority that owns the deposit"]
         },
         {
           "name": "depositAccount",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The token account to receive the deposit notes"
-          ]
+          "docs": ["The token account to receive the deposit notes"]
         },
         {
           "name": "depositSource",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The token account with the tokens to be deposited"
-          ]
+          "docs": ["The token account with the tokens to be deposited"]
         },
         {
           "name": "tokenProgram",
@@ -561,73 +467,55 @@
     },
     {
       "name": "withdrawTokens",
-      "docs": [
-        "Withdraw tokens from a reserve (unmanaged)"
-      ],
+      "docs": ["Withdraw tokens from a reserve (unmanaged)"],
       "accounts": [
         {
           "name": "market",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The relevant market this withdraw is for"
-          ]
+          "docs": ["The relevant market this withdraw is for"]
         },
         {
           "name": "marketAuthority",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The market's authority account"
-          ]
+          "docs": ["The market's authority account"]
         },
         {
           "name": "reserve",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The reserve being withdrawn from"
-          ]
+          "docs": ["The reserve being withdrawn from"]
         },
         {
           "name": "vault",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The reserve's vault where the withdrawn tokens will be transferred from"
-          ]
+          "docs": ["The reserve's vault where the withdrawn tokens will be transferred from"]
         },
         {
           "name": "depositNoteMint",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The mint for the deposit notes"
-          ]
+          "docs": ["The mint for the deposit notes"]
         },
         {
           "name": "depositor",
           "isMut": false,
           "isSigner": true,
-          "docs": [
-            "The user/authority that owns the deposit"
-          ]
+          "docs": ["The user/authority that owns the deposit"]
         },
         {
           "name": "depositNoteAccount",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The account that stores the deposit notes"
-          ]
+          "docs": ["The account that stores the deposit notes"]
         },
         {
           "name": "withdrawAccount",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The token account where to transfer withdrawn tokens to"
-          ]
+          "docs": ["The token account where to transfer withdrawn tokens to"]
         },
         {
           "name": "tokenProgram",
@@ -650,65 +538,49 @@
     },
     {
       "name": "depositNft",
-      "docs": [
-        "Deposit notes as collateral in an obligation"
-      ],
+      "docs": ["Deposit notes as collateral in an obligation"],
       "accounts": [
         {
           "name": "market",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The relevant market this deposit is for"
-          ]
+          "docs": ["The relevant market this deposit is for"]
         },
         {
           "name": "marketAuthority",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The market's authority account"
-          ]
+          "docs": ["The market's authority account"]
         },
         {
           "name": "obligation",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The obligation the collateral is being deposited toward"
-          ]
+          "docs": ["The obligation the collateral is being deposited toward"]
         },
         {
           "name": "owner",
           "isMut": true,
           "isSigner": true,
-          "docs": [
-            "The user/authority that owns the deposit"
-          ]
+          "docs": ["The user/authority that owns the deposit"]
         },
         {
           "name": "depositSource",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The account that stores the user's deposit notes"
-          ]
+          "docs": ["The account that stores the user's deposit notes"]
         },
         {
           "name": "depositNftMint",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The account that stores the user's deposit notes"
-          ]
+          "docs": ["The account that stores the user's deposit notes"]
         },
         {
           "name": "nftCollectionCreator",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "verified collection creator"
-          ]
+          "docs": ["verified collection creator"]
         },
         {
           "name": "metadata",
@@ -719,9 +591,7 @@
           "name": "collateralAccount",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The account that will store the deposit nft as collateral"
-          ]
+          "docs": ["The account that will store the deposit nft as collateral"]
         },
         {
           "name": "tokenProgram",
@@ -753,57 +623,43 @@
     },
     {
       "name": "depositPnft",
-      "docs": [
-        "Deposit notes as collateral in an obligation"
-      ],
+      "docs": ["Deposit notes as collateral in an obligation"],
       "accounts": [
         {
           "name": "market",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The relevant market this deposit is for"
-          ]
+          "docs": ["The relevant market this deposit is for"]
         },
         {
           "name": "marketAuthority",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The market's authority account"
-          ]
+          "docs": ["The market's authority account"]
         },
         {
           "name": "obligation",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The obligation the collateral is being deposited toward"
-          ]
+          "docs": ["The obligation the collateral is being deposited toward"]
         },
         {
           "name": "owner",
           "isMut": true,
           "isSigner": true,
-          "docs": [
-            "The user/authority that owns the deposit"
-          ]
+          "docs": ["The user/authority that owns the deposit"]
         },
         {
           "name": "depositSource",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The account that stores the user's deposit notes"
-          ]
+          "docs": ["The account that stores the user's deposit notes"]
         },
         {
           "name": "depositNftMint",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The account that stores the user's deposit notes"
-          ]
+          "docs": ["The account that stores the user's deposit notes"]
         },
         {
           "name": "nftMetadata",
@@ -829,17 +685,13 @@
           "name": "nftCollectionCreator",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "verified collection creator"
-          ]
+          "docs": ["verified collection creator"]
         },
         {
           "name": "collateralAccount",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The account that will store the deposit nft as collateral"
-          ]
+          "docs": ["The account that will store the deposit nft as collateral"]
         },
         {
           "name": "pnftShared",
@@ -903,59 +755,43 @@
     },
     {
       "name": "withdrawNft",
-      "docs": [
-        "Withdraw notes previously deposited as collateral in an obligation"
-      ],
+      "docs": ["Withdraw notes previously deposited as collateral in an obligation"],
       "accounts": [
         {
           "name": "market",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The relevant market the collateral is in"
-          ]
+          "docs": ["The relevant market the collateral is in"]
         },
         {
           "name": "marketAuthority",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The market's authority account"
-          ]
+          "docs": ["The market's authority account"]
         },
         {
           "name": "obligation",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The obligation the collateral is being withdrawn from",
-            "todo verify depositor?"
-          ]
+          "docs": ["The obligation the collateral is being withdrawn from", "todo verify depositor?"]
         },
         {
           "name": "owner",
           "isMut": false,
           "isSigner": true,
-          "docs": [
-            "The user/authority that owns the deposited collateral (depositor)"
-          ]
+          "docs": ["The user/authority that owns the deposited collateral (depositor)"]
         },
         {
           "name": "depositTo",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The account that stores the user's deposit notes, where",
-            "the collateral will be returned to."
-          ]
+          "docs": ["The account that stores the user's deposit notes, where", "the collateral will be returned to."]
         },
         {
           "name": "nftCollectionCreator",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The account that stores the user's deposit notes"
-          ]
+          "docs": ["The account that stores the user's deposit notes"]
         },
         {
           "name": "metadata",
@@ -971,9 +807,7 @@
           "name": "collateralAccount",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The account that contains the collateral to be withdrawn"
-          ]
+          "docs": ["The account that contains the collateral to be withdrawn"]
         },
         {
           "name": "tokenProgram",
@@ -990,59 +824,43 @@
     },
     {
       "name": "withdrawPnft",
-      "docs": [
-        "Withdraw notes previously deposited as collateral in an obligation"
-      ],
+      "docs": ["Withdraw notes previously deposited as collateral in an obligation"],
       "accounts": [
         {
           "name": "market",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The relevant market the collateral is in"
-          ]
+          "docs": ["The relevant market the collateral is in"]
         },
         {
           "name": "marketAuthority",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The market's authority account"
-          ]
+          "docs": ["The market's authority account"]
         },
         {
           "name": "obligation",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The obligation the collateral is being withdrawn from",
-            "todo verify depositor?"
-          ]
+          "docs": ["The obligation the collateral is being withdrawn from", "todo verify depositor?"]
         },
         {
           "name": "owner",
           "isMut": false,
           "isSigner": true,
-          "docs": [
-            "The user/authority that owns the deposited collateral (depositor)"
-          ]
+          "docs": ["The user/authority that owns the deposited collateral (depositor)"]
         },
         {
           "name": "depositTo",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The account that stores the user's deposit notes, where",
-            "the collateral will be returned to."
-          ]
+          "docs": ["The account that stores the user's deposit notes, where", "the collateral will be returned to."]
         },
         {
           "name": "nftCollectionCreator",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The account that stores the user's deposit notes"
-          ]
+          "docs": ["The account that stores the user's deposit notes"]
         },
         {
           "name": "depositNftMint",
@@ -1073,9 +891,7 @@
           "name": "collateralAccount",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The account that contains the collateral to be withdrawn"
-          ]
+          "docs": ["The account that contains the collateral to be withdrawn"]
         },
         {
           "name": "pnftShared",
@@ -1139,89 +955,67 @@
     },
     {
       "name": "borrow",
-      "docs": [
-        "Borrow tokens from a reserve"
-      ],
+      "docs": ["Borrow tokens from a reserve"],
       "accounts": [
         {
           "name": "market",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The relevant market this borrow is for"
-          ]
+          "docs": ["The relevant market this borrow is for"]
         },
         {
           "name": "marketAuthority",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The market's authority account"
-          ]
+          "docs": ["The market's authority account"]
         },
         {
           "name": "obligation",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The obligation with collateral to borrow with"
-          ]
+          "docs": ["The obligation with collateral to borrow with"]
         },
         {
           "name": "reserve",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The reserve being borrowed from"
-          ]
+          "docs": ["The reserve being borrowed from"]
         },
         {
           "name": "vault",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The reserve's vault where the borrowed tokens will be transferred from"
-          ]
+          "docs": ["The reserve's vault where the borrowed tokens will be transferred from"]
         },
         {
           "name": "loanNoteMint",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The mint for the debt/loan notes"
-          ]
+          "docs": ["The mint for the debt/loan notes"]
         },
         {
           "name": "borrower",
           "isMut": false,
           "isSigner": true,
-          "docs": [
-            "The user/authority that is borrowing"
-          ]
+          "docs": ["The user/authority that is borrowing"]
         },
         {
           "name": "loanAccount",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The account to track the borrower's balance to repay"
-          ]
+          "docs": ["The account to track the borrower's balance to repay"]
         },
         {
           "name": "receiverAccount",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The token account that the borrowed funds will be transferred to"
-          ]
+          "docs": ["The token account that the borrowed funds will be transferred to"]
         },
         {
           "name": "tokenMint",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The mint for the token being stored in this reserve."
-          ]
+          "docs": ["The mint for the token being stored in this reserve."]
         },
         {
           "name": "tokenProgram",
@@ -1232,9 +1026,7 @@
           "name": "nftSwitchboardPriceAggregator",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "-- MIGHT NOT NEED THIS IF WE REQUIRE REFRESH RESERVE"
-          ]
+          "docs": ["-- MIGHT NOT NEED THIS IF WE REQUIRE REFRESH RESERVE"]
         }
       ],
       "args": [
@@ -1254,81 +1046,61 @@
     },
     {
       "name": "repay",
-      "docs": [
-        "Repay a loan"
-      ],
+      "docs": ["Repay a loan"],
       "accounts": [
         {
           "name": "market",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The relevant market this repayment is for"
-          ]
+          "docs": ["The relevant market this repayment is for"]
         },
         {
           "name": "marketAuthority",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The market's authority account"
-          ]
+          "docs": ["The market's authority account"]
         },
         {
           "name": "obligation",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The obligation with debt to be repaid"
-          ]
+          "docs": ["The obligation with debt to be repaid"]
         },
         {
           "name": "reserve",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The reserve that the debt is from"
-          ]
+          "docs": ["The reserve that the debt is from"]
         },
         {
           "name": "vault",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The reserve's vault where the payment will be transferred to"
-          ]
+          "docs": ["The reserve's vault where the payment will be transferred to"]
         },
         {
           "name": "loanNoteMint",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The mint for the debt/loan notes"
-          ]
+          "docs": ["The mint for the debt/loan notes"]
         },
         {
           "name": "loanAccount",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The account that holds the borrower's debt balance"
-          ]
+          "docs": ["The account that holds the borrower's debt balance"]
         },
         {
           "name": "payerAccount",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The token account that the payment funds will be transferred from"
-          ]
+          "docs": ["The token account that the payment funds will be transferred from"]
         },
         {
           "name": "payer",
           "isMut": false,
           "isSigner": true,
-          "docs": [
-            "The account repaying the loan"
-          ]
+          "docs": ["The account repaying the loan"]
         },
         {
           "name": "tokenProgram",
@@ -1347,9 +1119,7 @@
     },
     {
       "name": "liquidateSolvent",
-      "docs": [
-        "liquidate through solvent droplets"
-      ],
+      "docs": ["liquidate through solvent droplets"],
       "accounts": [
         {
           "name": "market",
@@ -1375,17 +1145,13 @@
           "name": "obligation",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The obligation with debt to be repaid"
-          ]
+          "docs": ["The obligation with debt to be repaid"]
         },
         {
           "name": "loanNoteMint",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The mint for the debt/loan notes"
-          ]
+          "docs": ["The mint for the debt/loan notes"]
         },
         {
           "name": "collateralAccount",
@@ -1396,9 +1162,7 @@
           "name": "loanAccount",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The account that holds the borrower's debt balance"
-          ]
+          "docs": ["The account that holds the borrower's debt balance"]
         },
         {
           "name": "nftMint",
@@ -1409,9 +1173,7 @@
           "name": "executor",
           "isMut": true,
           "isSigner": true,
-          "docs": [
-            "The admin/authority that has permission to execute solvent liquidation"
-          ]
+          "docs": ["The admin/authority that has permission to execute solvent liquidation"]
         },
         {
           "name": "tokenProgram",
@@ -1430,42 +1192,31 @@
     },
     {
       "name": "withdrawNftSolvent",
-      "docs": [
-        "Withdraw notes previously deposited as collateral in an obligation"
-      ],
+      "docs": ["Withdraw notes previously deposited as collateral in an obligation"],
       "accounts": [
         {
           "name": "market",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The relevant market the collateral is in"
-          ]
+          "docs": ["The relevant market the collateral is in"]
         },
         {
           "name": "marketAuthority",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The market's authority account"
-          ]
+          "docs": ["The market's authority account"]
         },
         {
           "name": "obligation",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The obligation the collateral is being withdrawn from",
-            "todo verify depositor?"
-          ]
+          "docs": ["The obligation the collateral is being withdrawn from", "todo verify depositor?"]
         },
         {
           "name": "withdrawer",
           "isMut": false,
           "isSigner": true,
-          "docs": [
-            "The admin who will own the nft"
-          ]
+          "docs": ["The admin who will own the nft"]
         },
         {
           "name": "depositTo",
@@ -1480,9 +1231,7 @@
           "name": "nftCollectionCreator",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The account that stores the user's deposit notes"
-          ]
+          "docs": ["The account that stores the user's deposit notes"]
         },
         {
           "name": "metadata",
@@ -1498,9 +1247,7 @@
           "name": "collateralAccount",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The account that contains the collateral to be withdrawn"
-          ]
+          "docs": ["The account that contains the collateral to be withdrawn"]
         },
         {
           "name": "tokenProgram",
@@ -1517,42 +1264,31 @@
     },
     {
       "name": "withdrawPnftSolvent",
-      "docs": [
-        "Withdraw notes previously deposited as collateral in an obligation"
-      ],
+      "docs": ["Withdraw notes previously deposited as collateral in an obligation"],
       "accounts": [
         {
           "name": "market",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The relevant market the collateral is in"
-          ]
+          "docs": ["The relevant market the collateral is in"]
         },
         {
           "name": "marketAuthority",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The market's authority account"
-          ]
+          "docs": ["The market's authority account"]
         },
         {
           "name": "obligation",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The obligation the collateral is being withdrawn from",
-            "todo verify depositor?"
-          ]
+          "docs": ["The obligation the collateral is being withdrawn from", "todo verify depositor?"]
         },
         {
           "name": "withdrawer",
           "isMut": false,
           "isSigner": true,
-          "docs": [
-            "The admin who will own the nft"
-          ]
+          "docs": ["The admin who will own the nft"]
         },
         {
           "name": "depositTo",
@@ -1567,9 +1303,7 @@
           "name": "nftCollectionCreator",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The account that stores the user's deposit notes"
-          ]
+          "docs": ["The account that stores the user's deposit notes"]
         },
         {
           "name": "depositNftMint",
@@ -1600,9 +1334,7 @@
           "name": "collateralAccount",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The account that contains the collateral to be withdrawn"
-          ]
+          "docs": ["The account that contains the collateral to be withdrawn"]
         },
         {
           "name": "pnftShared",
@@ -1691,9 +1423,7 @@
           "name": "depositSource",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The account that stores the user's deposit notes"
-          ]
+          "docs": ["The account that stores the user's deposit notes"]
         },
         {
           "name": "bidMint",
@@ -1766,9 +1496,7 @@
           "name": "depositSource",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The account that stores the user's deposit notes"
-          ]
+          "docs": ["The account that stores the user's deposit notes"]
         },
         {
           "name": "bidMint",
@@ -1889,25 +1617,19 @@
           "name": "market",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The relevant market this liquidation is for"
-          ]
+          "docs": ["The relevant market this liquidation is for"]
         },
         {
           "name": "marketAuthority",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The market's authority account"
-          ]
+          "docs": ["The market's authority account"]
         },
         {
           "name": "obligation",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The obligation with debt to be repaid"
-          ]
+          "docs": ["The obligation with debt to be repaid"]
         },
         {
           "name": "reserve",
@@ -1918,33 +1640,24 @@
           "name": "vault",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The reserve's vault where the payment will be transferred to"
-          ]
+          "docs": ["The reserve's vault where the payment will be transferred to"]
         },
         {
           "name": "loanNoteMint",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The mint for the debt/loan notes"
-          ]
+          "docs": ["The mint for the debt/loan notes"]
         },
         {
           "name": "loanAccount",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The account that holds the borrower's debt balance"
-          ]
+          "docs": ["The account that holds the borrower's debt balance"]
         },
         {
           "name": "bid",
           "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "The account that holds the borrower's collateral"
-          ]
+          "isSigner": false
         },
         {
           "name": "bidder",
@@ -1975,25 +1688,19 @@
           "name": "nftMint",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "mint of the nft you are liquidating"
-          ]
+          "docs": ["mint of the nft you are liquidating"]
         },
         {
           "name": "collateralAccount",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The account that stores the nft"
-          ]
+          "docs": ["The account that stores the nft"]
         },
         {
           "name": "receiverAccount",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The account that will receive a portion of the borrower's collateral"
-          ]
+          "docs": ["The account that will receive a portion of the borrower's collateral"]
         },
         {
           "name": "liquidationFeeReceiver",
@@ -2047,25 +1754,19 @@
           "name": "market",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The relevant market this liquidation is for"
-          ]
+          "docs": ["The relevant market this liquidation is for"]
         },
         {
           "name": "marketAuthority",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The market's authority account"
-          ]
+          "docs": ["The market's authority account"]
         },
         {
           "name": "obligation",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The obligation with debt to be repaid"
-          ]
+          "docs": ["The obligation with debt to be repaid"]
         },
         {
           "name": "reserve",
@@ -2076,33 +1777,25 @@
           "name": "vault",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The reserve's vault where the payment will be transferred to"
-          ]
+          "docs": ["The reserve's vault where the payment will be transferred to"]
         },
         {
           "name": "loanNoteMint",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The mint for the debt/loan notes"
-          ]
+          "docs": ["The mint for the debt/loan notes"]
         },
         {
           "name": "loanAccount",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The account that holds the borrower's debt balance"
-          ]
+          "docs": ["The account that holds the borrower's debt balance"]
         },
         {
           "name": "bid",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The account that holds the borrower's collateral"
-          ]
+          "docs": ["The account that holds the borrower's collateral"]
         },
         {
           "name": "bidder",
@@ -2133,9 +1826,7 @@
           "name": "nftMint",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "mint of the nft you are liquidating"
-          ]
+          "docs": ["mint of the nft you are liquidating"]
         },
         {
           "name": "nftMetadata",
@@ -2161,17 +1852,13 @@
           "name": "collateralAccount",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The account that stores the nft"
-          ]
+          "docs": ["The account that stores the nft"]
         },
         {
           "name": "receiverAccount",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The account that will receive a portion of the borrower's collateral"
-          ]
+          "docs": ["The account that will receive a portion of the borrower's collateral"]
         },
         {
           "name": "liquidationFeeReceiver",
@@ -2264,33 +1951,25 @@
           "name": "market",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The relevant market this refresh is for"
-          ]
+          "docs": ["The relevant market this refresh is for"]
         },
         {
           "name": "marketAuthority",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The market's authority account"
-          ]
+          "docs": ["The market's authority account"]
         },
         {
           "name": "reserve",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The reserve being refreshed"
-          ]
+          "docs": ["The reserve being refreshed"]
         },
         {
           "name": "feeNoteVault",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The reserve's vault for storing collected fees"
-          ]
+          "docs": ["The reserve's vault for storing collected fees"]
         },
         {
           "name": "protocolFeeNoteVault",
@@ -2301,17 +1980,13 @@
           "name": "depositNoteMint",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "The reserve's mint for deposit notes"
-          ]
+          "docs": ["The reserve's mint for deposit notes"]
         },
         {
           "name": "switchboardPriceAggregator",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "The account containing the price information for the token."
-          ]
+          "docs": ["The account containing the price information for the token."]
         },
         {
           "name": "nftSwitchboardPriceAggregator",
@@ -2356,10 +2031,7 @@
           {
             "name": "authorityBumpSeed",
             "type": {
-              "array": [
-                "u8",
-                1
-              ]
+              "array": ["u8", 1]
             }
           },
           {
@@ -2379,9 +2051,7 @@
     },
     {
       "name": "Market",
-      "docs": [
-        "Lending market account"
-      ],
+      "docs": ["Lending market account"],
       "type": {
         "kind": "struct",
         "fields": [
@@ -2391,34 +2061,21 @@
           },
           {
             "name": "quoteExponent",
-            "docs": [
-              "The exponent used for quote prices"
-            ],
+            "docs": ["The exponent used for quote prices"],
             "type": "i32"
           },
           {
             "name": "quoteCurrency",
-            "docs": [
-              "The exponent used for quote prices",
-              "The currency used for quote prices"
-            ],
+            "docs": ["The exponent used for quote prices", "The currency used for quote prices"],
             "type": {
-              "array": [
-                "u8",
-                15
-              ]
+              "array": ["u8", 15]
             }
           },
           {
             "name": "authorityBumpSeed",
-            "docs": [
-              "The bump seed value for generating the authority address."
-            ],
+            "docs": ["The bump seed value for generating the authority address."],
             "type": {
-              "array": [
-                "u8",
-                1
-              ]
+              "array": ["u8", 1]
             }
           },
           {
@@ -2431,81 +2088,53 @@
           },
           {
             "name": "marketAuthority",
-            "docs": [
-              "The account derived by the program, which has authority over all",
-              "assets in the market."
-            ],
+            "docs": ["The account derived by the program, which has authority over all", "assets in the market."],
             "type": "publicKey"
           },
           {
             "name": "owner",
-            "docs": [
-              "The account that has authority to make changes to the market"
-            ],
+            "docs": ["The account that has authority to make changes to the market"],
             "type": "publicKey"
           },
           {
             "name": "quoteTokenMint",
-            "docs": [
-              "The mint for the token used to quote the value for reserve assets."
-            ],
+            "docs": ["The mint for the token used to quote the value for reserve assets."],
             "type": "publicKey"
           },
           {
             "name": "nftSwitchboardPriceAggregator",
-            "docs": [
-              "The account where a Pyth oracle keeps the updated price of the token."
-            ],
+            "docs": ["The account where a Pyth oracle keeps the updated price of the token."],
             "type": "publicKey"
           },
           {
             "name": "nftCollectionCreator",
-            "docs": [
-              "The mint for the token being held in this reserve"
-            ],
+            "docs": ["The mint for the token being held in this reserve"],
             "type": "publicKey"
           },
           {
             "name": "flags",
-            "docs": [
-              "Storage for flags that can be set on the market."
-            ],
+            "docs": ["Storage for flags that can be set on the market."],
             "type": "u64"
           },
           {
             "name": "marketOracleState",
-            "docs": [
-              "oracle price data"
-            ],
+            "docs": ["oracle price data"],
             "type": {
-              "array": [
-                "u8",
-                24
-              ]
+              "array": ["u8", 24]
             }
           },
           {
             "name": "reserved",
-            "docs": [
-              "Unused space before start of reserve list"
-            ],
+            "docs": ["Unused space before start of reserve list"],
             "type": {
-              "array": [
-                "u8",
-                352
-              ]
+              "array": ["u8", 352]
             }
           },
           {
             "name": "reserves",
-            "docs": [
-              "The storage for information on reserves in the market"
-            ],
+            "docs": ["The storage for information on reserves in the market"],
             "type": {
-              "array": [
-                "u8",
-                12288
-              ]
+              "array": ["u8", 12288]
             }
           }
         ]
@@ -2513,9 +2142,7 @@
     },
     {
       "name": "Obligation",
-      "docs": [
-        "Tracks information about a user's obligation to repay a borrowed position."
-      ],
+      "docs": ["Tracks information about a user's obligation to repay a borrowed position."],
       "type": {
         "kind": "struct",
         "fields": [
@@ -2529,64 +2156,40 @@
           },
           {
             "name": "market",
-            "docs": [
-              "The market this obligation is a part of"
-            ],
+            "docs": ["The market this obligation is a part of"],
             "type": "publicKey"
           },
           {
             "name": "owner",
-            "docs": [
-              "The address that owns the debt/assets as a part of this obligation"
-            ],
+            "docs": ["The address that owns the debt/assets as a part of this obligation"],
             "type": "publicKey"
           },
           {
             "name": "reserved1",
-            "docs": [
-              "Unused space before start of collateral info"
-            ],
+            "docs": ["Unused space before start of collateral info"],
             "type": {
-              "array": [
-                "u8",
-                184
-              ]
+              "array": ["u8", 184]
             }
           },
           {
             "name": "collateralNftMint",
-            "docs": [
-              "stores collateral nft key"
-            ],
+            "docs": ["stores collateral nft key"],
             "type": {
-              "array": [
-                "publicKey",
-                11
-              ]
+              "array": ["publicKey", 11]
             }
           },
           {
             "name": "cached",
-            "docs": [
-              "The storage for cached calculations"
-            ],
+            "docs": ["The storage for cached calculations"],
             "type": {
-              "array": [
-                "u8",
-                256
-              ]
+              "array": ["u8", 256]
             }
           },
           {
             "name": "loans",
-            "docs": [
-              "The storage for the information on positions owed by this obligation"
-            ],
+            "docs": ["The storage for the information on positions owed by this obligation"],
             "type": {
-              "array": [
-                "u8",
-                2048
-              ]
+              "array": ["u8", 2048]
             }
           }
         ]
@@ -2603,81 +2206,58 @@
           },
           {
             "name": "index",
-            "docs": [
-              "The unique id for this reserve within the market"
-            ],
+            "docs": ["The unique id for this reserve within the market"],
             "type": "u16"
           },
           {
             "name": "exponent",
-            "docs": [
-              "The base 10 decimals used for token values"
-            ],
+            "docs": ["The base 10 decimals used for token values"],
             "type": "i32"
           },
           {
             "name": "market",
-            "docs": [
-              "The market this reserve is a part of."
-            ],
+            "docs": ["The market this reserve is a part of."],
             "type": "publicKey"
           },
           {
             "name": "switchboardPriceAggregator",
-            "docs": [
-              "The account where a Pyth oracle keeps the updated price of the token."
-            ],
+            "docs": ["The account where a Pyth oracle keeps the updated price of the token."],
             "type": "publicKey"
           },
           {
             "name": "tokenMint",
-            "docs": [
-              "The mint for the token being held in this reserve"
-            ],
+            "docs": ["The mint for the token being held in this reserve"],
             "type": "publicKey"
           },
           {
             "name": "depositNoteMint",
-            "docs": [
-              "The mint for this reserve's deposit notes"
-            ],
+            "docs": ["The mint for this reserve's deposit notes"],
             "type": "publicKey"
           },
           {
             "name": "loanNoteMint",
-            "docs": [
-              "The mint for this reserve's loan notes"
-            ],
+            "docs": ["The mint for this reserve's loan notes"],
             "type": "publicKey"
           },
           {
             "name": "vault",
-            "docs": [
-              "The account with custody over the reserve's tokens."
-            ],
+            "docs": ["The account with custody over the reserve's tokens."],
             "type": "publicKey"
           },
           {
             "name": "feeNoteVault",
-            "docs": [
-              "The account with custody of the notes generated from collected fees"
-            ],
+            "docs": ["The account with custody of the notes generated from collected fees"],
             "type": "publicKey"
           },
           {
             "name": "protocolFeeNoteVault",
-            "docs": [
-              "The account with custody of the notes generated from protocol collected fees"
-            ],
+            "docs": ["The account with custody of the notes generated from protocol collected fees"],
             "type": "publicKey"
           },
           {
             "name": "reserved0",
             "type": {
-              "array": [
-                "u8",
-                408
-              ]
+              "array": ["u8", 408]
             }
           },
           {
@@ -2689,19 +2269,13 @@
           {
             "name": "reserved1",
             "type": {
-              "array": [
-                "u8",
-                704
-              ]
+              "array": ["u8", 704]
             }
           },
           {
             "name": "state",
             "type": {
-              "array": [
-                "u8",
-                536
-              ]
+              "array": ["u8", 536]
             }
           }
         ]
@@ -2711,9 +2285,7 @@
   "types": [
     {
       "name": "Amount",
-      "docs": [
-        "Represent an amount of some value (like tokens, or notes)"
-      ],
+      "docs": ["Represent an amount of some value (like tokens, or notes)"],
       "type": {
         "kind": "struct",
         "fields": [
@@ -2911,9 +2483,7 @@
         "fields": [
           {
             "name": "seeds",
-            "docs": [
-              "The vector of derivation seeds."
-            ],
+            "docs": ["The vector of derivation seeds."],
             "type": {
               "vec": "bytes"
             }
@@ -2928,15 +2498,10 @@
         "fields": [
           {
             "name": "proof",
-            "docs": [
-              "The merkle proof."
-            ],
+            "docs": ["The merkle proof."],
             "type": {
               "vec": {
-                "array": [
-                  "u8",
-                  32
-                ]
+                "array": ["u8", 32]
               }
             }
           }
@@ -2964,16 +2529,12 @@
         "fields": [
           {
             "name": "utilizationRate1",
-            "docs": [
-              "The utilization rate at which we switch from the first to second regime."
-            ],
+            "docs": ["The utilization rate at which we switch from the first to second regime."],
             "type": "u16"
           },
           {
             "name": "utilizationRate2",
-            "docs": [
-              "The utilization rate at which we switch from the second to third regime."
-            ],
+            "docs": ["The utilization rate at which we switch from the second to third regime."],
             "type": "u16"
           },
           {
@@ -2986,16 +2547,12 @@
           },
           {
             "name": "borrowRate1",
-            "docs": [
-              "The borrow rate at the transition point from the first to second regime."
-            ],
+            "docs": ["The borrow rate at the transition point from the first to second regime."],
             "type": "u16"
           },
           {
             "name": "borrowRate2",
-            "docs": [
-              "The borrow rate at the transition point from the second to thirs regime."
-            ],
+            "docs": ["The borrow rate at the transition point from the second to thirs regime."],
             "type": "u16"
           },
           {
@@ -3008,16 +2565,12 @@
           },
           {
             "name": "minCollateralRatio",
-            "docs": [
-              "The minimum allowable collateralization ratio for an obligation"
-            ],
+            "docs": ["The minimum allowable collateralization ratio for an obligation"],
             "type": "u16"
           },
           {
             "name": "liquidationPremium",
-            "docs": [
-              "The amount given as a bonus to a liquidator"
-            ],
+            "docs": ["The amount given as a bonus to a liquidator"],
             "type": "u16"
           },
           {
@@ -3030,16 +2583,12 @@
           },
           {
             "name": "manageFeeRate",
-            "docs": [
-              "The fee rate applied to the interest payments collected"
-            ],
+            "docs": ["The fee rate applied to the interest payments collected"],
             "type": "u16"
           },
           {
             "name": "loanOriginationFee",
-            "docs": [
-              "The fee rate applied as interest owed on new loans"
-            ],
+            "docs": ["The fee rate applied as interest owed on new loans"],
             "type": "u16"
           },
           {
@@ -3056,19 +2605,13 @@
           {
             "name": "reserved1",
             "type": {
-              "array": [
-                "u8",
-                24
-              ]
+              "array": ["u8", 24]
             }
           },
           {
             "name": "reserved2",
             "type": {
-              "array": [
-                "u8",
-                10
-              ]
+              "array": ["u8", 10]
             }
           }
         ]
@@ -3076,9 +2619,7 @@
     },
     {
       "name": "AmountUnits",
-      "docs": [
-        "Specifies the units of some amount of value"
-      ],
+      "docs": ["Specifies the units of some amount of value"],
       "type": {
         "kind": "enum",
         "variants": [
@@ -3096,9 +2637,7 @@
     },
     {
       "name": "Rounding",
-      "docs": [
-        "Specifies rounding integers up or down"
-      ],
+      "docs": ["Specifies rounding integers up or down"],
       "type": {
         "kind": "enum",
         "variants": [
@@ -3118,9 +2657,7 @@
         "variants": [
           {
             "name": "Pubkey",
-            "fields": [
-              "publicKey"
-            ]
+            "fields": ["publicKey"]
           },
           {
             "name": "Seeds",
@@ -3140,9 +2677,7 @@
           },
           {
             "name": "Number",
-            "fields": [
-              "u64"
-            ]
+            "fields": ["u64"]
           }
         ]
       }
@@ -3276,6 +2811,11 @@
         },
         {
           "name": "owner",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "nftMint",
           "type": "publicKey",
           "index": false
         }
