@@ -360,10 +360,11 @@ export class LiquidatorClient {
       ROOT_AUTHORITY,
     );
 
+    await reserves[0].refreshOldReserves();
+
     const refreshIx = await reserves[0].makeRefreshIx();
     try {
       // @ts-ignore
-      // const tx = new Transaction();
       const result = await this.program.methods
         .executeLiquidateBid(bumps)
         .accounts({
@@ -395,8 +396,9 @@ export class LiquidatorClient {
         })
         .preInstructions([refreshIx])
         .rpc();
+      // tx.add(refreshIx);
+      // tx.add(ix);
       // const result = await this.program.provider.sendAndConfirm(tx, [], { skipPreflight: true });
-      console.log(result);
       return [TxnResponse.Success, [result]];
     } catch (err) {
       console.log('error', err);
