@@ -122,7 +122,7 @@ const buildMarketBundle = async (
   } as MarketBundle;
 };
 
-const fetchPositionsAndBids = async (
+export const fetchPositionsAndBids = async (
   isDevnet: boolean,
   connection: Connection,
   honeyMarketId: string,
