@@ -19,7 +19,7 @@ export const useMarket = (
   // remove '| null'  - since we want to use this func. to init a honey user for transactions 
   wallet: ConnectedWallet,
   honeyProgramId: string,
-  honeyMarketId: string[],
+  honeyMarketIds: string[],
 ) => {
   const { isConfigured } = useAnchor();
 
@@ -27,7 +27,6 @@ export const useMarket = (
   const [honeyMarket, setHoneyMarket] = useState<HoneyMarket>();
   const [honeyUser, setHoneyUser] = useState<HoneyUser[]>([]);
   const [honeyReserves, setHoneyReserves] = useState<HoneyReserve[]>();
-  let honeyUserArray = [];
 
   useEffect(() => {
     const fetchHoneyClient = async (marketId: string) => {
@@ -66,26 +65,24 @@ export const useMarket = (
         new PublicKey(wallet.publicKey),
         reserves,
       );
-      // setHoneyUser(user);
-      honeyUserArray.push(user);
+
+      setHoneyUser((prevHoneyUser) => [...prevHoneyUser, user]);
     };
 
     const runMarkets = async () => {
-      await Promise.all(
-        honeyMarketId.map((marketId: string) => {
-          fetchHoneyClient(marketId);
-        })
-      ).then((res) => {
-        setHoneyUser(honeyUserArray);
-      }).catch((err) => {
+      try {
+        for (const marketId of honeyMarketIds) {
+          await fetchHoneyClient(marketId);
+        }
+      } catch (err) {
         console.log(`Error occurred running fetchHoneyClient: ${err}`);
-      })
+      }
     }
 
-    if (isConfigured && connection && honeyProgramId && honeyMarketId.length) {
+    if (isConfigured && connection && honeyProgramId && honeyMarketIds.length) {
       runMarkets();
     }
-  }, [isConfigured, connection, honeyProgramId, honeyMarketId]);
+  }, [isConfigured, connection, honeyProgramId, honeyMarketIds]);
 
   return {
     honeyClient,
