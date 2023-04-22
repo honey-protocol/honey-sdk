@@ -2,13 +2,7 @@ import { Metadata } from '@metaplex-foundation/mpl-token-metadata';
 import { BN } from '@project-serum/anchor';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { useEffect, useState } from 'react';
-import {
-  CollateralNFTPosition,
-  FungibleCollateralPosition,
-  getNFTAssociatedMetadata,
-  LoanPosition,
-  ObligationAccount,
-} from '..';
+import { CollateralNFTPosition, getNFTAssociatedMetadata, LoanPosition, ObligationAccount } from '..';
 import { ConnectedWallet } from '../helpers/walletType';
 import { useMarket } from './useMarket';
 
@@ -41,7 +35,7 @@ export const useBorrowPositions = (
     setStatus({ loading: true });
 
     const collateralNFTPositions: CollateralNFTPosition[] = [];
-    const obligation = (await honeyUser.getObligationData()) as ObligationAccount;
+    const obligation = await honeyUser.getObligationData();
     if (!obligation.market) {
       setStatus({ loading: false, error: new Error('Obligation does not have a valid market') });
       return;
@@ -53,23 +47,23 @@ export const useBorrowPositions = (
     }
     const promises = collateralNftMint.map(async (key: PublicKey, index: number) => {
       if (!key.equals(PublicKey.default)) {
-        const [nftMetadata, metadataBump] = await PublicKey.findProgramAddress(
+        const [nftMetadata, _] = await PublicKey.findProgramAddress(
           [Buffer.from('metadata'), METADATA_PROGRAM_ID.toBuffer(), key.toBuffer()],
           METADATA_PROGRAM_ID,
         );
         const data = await getNFTAssociatedMetadata(connection, nftMetadata);
         if (!data) return;
-        const tokenMetadata = new Metadata(nftMetadata, data);
-        const verifiedCreator = tokenMetadata.data.data.creators.filter((creator) => creator.verified)[0].address;
-        const arweaveData = await (await fetch(tokenMetadata.data.data.uri)).json();
+        const tokenMetadata = await Metadata.fromAccountAddress(connection, nftMetadata);
+        const verifiedCreator = tokenMetadata.data.creators.filter((creator) => creator.verified)[0].address;
+        const arweaveData = await (await fetch(tokenMetadata.data.uri)).json();
         collateralNFTPositions.push({
-          mint: new PublicKey(tokenMetadata?.data?.mint),
-          updateAuthority: new PublicKey(tokenMetadata?.data?.updateAuthority),
-          name: tokenMetadata?.data?.data?.name,
-          symbol: tokenMetadata?.data?.data.symbol,
-          uri: tokenMetadata?.data?.data.uri,
+          mint: new PublicKey(tokenMetadata?.mint),
+          updateAuthority: new PublicKey(tokenMetadata?.updateAuthority),
+          name: tokenMetadata?.data?.name,
+          symbol: tokenMetadata?.data?.symbol,
+          uri: tokenMetadata?.data?.uri,
           image: arweaveData?.image,
-          verifiedCreator,
+          verifiedCreator: verifiedCreator.toBase58(),
         });
       }
     });

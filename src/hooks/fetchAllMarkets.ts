@@ -3,7 +3,6 @@ import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import {
   HoneyClient,
   HoneyMarket,
-  CachedReserveInfo,
   HoneyReserve,
   HoneyUser,
   MarketReserveInfoList,
@@ -11,12 +10,12 @@ import {
   PositionInfoList,
 } from '..';
 import * as anchor from '@project-serum/anchor';
-import { BN, Program } from '@project-serum/anchor';
-import { Bid, NftPosition } from '../helpers/types';
+import { BN, Idl, Program } from '@project-serum/anchor';
+import { Bid, CachedReserveInfo, NftPosition } from '../helpers/types';
 import { getHealthStatus, getOraclePrice, onChainNumberToBN, TokenAmount } from '../helpers/util';
-import devnetIdl from '../idl/devnet/honey.json';
-import mainnetBetaIdl from '../idl/mainnet-beta/honey.json';
 import NodeWallet from '@project-serum/anchor/dist/cjs/nodewallet';
+import { Honey } from '../artifacts/honey';
+import HoneyIdl from '../artifacts/honey.json';
 
 /**
  * Main data component for the honey program. Will fetch the market, reserves, user, and positions for a market.
@@ -54,7 +53,7 @@ export const fetchAllMarkets = async (
   devnet?: boolean,
 ): Promise<MarketBundle[]> => {
   const marketBundles: MarketBundle[] = [];
-  const program: Program = buildProgram(honeyId, connection, wallet, devnet);
+  const program: Program<Honey> = buildProgram(honeyId, connection, wallet, devnet);
   await Promise.all(
     honeyMarketIds.map(async (honeyMarketId) => {
       const marketBundle = await buildMarketBundle(connection, wallet, honeyId, honeyMarketId);
@@ -123,7 +122,7 @@ const buildMarketBundle = async (
   } as MarketBundle;
 };
 
-const fetchPositionsAndBids = async (
+export const fetchPositionsAndBids = async (
   isDevnet: boolean,
   connection: Connection,
   honeyMarketId: string,
@@ -165,6 +164,7 @@ const fetchPositionsAndBids = async (
 
   const reserveInfoData = new Uint8Array(marketReserves.reserves as any as number[]);
   const reserveInfoList = MarketReserveInfoList.decode(reserveInfoData) as CachedReserveInfo[];
+  marketReserves.reserves = reserveInfoList;
 
   let obligations = await honeyMarket.fetchObligations();
   if (obligations && reserveInfoList) {
@@ -192,7 +192,7 @@ const fetchPositionsAndBids = async (
               let debt = 0;
               const exponent = -honeyReserves[0].data.exponent;
               if (item.account?.loans.length != 0) {
-                const bnDebt = onChainNumberToBN(reserveInfoList[0].loanNoteExchangeRate)
+                const bnDebt = onChainNumberToBN(marketReserves.reserves[0].loanNoteExchangeRate)
                   .mul(item.account?.loans[0].amount)
                   .div(new BN(10 ** 6));
                 debt = bnDebt.toNumber() / 10 ** exponent;
@@ -218,14 +218,18 @@ const fetchPositionsAndBids = async (
   }
 };
 
-export const buildProgram = (honeyProgramId: string, connection: Connection, wallet: any, devnet: boolean) => {
-  const idl: any = devnet ? devnetIdl : mainnetBetaIdl;
+export const buildProgram = (
+  honeyProgramId: string,
+  connection: Connection,
+  wallet: any,
+  devnet: boolean,
+): Program<Honey> => {
   const HONEY_PROGRAM_ID = new PublicKey(honeyProgramId);
   const provider = new anchor.AnchorProvider(
     connection,
     wallet ?? new NodeWallet(new Keypair()),
     anchor.AnchorProvider.defaultOptions(),
   );
-  const program: Program = new anchor.Program(idl as any, HONEY_PROGRAM_ID, provider);
+  const program = new Program(HoneyIdl as Idl, HONEY_PROGRAM_ID, provider) as Program<Honey>;
   return program;
 };

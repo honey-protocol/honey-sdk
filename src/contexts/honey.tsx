@@ -1,11 +1,10 @@
 import React, { FC, ReactNode, useContext, useEffect, useState } from 'react';
 import { useAnchor } from './anchor';
-import { MarketReserveInfoList } from '../helpers/layout';
 import { ConnectedWallet } from '../helpers/walletType';
 import { useMarket } from '../hooks';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { HoneyReserve } from '../wrappers';
-import { CachedReserveInfo, MarketAccount, TReserve } from '../helpers';
+import { CachedReserveInfo, MarketAccount, MarketReserveInfoList, TReserve } from '../helpers';
 
 interface HoneyContext {
   market: MarketAccount | null;
@@ -79,12 +78,13 @@ export const HoneyProvider: FC<HoneyProps> = ({ children, wallet, connection, ho
 
   const fetchMarket = async () => {
     // market info
-    const marketValue = await program.account.market.fetch(honeyMarket.address);
-    setMarket(marketValue as any as MarketAccount);
+    const fetchMarket = (await program.account.market.fetch(honeyMarket.address)) as unknown as MarketAccount;
+    setMarket(fetchMarket);
 
     // reserve info
-    const reserveInfoData = new Uint8Array(marketValue.reserves as any as number[]);
+    const reserveInfoData = new Uint8Array(fetchMarket.reserves as any as number[]);
     const reserveInfoList = MarketReserveInfoList.decode(reserveInfoData) as CachedReserveInfo[];
+
     setMarketReserveInfo(reserveInfoList);
 
     const reservesList = [] as TReserve[];

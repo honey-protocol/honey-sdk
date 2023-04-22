@@ -9,11 +9,11 @@ import {
   getCcRate,
   getOraclePrice,
   ReserveState,
-  ReserveStateLayout,
   ReserveStateStruct,
   TReserve,
   TotalReserveState,
   onChainNumberToBN,
+  ReserveStateLayout,
 } from '../helpers';
 
 export interface ReserveConfig {
@@ -28,6 +28,9 @@ export interface ReserveConfig {
   manageFeeCollectionThreshold: anchor.BN;
   manageFeeRate: number;
   loanOriginationFee: number;
+  reserved0: number;
+  reserved1: number[];
+  reserved2: number[];
 }
 
 export interface ReserveAccounts {
@@ -119,10 +122,9 @@ export class HoneyReserve {
   }
 
   static async decodeReserve(client: HoneyClient, address: PublicKey): Promise<TReserve> {
-    const reserveData = (await client.program.account.reserve.fetch(address)) as any as TReserve;
-    const reserveState = ReserveStateLayout.decode(Buffer.from(reserveData.state)) as ReserveStateStruct;
-    reserveData.reserveState = reserveState;
-
+    const reserveData = (await client.program.account.reserve.fetch(address)) as unknown as TReserve;
+    const reserveState = ReserveStateLayout.decode(Buffer.from(reserveData.state as any)) as ReserveStateStruct;
+    reserveData.state = reserveState;
     return reserveData;
   }
 
@@ -159,19 +161,19 @@ export class HoneyReserve {
   getReserveState(): ReserveState {
     const decimals = 10 ** (this.data.exponent * -1);
 
-    const outstandingAsUnderlying = onChainNumberToBN(this.data.reserveState.outstandingDebt).toNumber() / decimals;
-    const uncollectedAsUnderlying = onChainNumberToBN(this.data.reserveState.uncollectedFees).toNumber() / decimals;
+    const outstandingAsUnderlying = onChainNumberToBN(this.data.state.outstandingDebt).toNumber() / decimals;
+    const uncollectedAsUnderlying = onChainNumberToBN(this.data.state.uncollectedFees).toNumber() / decimals;
     const protocolUncollectedAsUnderlying =
-      onChainNumberToBN(this.data.reserveState.protocolUncollectedFees).toNumber() / decimals;
+      onChainNumberToBN(this.data.state.protocolUncollectedFees).toNumber() / decimals;
 
     return {
-      accruedUntil: this.data.reserveState.accruedUntil.toString(),
+      accruedUntil: this.data.state.accruedUntil.toString(),
       outstandingDebt: outstandingAsUnderlying,
       uncollectedFees: uncollectedAsUnderlying,
       protocolUncollectedFees: protocolUncollectedAsUnderlying,
-      totalDeposits: this.data.reserveState.totalDeposits.toNumber() / decimals,
-      totalDepositNotes: this.data.reserveState.totalDepositNotes.toNumber() / decimals,
-      totalLoanNotes: this.data.reserveState.totalLoanNotes.toNumber() / decimals,
+      totalDeposits: this.data.state.totalDeposits.toNumber() / decimals,
+      totalDepositNotes: this.data.state.totalDepositNotes.toNumber() / decimals,
+      totalLoanNotes: this.data.state.totalLoanNotes.toNumber() / decimals,
     };
   }
 
@@ -180,8 +182,8 @@ export class HoneyReserve {
    * and interest rate based on the utilization.
    */
   getUtilizationAndInterestRate(): { utilization: number; interestRate: number } {
-    const outstandingDebt = onChainNumberToBN(this.data.reserveState.outstandingDebt);
-    const totalDeposits = this.data.reserveState.totalDeposits;
+    const outstandingDebt = onChainNumberToBN(this.data.state.outstandingDebt);
+    const totalDeposits = this.data.state.totalDeposits;
     if (totalDeposits.isZero()) {
       return { utilization: 0, interestRate: getCcRate(this.data.config, 0) };
     }
@@ -207,11 +209,11 @@ export class HoneyReserve {
   }
 
   async refreshOldReserves(): Promise<void> {
-    if (!this.data.reserveState) {
+    if (!this.data.state) {
       console.log('State is not set, call refresh');
       return;
     }
-    let accruedUntil = new BN(this.data.reserveState.accruedUntil);
+    let accruedUntil = new BN(this.data.state.accruedUntil);
     while (accruedUntil.add(MAX_ACCRUAL_SECONDS).lt(new BN(Math.floor(Date.now() / 1000)))) {
       await this.sendRefreshTx();
       accruedUntil = accruedUntil.add(MAX_ACCRUAL_SECONDS);
@@ -248,14 +250,14 @@ export class HoneyReserve {
   }
 
   async updateReserveConfig(params: UpdateReserveConfigParams): Promise<void> {
-    await this.client.program.rpc.updateReserveConfig(params.config, {
-      accounts: {
+    await this.client.program.methods
+      .updateReserveConfig(params.config)
+      .accounts({
         market: params.market,
         reserve: params.reserve,
         owner: params.owner.publicKey,
-      },
-      signers: [params.owner],
-    });
+      })
+      .rpc();
   }
 
   static async load(client: HoneyClient, address: PublicKey, maybeMarket?: HoneyMarket): Promise<HoneyReserve> {

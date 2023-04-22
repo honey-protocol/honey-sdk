@@ -1,11 +1,6 @@
 import { BN } from '@project-serum/anchor';
 import * as anchor from '@project-serum/anchor';
-import {
-  MintInfo,
-  MintLayout,
-  AccountInfo as TokenAccountInfo,
-  AccountLayout as TokenAccountLayout,
-} from '@solana/spl-token';
+import { MintLayout, AccountLayout as TokenAccountLayout } from '@solana/spl-token';
 import {
   AccountInfo,
   Commitment,
@@ -17,8 +12,10 @@ import {
   Transaction,
   TransactionInstruction,
 } from '@solana/web3.js';
+import { Metaplex } from '@metaplex-foundation/js';
+import { AuthorizationData, Metadata, PROGRAM_ID as TMETA_PROG_ID } from '@metaplex-foundation/mpl-token-metadata';
+import { PREFIX, PROGRAM_ID as AUTH_PROG_ID } from '@metaplex-foundation/mpl-token-auth-rules';
 import { Buffer } from 'buffer';
-import { PositionInfoList } from './layout';
 import { TokenAmount } from './util';
 import {
   CustomProgramError,
@@ -29,6 +26,7 @@ import {
   ToBytes,
   TxnResponse,
 } from './types';
+import { PositionInfoList } from './layout';
 
 export const SOL_DECIMALS = 9;
 export const NULL_PUBKEY = new PublicKey('11111111111111111111111111111111');
@@ -150,6 +148,25 @@ export const findProgramAddress = async (
   return await anchor.web3.PublicKey.findProgramAddress(SEEDBYTES, programId);
 };
 
+export const parseObligationAccount = (account: Buffer, coder: anchor.Coder) => {
+  let obligation = coder.accounts.decode<ObligationAccount>('Obligation', account);
+
+  const parsePosition = (position: any) => {
+    const pos: ObligationPositionStruct = {
+      account: new PublicKey(position.account),
+      amount: new BN(position.amount),
+      side: position.side,
+      reserveIndex: position.reserveIndex,
+      _reserved: [],
+    };
+    return pos;
+  };
+
+  obligation.loans = PositionInfoList.decode(Buffer.from(obligation.loans as any as number[])).map(parsePosition);
+
+  return obligation;
+};
+
 /**
  * Fetch an account for the specified public key and subscribe a callback
  * to be invoked whenever the specified account changes.
@@ -207,7 +224,7 @@ export const getMintInfoAndSubscribe = async function (
     publicKey,
     (account, context) => {
       if (account != null) {
-        let mintInfo = MintLayout.decode(account.data) as MintInfo;
+        let mintInfo = MintLayout.decode(account.data);
         let amount = TokenAmount.mint(mintInfo);
         callback(amount, context);
       } else {
@@ -535,15 +552,15 @@ export const parseTokenAccount = (account: AccountInfo<Buffer>, accountPubkey: P
 
   // PublicKeys and BNs are currently Uint8 arrays and
   // booleans are really Uint8s. Convert them
-  const decoded: AccountInfo<TokenAccountInfo> = {
+  const decoded: AccountInfo<any> = {
     ...account,
     data: {
       address: accountPubkey,
       mint: new PublicKey(data.mint),
       owner: new PublicKey(data.owner),
-      amount: new BN(data.amount, undefined, 'le'),
+      amount: new BN(data.amount.toString(), undefined, 'le'),
       delegate: (data as any).delegateOption ? new PublicKey(data.delegate!) : null,
-      delegatedAmount: new BN(data.delegatedAmount, undefined, 'le'),
+      delegatedAmount: new BN(data.delegatedAmount.toString(), undefined, 'le'),
       isInitialized: (data as any).state != 0,
       isFrozen: (data as any).state == 2,
       isNative: !!(data as any).isNativeOption,
@@ -552,25 +569,6 @@ export const parseTokenAccount = (account: AccountInfo<Buffer>, accountPubkey: P
     },
   };
   return decoded;
-};
-
-export const parseObligationAccount = (account: Buffer, coder: anchor.Coder) => {
-  let obligation = coder.accounts.decode<ObligationAccount>('Obligation', account);
-
-  const parsePosition = (position: any) => {
-    const pos: ObligationPositionStruct = {
-      account: new PublicKey(position.account),
-      amount: new BN(position.amount),
-      side: position.side,
-      reserveIndex: position.reserveIndex,
-      _reserved: [],
-    };
-    return pos;
-  };
-
-  obligation.loans = PositionInfoList.decode(Buffer.from(obligation.loans as any as number[])).map(parsePosition);
-
-  return obligation;
 };
 
 export const parseU192 = (data: Buffer | number[]) => {
@@ -648,4 +646,81 @@ export const getDepositRate = (ccRate: number, utilRatio: number): number => {
   const rt = ccRate / secondsPerYear;
 
   return Math.log1p(Math.expm1(rt)) * secondsPerYear * utilRatio;
+};
+
+export const fetchNft = async (conn: Connection, mint: PublicKey) => {
+  const mplex = new Metaplex(conn);
+  return await mplex.nfts().findByMint({ mintAddress: mint, loadJsonMetadata: true });
+};
+
+export const findTokenRecordPDA = async (mint: PublicKey, token: PublicKey) => {
+  return findProgramAddress(TMETA_PROG_ID, [
+    Buffer.from('metadata'),
+    TMETA_PROG_ID.toBuffer(),
+    mint.toBuffer(),
+    Buffer.from('token_record'),
+    token.toBuffer(),
+  ]);
+};
+
+export const findRuleSetPDA = async (payer: PublicKey, name: string) => {
+  return await findProgramAddress(AUTH_PROG_ID, [Buffer.from(PREFIX), payer.toBuffer(), Buffer.from(name)]);
+};
+
+export const prepPnftAccounts = async (
+  connection: Connection,
+  {
+    nftMetadata,
+    nftMint,
+    sourceAta,
+    destAta,
+    authData = null,
+  }: {
+    nftMetadata?: PublicKey;
+    nftMint: PublicKey;
+    sourceAta: PublicKey;
+    destAta: PublicKey;
+    authData?: AuthorizationData | null;
+  },
+) => {
+  let meta;
+  let creators: PublicKey[] = [];
+  if (nftMetadata) {
+    meta = nftMetadata;
+  } else {
+    const nft = await fetchNft(connection, nftMint);
+    meta = nft.metadataAddress;
+    creators = nft.creators.map((c) => c.address);
+  }
+
+  const inflatedMeta = await Metadata.fromAccountAddress(connection, meta);
+  const ruleSet = inflatedMeta.programmableConfig?.ruleSet;
+
+  const [ownerTokenRecordPda, ownerTokenRecordBump] = await findTokenRecordPDA(nftMint, sourceAta);
+  const [destTokenRecordPda, destTokenRecordBump] = await findTokenRecordPDA(nftMint, destAta);
+
+  //retrieve edition PDA
+  const mplex = new Metaplex(connection);
+  const nftEditionPda = mplex.nfts().pdas().edition({ mint: nftMint });
+
+  //have to re-serialize due to anchor limitations
+  const authDataSerialized = authData
+    ? {
+        payload: Object.entries(authData.payload.map).map(([k, v]) => {
+          return { name: k, payload: v };
+        }),
+      }
+    : null;
+
+  return {
+    meta,
+    creators,
+    ownerTokenRecordBump,
+    ownerTokenRecordPda,
+    destTokenRecordBump,
+    destTokenRecordPda,
+    ruleSet,
+    nftEditionPda,
+    authDataSerialized,
+  };
 };

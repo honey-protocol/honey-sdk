@@ -1,5 +1,5 @@
 import { BN } from '@project-serum/anchor';
-import type { AccountInfo as TokenAccountInfo, MintInfo, u64 } from '@solana/spl-token';
+import { RawAccount, RawMint } from '@solana/spl-token';
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { AggregatorAccount, loadSwitchboardProgram } from '@switchboard-xyz/switchboard-v2';
 
@@ -103,12 +103,12 @@ export class TokenAmount {
     return new TokenAmount(new BN(0), decimals ?? 0);
   }
 
-  public static tokenAccount(tokenAccount: TokenAccountInfo, decimals: number) {
-    return new TokenAmount(tokenAccount.amount, decimals);
+  public static tokenAccount(tokenAccount: RawAccount, decimals: number) {
+    return new TokenAmount(new BN(tokenAccount.amount.toString()), decimals);
   }
 
-  public static mint(mint: MintInfo) {
-    return new TokenAmount(new BN(mint.supply), mint.decimals);
+  public static mint(mint: RawMint) {
+    return new TokenAmount(new BN(mint.supply.toString()), mint.decimals);
   }
 
   public static tokens(tokenAmount: string, decimals: number) {

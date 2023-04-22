@@ -1,18 +1,32 @@
 import * as anchor from '@project-serum/anchor';
-import { Keypair, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
+import {
+  ComputeBudgetProgram,
+  Keypair,
+  PublicKey,
+  SystemProgram,
+  SYSVAR_INSTRUCTIONS_PUBKEY,
+  Transaction,
+} from '@solana/web3.js';
 import { HasPublicKey, ToBytes, TxnResponse } from '../helpers';
-import devnetIdl from '../idl/devnet/honey.json';
-import mainnetBetaIdl from '../idl/mainnet-beta/honey.json';
 import { DerivedAccount } from './derived-account';
 import {
   NATIVE_MINT,
   ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
   AccountLayout as TokenAccountLayout,
-  Token,
+  getMinimumBalanceForRentExemptAccount,
+  createCloseAccountInstruction,
+  createInitializeAccount2Instruction,
+  getAssociatedTokenAddress,
 } from '@solana/spl-token';
 import { HoneyReserve } from '.';
 import { TxResponse } from '../actions';
+import { prepPnftAccounts } from '../helpers/programUtil';
+import { METADATA_PROGRAM_ID } from './user';
+import { PROGRAM_ID as TMETA_PROG_ID } from '@metaplex-foundation/mpl-token-metadata';
+import { PROGRAM_ID as AUTH_PROG_ID } from '@metaplex-foundation/mpl-token-auth-rules';
+import { Honey } from '../artifacts/honey';
+import HoneyIdl from '../artifacts/honey.json';
 
 export interface PlaceBidParams {
   bid_limit: number;
@@ -46,6 +60,8 @@ export interface ExecuteBidParams {
   bidder: PublicKey;
 }
 
+const ROOT_AUTHORITY = new PublicKey('4mhZ7qW2EpryeT9YkBGwfWRVE75pJsFdqCGB7WpKdic2');
+
 type DerivedAccountSeed = HasPublicKey | ToBytes | Uint8Array | string;
 
 export class LiquidatorClient {
@@ -65,11 +81,8 @@ export class LiquidatorClient {
     honeyPubKey: string,
     devnet?: boolean,
   ): Promise<LiquidatorClient> {
-    console.log('provider in liquidator', typeof provider);
-    const idl = devnet ? devnetIdl : mainnetBetaIdl;
     const HONEY_PROGRAM_ID = new PublicKey(honeyPubKey);
-    const program = new anchor.Program(idl as any, HONEY_PROGRAM_ID, provider);
-
+    const program = new anchor.Program(HoneyIdl as anchor.Idl, HONEY_PROGRAM_ID, provider) as anchor.Program<Honey>;
     return new LiquidatorClient(program);
   }
 
@@ -122,11 +135,11 @@ export class LiquidatorClient {
         fromPubkey: bidder,
         newAccountPubkey: depositSource.publicKey,
         space: TokenAccountLayout.span,
-        lamports: (await Token.getMinBalanceRentForExemptAccount(this.program.provider.connection)) + amount, // rent + amount
+        lamports: (await getMinimumBalanceForRentExemptAccount(this.program.provider.connection)) + amount, // rent + amount
         programId: TOKEN_PROGRAM_ID,
       }),
       // init token account
-      Token.createInitAccountInstruction(TOKEN_PROGRAM_ID, NATIVE_MINT, depositSource.publicKey, bidder),
+      createInitializeAccount2Instruction(depositSource.publicKey, NATIVE_MINT, bidder),
     );
 
     try {
@@ -152,15 +165,13 @@ export class LiquidatorClient {
             fromPubkey: bidder,
             newAccountPubkey: depositSource.publicKey,
             space: TokenAccountLayout.span,
-            lamports: (await Token.getMinBalanceRentForExemptAccount(this.program.provider.connection)) + amount, // rent + amount
+            lamports: (await getMinimumBalanceForRentExemptAccount(this.program.provider.connection)) + amount, // rent + amount
             programId: TOKEN_PROGRAM_ID,
           }),
           // init token account
-          Token.createInitAccountInstruction(TOKEN_PROGRAM_ID, NATIVE_MINT, depositSource.publicKey, bidder),
+          createInitializeAccount2Instruction(depositSource.publicKey, NATIVE_MINT, bidder),
         ])
-        .postInstructions([
-          Token.createCloseAccountInstruction(TOKEN_PROGRAM_ID, depositSource.publicKey, bidder, bidder, []),
-        ])
+        .postInstructions([createCloseAccountInstruction(depositSource.publicKey, bidder, bidder, [])])
         .signers([depositSource])
         .rpc();
       console.log(result);
@@ -216,15 +227,13 @@ export class LiquidatorClient {
             fromPubkey: bidder,
             newAccountPubkey: depositSource.publicKey,
             space: TokenAccountLayout.span,
-            lamports: (await Token.getMinBalanceRentForExemptAccount(this.program.provider.connection)) + amount, // rent + amount
+            lamports: (await getMinimumBalanceForRentExemptAccount(this.program.provider.connection)) + amount, // rent + amount
             programId: TOKEN_PROGRAM_ID,
           }),
           // init token account
-          Token.createInitAccountInstruction(TOKEN_PROGRAM_ID, NATIVE_MINT, depositSource.publicKey, bidder),
+          createInitializeAccount2Instruction(depositSource.publicKey, NATIVE_MINT, bidder),
         ])
-        .postInstructions([
-          Token.createCloseAccountInstruction(TOKEN_PROGRAM_ID, depositSource.publicKey, bidder, bidder, []),
-        ])
+        .postInstructions([createCloseAccountInstruction(depositSource.publicKey, bidder, bidder, [])])
         .signers([depositSource])
         .rpc();
       console.log('increase bid tx result', result);
@@ -274,15 +283,13 @@ export class LiquidatorClient {
             fromPubkey: bidder,
             newAccountPubkey: withdrawDestination.publicKey,
             space: TokenAccountLayout.span,
-            lamports: await Token.getMinBalanceRentForExemptAccount(this.program.provider.connection), // rent + amount
+            lamports: await getMinimumBalanceForRentExemptAccount(this.program.provider.connection), // rent + amount
             programId: TOKEN_PROGRAM_ID,
           }),
           // init token account
-          Token.createInitAccountInstruction(TOKEN_PROGRAM_ID, NATIVE_MINT, withdrawDestination.publicKey, bidder),
+          createInitializeAccount2Instruction(withdrawDestination.publicKey, NATIVE_MINT, bidder),
         ])
-        .postInstructions([
-          Token.createCloseAccountInstruction(TOKEN_PROGRAM_ID, withdrawDestination.publicKey, bidder, bidder, []),
-        ])
+        .postInstructions([createCloseAccountInstruction(withdrawDestination.publicKey, bidder, bidder, [])])
         .signers([withdrawDestination])
         .rpc();
 
@@ -293,7 +300,7 @@ export class LiquidatorClient {
     }
 
     // tx.add(ix);
-    // tx.add(Token.createCloseAccountInstruction(TOKEN_PROGRAM_ID, withdrawDestination.publicKey, bidder, bidder, []));
+    // tx.add(createCloseAccountInstruction(withdrawDestination.publicKey, bidder, bidder, []));
 
     // try {
     //   const result = await this.program.provider.sendAndConfirm(tx, [withdrawDestination], { skipPreflight: true });
@@ -321,7 +328,101 @@ export class LiquidatorClient {
       bidEscrowAuthority: bid_escrow_authority.bumpSeed,
     };
 
-    const market = await this.program.account.market.fetch(params.market);
+    const reserve = await this.program.account.reserve.fetch(params.reserve);
+    const obligation = await this.program.account.obligation.fetch(params.obligation);
+    const bidData = await this.program.account.bid.fetch(bid.address);
+    // pay for these should be ther person getting liquidated
+    // @ts-ignore
+    const loanNoteAddress = await this.findLoanNoteAddress(params.reserve, params.obligation, obligation.owner);
+    // @ts-ignore
+    const loanNoteMint = await this.findLoanNoteMintAddress(params.reserve, reserve.tokenMint);
+    const vault = await this.findVaultAddress(params.market, params.reserve);
+
+    // find the registered nft to liqudiate
+    const vaultedNFTMint = obligation.collateralNftMint[0];
+    const vaultedNFT: PublicKey = await getAssociatedTokenAddress(vaultedNFTMint, market_authority.address, true);
+
+    const receiverAccount: PublicKey = await getAssociatedTokenAddress(
+      params.nftMint,
+      // @ts-ignore
+      bidData.bidder,
+    );
+
+    const liquidationFeeReceiver = await getAssociatedTokenAddress(
+      // @ts-ignore
+      bidData.bidMint,
+      params.payer,
+    );
+
+    const leftoversReceiver = await getAssociatedTokenAddress(
+      // @ts-ignore
+      bidData.bidMint,
+      ROOT_AUTHORITY,
+    );
+
+    await reserves[0].refreshOldReserves();
+
+    const refreshIx = await reserves[0].makeRefreshIx();
+    try {
+      // @ts-ignore
+      const result = await this.program.methods
+        .executeLiquidateBid(bumps)
+        .accounts({
+          market: params.market,
+          marketAuthority: market_authority.address,
+          obligation: params.obligation,
+          reserve: params.reserve,
+          vault: vault.address,
+          loanNoteMint: loanNoteMint.address,
+          loanAccount: loanNoteAddress.address,
+          bid: bid.address,
+          bidder: new PublicKey(bidData.bidder),
+          rootAuthority: ROOT_AUTHORITY,
+          bidMint: new PublicKey(bidData.bidMint),
+          bidEscrow: new PublicKey(bidData.bidEscrow),
+          bidEscrowAuthority: bid_escrow_authority.address,
+          payerAccount: new PublicKey(bidData.bidEscrow),
+          nftMint: params.nftMint,
+          collateralAccount: vaultedNFT,
+          receiverAccount: receiverAccount,
+          liquidationFeeReceiver,
+          leftoversReceiver,
+          payer: params.payer,
+          // system accounts
+          tokenProgram: TOKEN_PROGRAM_ID,
+          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .preInstructions([refreshIx])
+        .rpc();
+      // tx.add(refreshIx);
+      // tx.add(ix);
+      // const result = await this.program.provider.sendAndConfirm(tx, [], { skipPreflight: true });
+      return [TxnResponse.Success, [result]];
+    } catch (err) {
+      console.log('error', err);
+      return [TxnResponse.Failed, []];
+    }
+  }
+
+  /**
+   * Execute a liquidation bid.
+   * @param params
+   * @returns
+   */
+  async executePnftBid(reserves: HoneyReserve[], params: ExecuteBidParams) {
+    const bid = await this.findBidAccount(params.market, params.bidder);
+    const bid_escrow = await this.findEscrowAccount(params.market, params.bidder);
+    const bid_escrow_authority = await this.findBidEscrowAuthorityAccount(bid_escrow.address);
+    const market_authority = await this.findMarketAuthority(params.market);
+
+    const bumps = {
+      bid: bid.bumpSeed,
+      bidEscrow: bid_escrow.bumpSeed,
+      bidEscrowAuthority: bid_escrow_authority.bumpSeed,
+    };
+
     const reserve = await this.program.account.reserve.fetch(params.reserve);
     const obligation = await this.program.account.obligation.fetch(params.obligation);
     const bidData = await this.program.account.bid.fetch(bid.address);
@@ -335,25 +436,15 @@ export class LiquidatorClient {
 
     // find the registered nft to liqudiate
     const vaultedNFTMint = obligation.collateralNftMint[0];
-    const vaultedNFT: PublicKey = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      vaultedNFTMint,
-      market_authority.address,
-      true,
-    );
+    const vaultedNFT: PublicKey = await getAssociatedTokenAddress(vaultedNFTMint, market_authority.address, true);
 
-    const receiverAccount: PublicKey = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
+    const receiverAccount: PublicKey = await getAssociatedTokenAddress(
       params.nftMint,
       // @ts-ignore
       bidData.bidder,
     );
 
-    const liquidationFeeReceiver = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
+    const liquidationFeeReceiver = await getAssociatedTokenAddress(
       // @ts-ignore
       bidData.bidMint,
       params.payer,
@@ -361,9 +452,7 @@ export class LiquidatorClient {
 
     console.log('liquidationFeeReceiver', liquidationFeeReceiver.toString());
 
-    const leftoversReceiver = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
+    const leftoversReceiver = await getAssociatedTokenAddress(
       // @ts-ignore
       bidData.bidMint,
       bidData.bidder,
@@ -375,40 +464,86 @@ export class LiquidatorClient {
     const refreshIx = await reserves[0].makeRefreshIx();
     // const tx = new Transaction().add(refreshIx);
 
-    try {
-      // @ts-ignore
-      const result = await this.program.methods
-        .executeLiquidateBid(bumps)
-        .accounts({
-          market: params.market,
-          marketAuthority: market_authority.address,
-          obligation: params.obligation,
-          reserve: params.reserve,
-          vault: vault.address,
-          loanNoteMint: loanNoteMint.address,
-          loanAccount: loanNoteAddress.address,
-          collateralAccount: vaultedNFT,
-          bid: bid.address,
-          bidder: new PublicKey(bidData.bidder),
-          bidMint: new PublicKey(bidData.bidMint),
-          bidEscrow: new PublicKey(bidData.bidEscrow),
-          bidEscrowAuthority: bid_escrow_authority.address,
-          payerAccount: new PublicKey(bidData.bidEscrow),
-          nftMint: params.nftMint,
-          receiverAccount: receiverAccount,
-          liquidationFeeReceiver,
-          leftoversReceiver,
-          payer: params.payer,
-          // system accounts
-          tokenProgram: TOKEN_PROGRAM_ID,
-          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-          rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        })
-        .preInstructions([refreshIx])
-        .rpc();
+    const [nftMetadata, metadataBump] = await PublicKey.findProgramAddress(
+      [Buffer.from('metadata'), METADATA_PROGRAM_ID.toBuffer(), params.nftMint.toBuffer()],
+      METADATA_PROGRAM_ID,
+    );
 
-      // const result = await this.program.provider.sendAndConfirm(tx, [], { skipPreflight: true });
+    //pnft
+    const {
+      meta,
+      ownerTokenRecordBump,
+      ownerTokenRecordPda,
+      destTokenRecordBump,
+      destTokenRecordPda,
+      ruleSet,
+      nftEditionPda,
+      authDataSerialized,
+    } = await prepPnftAccounts(this.conn, {
+      nftMint: params.nftMint,
+      destAta: receiverAccount,
+      authData: null, //currently useless
+      sourceAta: vaultedNFT,
+    });
+    const remainingAccounts = [];
+    if (!!ruleSet) {
+      remainingAccounts.push({
+        pubkey: ruleSet,
+        isSigner: false,
+        isWritable: false,
+      });
+    }
+
+    try {
+      const tx = new Transaction();
+      const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
+        units: 500000,
+      });
+      tx.add(modifyComputeUnits);
+      tx.add(refreshIx);
+      tx.add(
+        await this.program.methods
+          .executeLiquidatePnftBid(bumps, authDataSerialized, !!ruleSet)
+          .accounts({
+            market: params.market,
+            marketAuthority: market_authority.address,
+            obligation: params.obligation,
+            reserve: params.reserve,
+            vault: vault.address,
+            loanNoteMint: loanNoteMint.address,
+            loanAccount: loanNoteAddress.address,
+            collateralAccount: vaultedNFT,
+            bid: bid.address,
+            bidder: new PublicKey(bidData.bidder),
+            bidMint: new PublicKey(bidData.bidMint),
+            bidEscrow: new PublicKey(bidData.bidEscrow),
+            bidEscrowAuthority: bid_escrow_authority.address,
+            payerAccount: new PublicKey(bidData.bidEscrow),
+            nftMint: params.nftMint,
+            nftMetadata,
+            nftEdition: nftEditionPda,
+            ownerTokenRecord: ownerTokenRecordPda,
+            destTokenRecord: destTokenRecordPda,
+            pnftShared: {
+              authorizationRulesProgram: AUTH_PROG_ID,
+              tokenMetadataProgram: TMETA_PROG_ID,
+              instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+            },
+            receiverAccount: receiverAccount,
+            liquidationFeeReceiver,
+            leftoversReceiver,
+            payer: params.payer,
+            // system accounts
+            tokenProgram: TOKEN_PROGRAM_ID,
+            associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+            rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+            systemProgram: anchor.web3.SystemProgram.programId,
+          })
+          .remainingAccounts(remainingAccounts)
+          .instruction(),
+      );
+
+      const result = await this.program.provider.sendAndConfirm(tx, [], { skipPreflight: true });
       console.log(result);
       return [TxnResponse.Success, [result]];
     } catch (err) {
