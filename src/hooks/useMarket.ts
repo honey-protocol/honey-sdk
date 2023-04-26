@@ -25,7 +25,7 @@ export const useMarket = (
 
   const [honeyClient, setHoneyClient] = useState<HoneyClient>();
   const [honeyMarket, setHoneyMarket] = useState<HoneyMarket>();
-  const [honeyUser, setHoneyUser] = useState<HoneyUser[]>([]);
+  const [honeyUser, setHoneyUser] = useState<HoneyUser[]>();
   const [honeyReserves, setHoneyReserves] = useState<HoneyReserve[]>();
 
   useEffect(() => {
@@ -66,7 +66,15 @@ export const useMarket = (
         reserves,
       );
 
-      setHoneyUser((prevHoneyUser) => [...prevHoneyUser, user]);
+
+      setHoneyUser((prevHoneyUser) => {
+        if (prevHoneyUser.some((u) => u.market.address.toString() === user.market.address.toString())) {
+        // if user for this market already exists in state, return previous state
+        return prevHoneyUser;
+      }
+    // otherwise, append new user object to state
+    return [...prevHoneyUser, user];
+});
     };
 
     const runMarkets = async () => {
