@@ -38,15 +38,15 @@ export const useAllPositions = (
     error?: Error;
   }>({ loading: false });
 
-  const { honeyUser, honeyReserves, honeyMarket } = useMarket(connection, wallet, honeyId, [honeyMarketId]);
+  const { honeyUser, honeyReserves, honeyMarket } = useMarket(connection, wallet, honeyId, honeyMarketId);
   const { marketReserveInfo } = useHoney();
 
   const fetchPositions = async (isDevnet: boolean) => {
     console.log('fetching bids...');
     const resBids = await fetch(
       isDevnet
-        ? `https://honeyfinance.xyz/bids/${honeyMarketId}`
-        : `https://honeyfinance.xyz/bids/${honeyMarketId}`,
+        ? `https://honey-nft-api.herokuapp.com/bids/${honeyMarketId}`
+        : `https://honey-mainnet-api.herokuapp.com/bids/${honeyMarketId}`,
       { mode: 'cors' },
     );
 
