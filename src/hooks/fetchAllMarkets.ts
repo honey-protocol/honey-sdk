@@ -133,8 +133,8 @@ export const fetchPositionsAndBids = async (
   console.log('fetching bids...');
   const resBids = await fetch(
     isDevnet
-      ? `https://honey-nft-api.herokuapp.com/bids/${honeyMarketId}`
-      : `https://honey-mainnet-api.herokuapp.com/bids/${honeyMarketId}`,
+      ? `http://honeyfinance.xyz/bids/${honeyMarketId}`
+      : `http://honeyfinance.xyz/bids/${honeyMarketId}`,
     { mode: 'cors' },
   );
   const arrBids = await resBids.json();
