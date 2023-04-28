@@ -70,7 +70,7 @@ export interface HoneyProps {
  */
 export const HoneyProvider: FC<HoneyProps> = ({ children, wallet, connection, honeyProgramId, honeyMarketId }) => {
   const { program, coder } = useAnchor();
-  const { honeyClient, honeyMarket } = useMarket(connection, wallet, honeyProgramId, [honeyMarketId]);
+  const { honeyClient, honeyMarket } = useMarket(connection, wallet, honeyProgramId, honeyMarketId);
 
   const [market, setMarket] = useState<MarketAccount | null>(null);
   const [marketReserveInfo, setMarketReserveInfo] = useState<CachedReserveInfo[]>();

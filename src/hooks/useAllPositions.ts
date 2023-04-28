@@ -38,7 +38,7 @@ export const useAllPositions = (
     error?: Error;
   }>({ loading: false });
 
-  const { honeyUser, honeyReserves, honeyMarket } = useMarket(connection, wallet, honeyId, [honeyMarketId]);
+  const { honeyUser, honeyReserves, honeyMarket } = useMarket(connection, wallet, honeyId, honeyMarketId);
   const { marketReserveInfo } = useHoney();
 
   const fetchPositions = async (isDevnet: boolean) => {
@@ -47,7 +47,7 @@ export const useAllPositions = (
       isDevnet
         ? `https://honeyfinance.xyz/bids/${honeyMarketId}`
         : `https://honeyfinance.xyz/bids/${honeyMarketId}`,
-      { mode: 'cors' },
+      // { mode: 'no-cors' },
     );
 
     const arrBids = await resBids.json();
