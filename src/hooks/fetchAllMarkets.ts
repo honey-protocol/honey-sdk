@@ -135,7 +135,6 @@ export const fetchPositionsAndBids = async (
     isDevnet
       ? `https://honeyfinance.xyz/bids/${honeyMarketId}`
       : `https://honeyfinance.xyz/bids/${honeyMarketId}`,
-    { mode: 'cors' },
   );
   const arrBids = await resBids.json();
   const highestBid = Math.max.apply(

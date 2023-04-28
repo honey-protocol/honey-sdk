@@ -151,7 +151,7 @@ export class HoneyUser implements User {
 
     const obligationData = await this.getObligationData();
     const collateralCount =
-      obligationData instanceof Error
+      !obligationData
         ? 1
         : obligationData.collateralNftMint.filter((mint) => !mint.equals(PublicKey.default)).length;
     const nftValue = await this.market.fetchNFTFloorPriceInReserve(index);
@@ -187,9 +187,9 @@ export class HoneyUser implements User {
   //   obligation.loans = loans;
   //   return obligation;
   // }
-  async getObligationData(): Promise<ObligationAccount | Error> {
+  async getObligationData(): Promise<ObligationAccount> {
     const data = await this.conn.getAccountInfo(this.obligation.address);
-    if (!data) return new Error('Could not get obligation data');
+    if (!data) return null;
     const parsed = parseObligationAccount(data.data, this.client.program.coder);
     return parsed;
   }
