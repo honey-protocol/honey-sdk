@@ -36,7 +36,8 @@ export const useBorrowPositions = (
 
     const collateralNFTPositions: CollateralNFTPosition[] = [];
     const obligation = await honeyUser.getObligationData();
-    if (!obligation.market) {
+
+    if (!obligation) {
       setStatus({ loading: false, error: new Error('Obligation does not have a valid market') });
       return;
     }
