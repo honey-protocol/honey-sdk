@@ -104,8 +104,4 @@ $ yarn link react-dom
 ```
 
 Et voila! You should be good to go.
-Any problems during the setup, don't hesitate to reach out
-
-- Twitter:
-- Discord:
-
+Any problems during the setup, don't hesitate to reach out.
