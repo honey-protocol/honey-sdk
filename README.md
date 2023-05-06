@@ -54,8 +54,54 @@ yarn add @honey-finance/sdk
         2. can call fetchReserveValue to get the switchboard price oracle's most recent data
         3. can update reserve's configuration by calling updateReserveConfig
 
-## Developing locally with the @honey-finance/sdk
+## 👷🏼 Developing locally with the @honey-finance/sdk
 
-Look for the secion on local testing in the article below
+In order to develop locally with the @honey-finance/sdk we need to run a couple of configurations. <br>
+First up, we want to create a folder that we name e.g. local_honey_setup:
 
-https://blog.logrocket.com/the-complete-guide-to-publishing-a-react-package-to-npm/
+```bash
+$ mkdir local_honey_setup
+```
+We can now cd into the folder and clone the SDK;
+```bash
+$ cd local_honey_setup
+$ git clone https://github.com/honey-protocol/honey-sdk.git
+```
+Now that we are inside the local_honey_setup folder, make sure your project (Front-end supposedly) is inside the same folder, this is for convenience.
+
+In order to eliminate potential conflicts by previous attempts on linking the project, you can list your exitsting links by running;
+```bash
+$ cat ~/.config/yarn/link
+```
+If there are any present regarding the linking of the honey-sdk, make sure to remove those. Navigate to the folder where the links exist and run the following commands;
+```bash
+$ cd ~/.config/yarn/link 
+$ ls # shows you existing links
+$ rm -rf folder_name # folder name presents the folder you want to delete
+```
+Now that we have that setup, we can start the actual linking. 
+Open two terminal windows, in the frist, navigate to your front-end, in the second one navigate to the SDK. In both terminals run the yarn (or npm) install command;
+```bash
+$ yarn install # both in the front-end and in the sdk folder
+```
+Now in the terminal where you have the SDK open, in the root run the following commmands;
+```bash
+$ yarn build # builds the project into the dist folder which is being served to the front-end 
+$ yarn link # sets the link in our .config/yarn/link folder and allows us to link the honey-sdk in our FED
+```
+In your terminal window where you have the FED open, in the root - run the following commands;
+```bash
+$ yarn link @honey-finance/sdk # links the sdk
+$ cd node_modules/react # navigate to the react package
+$ yarn link # link the react package to overrule the react package of the SDK
+$ cd ../react-dom # navigate to the react-dom package to do the exact same thing
+$ yarn link # link react-dom over SDK react-dom package 
+```
+Now navigate to the root of the SDK in your terminal and link the react / react-dom packages by running the following command;
+```bash
+$ yarn link react
+$ yarn link react-dom
+```
+
+Et voila! You should be good to go.
+Any problems during the setup, don't hesitate to reach out.
