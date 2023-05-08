@@ -38,13 +38,10 @@ import {
 } from '../helpers/programUtil';
 import { TxResponse } from '../actions/types';
 import { TokenAmount } from './token-amount';
-import {
-  ObligationAccount,
-  TxnResponse,
-  CachedReserveInfo,
-  PositionInfoList,
-  ObligationPositionStruct,
-} from '../helpers';
+import { ObligationAccount, TxnResponse, CachedReserveInfo, ObligationPositionStruct } from '../helpers';
+import { findProgramAddressSync } from '@project-serum/anchor/dist/cjs/utils/pubkey';
+import { Honey } from '../artifacts/honey';
+import HoneyIdl from '../artifacts/honey.json';
 
 export const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
 export const SOLVENT_PROGRAM = new PublicKey('GwRvoU6vTXQAbS75KaMbm7o2iTYVtdEnF4mFUbZr9Cmb');
@@ -150,10 +147,9 @@ export class HoneyUser implements User {
     }
 
     const obligationData = await this.getObligationData();
-    const collateralCount =
-      !obligationData
-        ? 1
-        : obligationData.collateralNftMint.filter((mint) => !mint.equals(PublicKey.default)).length;
+    const collateralCount = !obligationData
+      ? 1
+      : obligationData.collateralNftMint.filter((mint) => !mint.equals(PublicKey.default)).length;
     const nftValue = await this.market.fetchNFTFloorPriceInReserve(index);
     const nftValueMantissaShifted = new anchor.BN(nftValue * collateralCount * 10 ** mantissa);
     const debtValueMantissaShifted = new anchor.BN(debt * 10 ** mantissa);
@@ -178,20 +174,24 @@ export class HoneyUser implements User {
     return { allowance, debt, liquidationThreshold, ltv, ratio, exponent };
   }
 
-  // async getObligationData(): Promise<ObligationAccount> {
-  //   const obligation = (await this.client.program.account.obligation.fetchNullable(
-  //     this.obligation.address,
-  //   )) as ObligationAccount;
-
-  //   const loans = PositionInfoList.decode(Buffer.from(obligation.loans as any as number[])).map(this.parsePosition);
-  //   obligation.loans = loans;
-  //   return obligation;
-  // }
   async getObligationData(): Promise<ObligationAccount> {
     const data = await this.conn.getAccountInfo(this.obligation.address);
     if (!data) return null;
     const parsed = parseObligationAccount(data.data, this.client.program.coder);
     return parsed;
+  }
+
+  static async userObligationData(
+    program: anchor.Program,
+    market: PublicKey,
+    user: PublicKey,
+    programId: PublicKey,
+  ): Promise<ObligationAccount> {
+    const obligationAccount = await findProgramAddressSync(
+      [Buffer.from('obligation'), market.toBuffer(), user.toBuffer()],
+      programId,
+    );
+    return program.account.obligation.fetchNullable(obligationAccount[0]) as unknown as ObligationAccount;
   }
 
   parsePosition = (position: any) => {
