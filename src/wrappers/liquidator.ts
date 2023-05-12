@@ -515,6 +515,7 @@ export class LiquidatorClient {
             collateralAccount: vaultedNFT,
             bid: bid.address,
             bidder: new PublicKey(bidData.bidder),
+            rootAuthority: ROOT_AUTHORITY,
             bidMint: new PublicKey(bidData.bidMint),
             bidEscrow: new PublicKey(bidData.bidEscrow),
             bidEscrowAuthority: bid_escrow_authority.address,
