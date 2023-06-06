@@ -156,7 +156,9 @@ export const fetchPositionsAndBids = async (
     connection,
     honeyMarket.nftSwitchboardPriceAggregator,
   );
-  const nftPrice = nftPriceUsd / solPriceUsd;
+
+  // set nft price to be usd if market is usdc | if not set to be usd/solpriceusd
+  const nftPrice = honeyReserves[0].data.exponent === -6 ?  nftPriceUsd : nftPriceUsd / solPriceUsd;
 
   // reserve info
   const marketReserves = await program.account.market.fetch(honeyMarket.address);
@@ -189,7 +191,8 @@ export const fetchPositionsAndBids = async (
           nftMints.map(async (nft) => {
             if (nft.toString() != '11111111111111111111111111111111') {
               let debt = 0;
-              const exponent = -honeyReserves[0].data.exponent;
+              // why did we had a - infront of our reserves? the exponent was already -6 || -9
+              const exponent = honeyReserves[0].data.exponent;
               if (item.account?.loans.length != 0) {
                 const bnDebt = onChainNumberToBN(marketReserves.reserves[0].loanNoteExchangeRate)
                   .mul(item.account?.loans[0].amount)
