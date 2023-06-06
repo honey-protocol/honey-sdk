@@ -191,13 +191,18 @@ export const fetchPositionsAndBids = async (
           nftMints.map(async (nft) => {
             if (nft.toString() != '11111111111111111111111111111111') {
               let debt = 0;
-              // why did we had a - infront of our reserves? the exponent was already -6 || -9
-              const exponent = honeyReserves[0].data.exponent;
+              const exponent = -honeyReserves[0].data.exponent;
               if (item.account?.loans.length != 0) {
                 const bnDebt = onChainNumberToBN(marketReserves.reserves[0].loanNoteExchangeRate)
                   .mul(item.account?.loans[0].amount)
-                  .div(new BN(10 ** 6));
-                debt = bnDebt.toNumber() / 10 ** exponent;
+                  .div(new BN(10 ** 6))
+                if (exponent == -6 || exponent == 6) {
+                  // added an additional 10**3
+                  const val = bnDebt.div(new BN(Math.pow(10, 3)));
+                  debt = val.toNumber() / 10 ** exponent
+                } else {
+                    debt = bnDebt.toNumber() / 10 ** exponent;  
+                }
               }
 
               let position: NftPosition = {
@@ -210,6 +215,7 @@ export const fetchPositionsAndBids = async (
                 highest_bid: highestBid,
                 verifiedCreator: honeyMarket.nftCollectionCreator,
               };
+
               arrPositions.push(position);
             }
           }),
