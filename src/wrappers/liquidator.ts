@@ -33,6 +33,7 @@ export interface PlaceBidParams {
   market: PublicKey;
   bidder: PublicKey;
   bid_mint: PublicKey;
+  exponent: number;
   deposit_source?: PublicKey;
 }
 
@@ -41,6 +42,7 @@ export interface IncreaseBidParams {
   market: PublicKey;
   bidder: PublicKey;
   bid_mint: PublicKey;
+  exponent: number
   deposit_source?: PublicKey;
 }
 
@@ -122,7 +124,7 @@ export class LiquidatorClient {
       bidEscrowAuthority: bid_escrow_authority.bumpSeed,
     };
 
-    const amount = params.bid_limit * 1e9; /* Wrapped SOL's decimals is 9 */
+    const amount = params.bid_limit * params.exponent; /* exponent contains the number of decimals for the token */
     const amountBN = new anchor.BN(amount);
 
     const bidder = params.bidder;
@@ -196,7 +198,7 @@ export class LiquidatorClient {
       bidEscrowAuthority: bid_escrow_authority.bumpSeed,
     };
 
-    const amount = params.bid_increase * 1e9; /* Wrapped SOL's decimals is 9 */
+    const amount = params.bid_increase * params.exponent; /* exponent contains the number of decimals for the token */
     const amountBN = new anchor.BN(amount);
 
     const bidder = params.bidder;
