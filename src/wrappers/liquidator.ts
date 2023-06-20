@@ -42,7 +42,7 @@ export interface IncreaseBidParams {
   market: PublicKey;
   bidder: PublicKey;
   bid_mint: PublicKey;
-  exponent: number
+  exponent: number;
   deposit_source?: PublicKey;
 }
 
@@ -130,20 +130,11 @@ export class LiquidatorClient {
     const bidder = params.bidder;
 
     // wSOL deposit
-    const depositSource = Keypair.generate();
-    const tx = new Transaction().add(
-      // create token account
-      SystemProgram.createAccount({
-        fromPubkey: bidder,
-        newAccountPubkey: depositSource.publicKey,
-        space: TokenAccountLayout.span,
-        lamports: (await getMinimumBalanceForRentExemptAccount(this.program.provider.connection)) + amount, // rent + amount
-        programId: TOKEN_PROGRAM_ID,
-      }),
-      // init token account
-      createInitializeAccount2Instruction(depositSource.publicKey, NATIVE_MINT, bidder),
-    );
-
+    const depositKeypair = Keypair.generate();
+    const depositSource =
+      params.bid_mint == NATIVE_MINT
+        ? depositKeypair.publicKey
+        : await getAssociatedTokenAddress(params.bid_mint, params.bidder);
     try {
       const result = await this.program.methods
         .placeLiquidateBid(bumps, amountBN)
@@ -152,7 +143,7 @@ export class LiquidatorClient {
           marketAuthority: market_authority.address,
           bid: bid.address,
           bidder: params.bidder,
-          depositSource: depositSource.publicKey,
+          depositSource: depositSource,
           bidMint: params.bid_mint,
           bidEscrow: bid_escrow.address,
           bidEscrowAuthority: bid_escrow_authority.address,
@@ -162,20 +153,27 @@ export class LiquidatorClient {
           rent: anchor.web3.SYSVAR_RENT_PUBKEY,
           systemProgram: anchor.web3.SystemProgram.programId,
         })
-        .preInstructions([
-          SystemProgram.createAccount({
-            fromPubkey: bidder,
-            newAccountPubkey: depositSource.publicKey,
-            space: TokenAccountLayout.span,
-            lamports: (await getMinimumBalanceForRentExemptAccount(this.program.provider.connection)) + amount, // rent + amount
-            programId: TOKEN_PROGRAM_ID,
-          }),
-          // init token account
-          createInitializeAccount2Instruction(depositSource.publicKey, NATIVE_MINT, bidder),
-        ])
-        .postInstructions([createCloseAccountInstruction(depositSource.publicKey, bidder, bidder, [])])
-        .signers([depositSource])
+        .preInstructions(
+          params.bid_mint == NATIVE_MINT
+            ? [
+                SystemProgram.createAccount({
+                  fromPubkey: bidder,
+                  newAccountPubkey: depositSource,
+                  space: TokenAccountLayout.span,
+                  lamports: (await getMinimumBalanceForRentExemptAccount(this.program.provider.connection)) + amount, // rent + amount
+                  programId: TOKEN_PROGRAM_ID,
+                }),
+                // init token account
+                createInitializeAccount2Instruction(depositSource, NATIVE_MINT, bidder),
+              ]
+            : [],
+        )
+        .postInstructions(
+          params.bid_mint == NATIVE_MINT ? [createCloseAccountInstruction(depositSource, bidder, bidder)] : [],
+        )
+        .signers(params.bid_mint == NATIVE_MINT ? [depositKeypair] : [])
         .rpc();
+
       console.log(result);
       return [TxnResponse.Success, [result]];
     } catch (err) {
