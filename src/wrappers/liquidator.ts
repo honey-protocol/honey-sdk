@@ -125,8 +125,6 @@ export class LiquidatorClient {
     // set bidding amount based on exponent
     const amount = params.bid_limit * params.exponent; /* exponent contains the number of decimals for the token */
     const amountBN = new anchor.BN(amount);
-    console.log('@@-- amount ', amount)
-    console.log('@@-- amount BN', amountBN)
     // init bumps
     const bumps = {
       bid: bid.bumpSeed,
