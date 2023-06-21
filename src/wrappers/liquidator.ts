@@ -42,7 +42,7 @@ export interface IncreaseBidParams {
   market: PublicKey;
   bidder: PublicKey;
   bid_mint: PublicKey;
-  exponent: number
+  exponent: number;
   deposit_source?: PublicKey;
 }
 
@@ -108,43 +108,38 @@ export class LiquidatorClient {
     const [address, bumpSeed] = await PublicKey.findProgramAddress(seedBytes, this.program.programId);
     return new DerivedAccount(address, bumpSeed);
   }
-
+  /**
+   * @description
+   * @params
+   * @returns
+  */
   async placeBid(params: PlaceBidParams): Promise<TxResponse> {
+    // return if bid not greater than 0
     if (params.bid_limit <= 0) return [TxnResponse.Failed, ['Bid limit should be greater than 0']];
-
+    // set all bid constants
     const bid = await this.findBidAccount(params.market, params.bidder);
-    console.log(bid.address.toString());
     const bid_escrow = await this.findEscrowAccount(params.market, params.bidder);
     const bid_escrow_authority = await this.findBidEscrowAuthorityAccount(bid_escrow.address);
     const market_authority = await this.findMarketAuthority(params.market);
-
+    const bidder = params.bidder;
+    // set bidding amount based on exponent
+    const amount = params.bid_limit * params.exponent; /* exponent contains the number of decimals for the token */
+    const amountBN = new anchor.BN(amount);
+    // init bumps
     const bumps = {
       bid: bid.bumpSeed,
       bidEscrow: bid_escrow.bumpSeed,
       bidEscrowAuthority: bid_escrow_authority.bumpSeed,
     };
-
-    const amount = params.bid_limit * params.exponent; /* exponent contains the number of decimals for the token */
-    const amountBN = new anchor.BN(amount);
-
-    const bidder = params.bidder;
-
-    // wSOL deposit
-    const depositSource = Keypair.generate();
-    const tx = new Transaction().add(
-      // create token account
-      SystemProgram.createAccount({
-        fromPubkey: bidder,
-        newAccountPubkey: depositSource.publicKey,
-        space: TokenAccountLayout.span,
-        lamports: (await getMinimumBalanceForRentExemptAccount(this.program.provider.connection)) + amount, // rent + amount
-        programId: TOKEN_PROGRAM_ID,
-      }),
-      // init token account
-      createInitializeAccount2Instruction(depositSource.publicKey, NATIVE_MINT, bidder),
-    );
-
+    // generate a keypair for transactions 
+    const depositKeypair = Keypair.generate();
+    // if currency is not SOL we fetch ATA based on SPL mint and bidders address - returns / needs to be a public key
+    const depositSource =
+      params.bid_mint.toString() == NATIVE_MINT.toString()
+        ? depositKeypair.publicKey
+        : await getAssociatedTokenAddress(params.bid_mint, params.bidder);
     try {
+      // start with instructions 
       const result = await this.program.methods
         .placeLiquidateBid(bumps, amountBN)
         .accounts({
@@ -152,31 +147,35 @@ export class LiquidatorClient {
           marketAuthority: market_authority.address,
           bid: bid.address,
           bidder: params.bidder,
-          depositSource: depositSource.publicKey,
+          depositSource: depositSource,
           bidMint: params.bid_mint,
           bidEscrow: bid_escrow.address,
           bidEscrowAuthority: bid_escrow_authority.address,
-
           // system accounts
           tokenProgram: TOKEN_PROGRAM_ID,
           rent: anchor.web3.SYSVAR_RENT_PUBKEY,
           systemProgram: anchor.web3.SystemProgram.programId,
         })
-        .preInstructions([
-          SystemProgram.createAccount({
-            fromPubkey: bidder,
-            newAccountPubkey: depositSource.publicKey,
-            space: TokenAccountLayout.span,
-            lamports: (await getMinimumBalanceForRentExemptAccount(this.program.provider.connection)) + amount, // rent + amount
-            programId: TOKEN_PROGRAM_ID,
-          }),
-          // init token account
-          createInitializeAccount2Instruction(depositSource.publicKey, NATIVE_MINT, bidder),
-        ])
-        .postInstructions([createCloseAccountInstruction(depositSource.publicKey, bidder, bidder, [])])
-        .signers([depositSource])
+        .preInstructions(
+          params.bid_mint.toString() == NATIVE_MINT.toString()
+            ? [
+                SystemProgram.createAccount({
+                  fromPubkey: bidder,
+                  newAccountPubkey: depositSource,
+                  space: TokenAccountLayout.span,
+                  lamports: (await getMinimumBalanceForRentExemptAccount(this.program.provider.connection)) + amount, // rent + amount
+                  programId: TOKEN_PROGRAM_ID,
+                }),
+                // init token account
+                createInitializeAccount2Instruction(depositSource, NATIVE_MINT, bidder),
+              ]
+            : [],
+        )
+        .postInstructions(
+          params.bid_mint.toString() == NATIVE_MINT.toString() ? [createCloseAccountInstruction(depositSource, bidder, bidder)] : [],
+        )
+        .signers(params.bid_mint.toString() == NATIVE_MINT.toString() ? [depositKeypair] : [])
         .rpc();
-      console.log(result);
       return [TxnResponse.Success, [result]];
     } catch (err) {
       console.error(`Error placing bid: ${err}`);
@@ -186,8 +185,8 @@ export class LiquidatorClient {
 
   async increaseBid(params: IncreaseBidParams): Promise<TxResponse> {
     if (params.bid_increase <= 0) return [TxnResponse.Failed, ['Bid increase amount should be greater than 0']];
+    
     const bid = await this.findBidAccount(params.market, params.bidder);
-    console.log(bid.address.toString());
     const bid_escrow = await this.findEscrowAccount(params.market, params.bidder);
     const bid_escrow_authority = await this.findBidEscrowAuthorityAccount(bid_escrow.address);
     const market_authority = await this.findMarketAuthority(params.market);
@@ -203,8 +202,13 @@ export class LiquidatorClient {
 
     const bidder = params.bidder;
 
-    // wSOL deposit
-    const depositSource = Keypair.generate();
+    // generate a keypair for transactions 
+    const depositKeypair = Keypair.generate();
+    // if currency is not SOL we fetch ATA based on SPL mint and bidders address - returns / needs to be a public key
+    const depositSource =
+      params.bid_mint.toString() == NATIVE_MINT.toString()
+        ? depositKeypair.publicKey
+        : await getAssociatedTokenAddress(params.bid_mint, params.bidder);
 
     try {
       const result = await this.program.methods
@@ -214,29 +218,35 @@ export class LiquidatorClient {
           marketAuthority: market_authority.address,
           bid: bid.address,
           bidder: params.bidder,
-          depositSource: depositSource.publicKey,
+          depositSource: depositSource,
           bidMint: params.bid_mint,
           bidEscrow: bid_escrow.address,
           bidEscrowAuthority: bid_escrow_authority.address,
-
           // system accounts
           tokenProgram: TOKEN_PROGRAM_ID,
           rent: anchor.web3.SYSVAR_RENT_PUBKEY,
           systemProgram: anchor.web3.SystemProgram.programId,
         })
-        .preInstructions([
+        .preInstructions(
+          params.bid_mint.toString() == NATIVE_MINT.toString()
+          ?
+          [
           SystemProgram.createAccount({
             fromPubkey: bidder,
-            newAccountPubkey: depositSource.publicKey,
+            newAccountPubkey: depositSource,
             space: TokenAccountLayout.span,
             lamports: (await getMinimumBalanceForRentExemptAccount(this.program.provider.connection)) + amount, // rent + amount
             programId: TOKEN_PROGRAM_ID,
           }),
           // init token account
-          createInitializeAccount2Instruction(depositSource.publicKey, NATIVE_MINT, bidder),
-        ])
-        .postInstructions([createCloseAccountInstruction(depositSource.publicKey, bidder, bidder, [])])
-        .signers([depositSource])
+          createInitializeAccount2Instruction(depositSource, NATIVE_MINT, bidder),
+        ]
+        : [],
+        )
+        .postInstructions(
+          params.bid_mint.toString() == NATIVE_MINT.toString() ? [createCloseAccountInstruction(depositSource, bidder, bidder, [])] : [],
+        )
+        .signers(params.bid_mint.toString() == NATIVE_MINT.toString() ? [depositKeypair] : [])
         .rpc();
       console.log('increase bid tx result', result);
       return [TxnResponse.Success, [result]];
@@ -258,9 +268,14 @@ export class LiquidatorClient {
     };
 
     const bidder = params.bidder;
+    // generate a keypair for transactions 
+    const depositKeypair = Keypair.generate();
+    // if currency is not SOL we fetch ATA based on SPL mint and bidders address - returns / needs to be a public key
+    const depositSource =
+      params.bid_mint.toString() == NATIVE_MINT.toString()
+        ? depositKeypair.publicKey
+        : await getAssociatedTokenAddress(params.bid_mint, params.bidder);
 
-    // wSOL withdrawal
-    const withdrawDestination = Keypair.generate();
 
     try {
       const ix_result = await this.program.methods
@@ -273,26 +288,31 @@ export class LiquidatorClient {
           bidEscrow: bid_escrow.address,
           bidEscrowAuthority: bid_escrow_authority.address,
           bidMint: params.bid_mint,
-          withdrawDestination: withdrawDestination.publicKey,
+          withdrawDestination: depositSource,
 
           // system accounts
           tokenProgram: TOKEN_PROGRAM_ID,
           rent: anchor.web3.SYSVAR_RENT_PUBKEY,
           systemProgram: anchor.web3.SystemProgram.programId,
         })
-        .preInstructions([
+        .preInstructions(
+         params.bid_mint.toString() == NATIVE_MINT.toString() ?
+          [
           SystemProgram.createAccount({
             fromPubkey: bidder,
-            newAccountPubkey: withdrawDestination.publicKey,
+            newAccountPubkey: depositSource,
             space: TokenAccountLayout.span,
             lamports: await getMinimumBalanceForRentExemptAccount(this.program.provider.connection), // rent + amount
             programId: TOKEN_PROGRAM_ID,
           }),
           // init token account
-          createInitializeAccount2Instruction(withdrawDestination.publicKey, NATIVE_MINT, bidder),
-        ])
-        .postInstructions([createCloseAccountInstruction(withdrawDestination.publicKey, bidder, bidder, [])])
-        .signers([withdrawDestination])
+          createInitializeAccount2Instruction(depositSource, NATIVE_MINT, bidder),
+        ] : []
+        )
+        .postInstructions(
+          params.bid_mint.toString() == NATIVE_MINT.toString() ? [createCloseAccountInstruction(depositSource, bidder, bidder, [])] : [],
+          )
+        .signers(params.bid_mint.toString() == NATIVE_MINT.toString() ? [depositKeypair] : [])
         .rpc();
 
       console.log('revoke bid result', ix_result);
@@ -300,17 +320,6 @@ export class LiquidatorClient {
     } catch (err) {
       return [TxnResponse.Failed, []];
     }
-
-    // tx.add(ix);
-    // tx.add(createCloseAccountInstruction(withdrawDestination.publicKey, bidder, bidder, []));
-
-    // try {
-    //   const result = await this.program.provider.sendAndConfirm(tx, [withdrawDestination], { skipPreflight: true });
-    //   console.log(result);
-    //   return [TxnResponse.Success, [result]];
-    // } catch (err) {
-    //   return [TxnResponse.Failed, []];
-    // }
   }
 
   /**
